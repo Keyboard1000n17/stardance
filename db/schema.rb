@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_06_215815) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_07_052608) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -772,6 +772,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_215815) do
     t.index ["user_id"], name: "index_user_identities_on_user_id"
   end
 
+  create_table "user_preferences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "leaderboard_optin", default: false, null: false
+    t.boolean "search_engine_indexing_off", default: false, null: false
+    t.boolean "send_notifications_for_followed_projects", default: true, null: false
+    t.boolean "send_notifications_for_followed_users", default: true, null: false
+    t.boolean "send_notifications_for_new_comments", default: true, null: false
+    t.boolean "send_notifications_for_new_followers", default: true, null: false
+    t.boolean "send_votes_to_slack", default: false, null: false
+    t.boolean "stardust_balance_notifications", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["leaderboard_optin"], name: "index_user_preferences_on_leaderboard_optin"
+    t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
+  end
+
   create_table "user_vote_verdicts", force: :cascade do |t|
     t.datetime "assessed_at"
     t.datetime "created_at", null: false
@@ -803,24 +819,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_215815) do
     t.string "hcb_email"
     t.text "internal_notes"
     t.string "last_name"
-    t.boolean "leaderboard_optin", default: false, null: false
     t.boolean "manual_ysws_override"
     t.datetime "metrics_synced_at"
     t.integer "projects_count"
     t.integer "projects_shipped_count"
     t.string "ref"
     t.string "regions", default: [], array: true
-    t.boolean "search_engine_indexing_off", default: false, null: false
-    t.boolean "send_notifications_for_followed_devlogs", default: true, null: false
-    t.boolean "send_notifications_for_new_comments", default: true, null: false
-    t.boolean "send_notifications_for_new_followers", default: true, null: false
-    t.boolean "send_votes_to_slack", default: false, null: false
     t.string "session_token"
     t.enum "shop_region", enum_type: "shop_region_type"
-    t.boolean "slack_balance_notifications", default: false, null: false
     t.string "slack_id"
     t.datetime "slack_messages_updated_at"
-    t.boolean "special_effects_enabled", default: true, null: false
     t.integer "stardust_clicks", default: 0, null: false
     t.datetime "synced_at"
     t.string "things_dismissed", default: [], null: false, array: true
@@ -941,6 +949,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_06_215815) do
   add_foreign_key "user_hackatime_projects", "projects"
   add_foreign_key "user_hackatime_projects", "users"
   add_foreign_key "user_identities", "users"
+  add_foreign_key "user_preferences", "users"
   add_foreign_key "user_vote_verdicts", "users"
   add_foreign_key "votes", "post_ship_events", column: "ship_event_id"
   add_foreign_key "votes", "projects"

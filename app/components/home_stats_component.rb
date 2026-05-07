@@ -47,19 +47,20 @@ class HomeStatsComponent < ApplicationComponent
   def render_leaderboard_card
     rank = calculate_rank
     balance = @user.balance
+    preference = @user.preference
 
     div(class: "state-card state-card--neutral home-stats-card") do
       div(class: "home-stats-card__content") do
         div(class: "state-card__title") { "Leaderboard" }
         div(class: "home-stats-card__stat") do
-          if @user.leaderboard_optin? && rank
+          if preference.leaderboard_optin? && rank
             span(class: "home-stats-card__rank") { "You are ##{rank}" }
           else
             span(class: "home-stats-card__rank home-stats-card__rank--unranked") { "Unranked" }
           end
         end
         div(class: "state-card__description") do
-          if @user.leaderboard_optin?
+          if preference.leaderboard_optin?
             plain "#{balance} "
             img src: helpers.image_path("icons/stardust.png"), alt: "Stardust", class: "currency-icon"
             plain " earned"
@@ -77,9 +78,9 @@ class HomeStatsComponent < ApplicationComponent
   end
 
   def calculate_rank
-    return nil unless @user.leaderboard_optin?
+    return nil unless @user.preference.leaderboard_optin?
 
-    scope = User.where(leaderboard_optin: true)
+    scope = User.joins(:preference).where(user_preferences: { leaderboard_optin: true })
 
     scope.where("(SELECT COALESCE(SUM(amount), 0) FROM ledger_entries WHERE user_id = users.id) > ?", @user.balance)
          .count + 1

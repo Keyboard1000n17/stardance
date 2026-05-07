@@ -2,56 +2,48 @@
 #
 # Table name: users
 #
-#  id                                      :bigint           not null, primary key
-#  banned                                  :boolean          default(FALSE), not null
-#  banned_at                               :datetime
-#  banned_reason                           :text
-#  bio                                     :text
-#  club_link                               :string
-#  club_name                               :string
-#  display_name                            :string
-#  email                                   :string
-#  enriched_ref                            :string
-#  first_name                              :string
-#  flavortown_message_count_14d            :integer
-#  flavortown_support_message_count_14d    :integer
-#  granted_roles                           :string           default([]), not null, is an Array
-#  has_gotten_free_stickers                :boolean          default(FALSE)
-#  has_pending_achievements                :boolean          default(FALSE), not null
-#  hcb_email                               :string
-#  internal_notes                          :text
-#  last_name                               :string
-#  leaderboard_optin                       :boolean          default(FALSE), not null
-#  manual_ysws_override                    :boolean
-#  metrics_synced_at                       :datetime
-#  projects_count                          :integer
-#  projects_shipped_count                  :integer
-#  ref                                     :string
-#  regions                                 :string           default([]), is an Array
-#  search_engine_indexing_off              :boolean          default(FALSE), not null
-#  send_notifications_for_followed_devlogs :boolean          default(TRUE), not null
-#  send_notifications_for_new_comments     :boolean          default(TRUE), not null
-#  send_notifications_for_new_followers    :boolean          default(TRUE), not null
-#  send_votes_to_slack                     :boolean          default(FALSE), not null
-#  session_token                           :string
-#  shop_region                             :enum
-#  slack_balance_notifications             :boolean          default(FALSE), not null
-#  slack_messages_updated_at               :datetime
-#  special_effects_enabled                 :boolean          default(TRUE), not null
-#  stardust_clicks                         :integer          default(0), not null
-#  synced_at                               :datetime
-#  things_dismissed                        :string           default([]), not null, is an Array
-#  tutorial_steps_completed                :string           default([]), is an Array
-#  verification_status                     :string           default("needs_submission"), not null
-#  vote_anonymously                        :boolean          default(FALSE), not null
-#  vote_balance                            :integer          default(0), not null
-#  votes_count                             :integer
-#  voting_locked                           :boolean          default(FALSE), not null
-#  ysws_eligible                           :boolean          default(FALSE), not null
-#  created_at                              :datetime         not null
-#  updated_at                              :datetime         not null
-#  airtable_record_id                      :string
-#  slack_id                                :string
+#  id                                   :bigint           not null, primary key
+#  banned                               :boolean          default(FALSE), not null
+#  banned_at                            :datetime
+#  banned_reason                        :text
+#  bio                                  :text
+#  club_link                            :string
+#  club_name                            :string
+#  display_name                         :string
+#  email                                :string
+#  enriched_ref                         :string
+#  first_name                           :string
+#  flavortown_message_count_14d         :integer
+#  flavortown_support_message_count_14d :integer
+#  granted_roles                        :string           default([]), not null, is an Array
+#  has_gotten_free_stickers             :boolean          default(FALSE)
+#  has_pending_achievements             :boolean          default(FALSE), not null
+#  hcb_email                            :string
+#  internal_notes                       :text
+#  last_name                            :string
+#  manual_ysws_override                 :boolean
+#  metrics_synced_at                    :datetime
+#  projects_count                       :integer
+#  projects_shipped_count               :integer
+#  ref                                  :string
+#  regions                              :string           default([]), is an Array
+#  session_token                        :string
+#  shop_region                          :enum
+#  slack_messages_updated_at            :datetime
+#  stardust_clicks                      :integer          default(0), not null
+#  synced_at                            :datetime
+#  things_dismissed                     :string           default([]), not null, is an Array
+#  tutorial_steps_completed             :string           default([]), is an Array
+#  verification_status                  :string           default("needs_submission"), not null
+#  vote_anonymously                     :boolean          default(FALSE), not null
+#  vote_balance                         :integer          default(0), not null
+#  votes_count                          :integer
+#  voting_locked                        :boolean          default(FALSE), not null
+#  ysws_eligible                        :boolean          default(FALSE), not null
+#  created_at                           :datetime         not null
+#  updated_at                           :datetime         not null
+#  airtable_record_id                   :string
+#  slack_id                             :string
 #
 # Indexes
 #
@@ -82,6 +74,7 @@ class User < ApplicationRecord
   has_many :flavortime_sessions, dependent: :destroy
   has_many :project_follows, dependent: :destroy
   has_many :followed_projects, through: :project_follows, source: :project
+  has_one :preference, class_name: "User::Preference", dependent: :destroy
 
   has_many :follows_as_follower, class_name: "Follow", foreign_key: :follower_id, dependent: :destroy, inverse_of: :follower
   has_many :follows_as_followed, class_name: "Follow", foreign_key: :followed_id, dependent: :destroy, inverse_of: :followed
@@ -119,6 +112,7 @@ class User < ApplicationRecord
 
   after_commit :handle_verification_eligibility_change, if: :should_check_verification_eligibility?
   after_commit :track_identity_verified, if: :should_track_identity_verified?
+  after_create :create_default_preference!
 
   def roles = granted_roles&.map(&:to_sym) || []
 
@@ -562,6 +556,10 @@ class User < ApplicationRecord
       event_name: "identity_verified",
       user: self
     )
+  end
+
+  def create_default_preference!
+    create_preference! unless preference
   end
 
   def notify_role_granted(role)

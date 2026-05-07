@@ -84,6 +84,7 @@
   </div>
 
   <%= render layout: "shared/modal", locals: { id: "settings-modal", title: "Settings" } do %>
+    <% preference = user.preference %>
     <%= form_with url: my_settings_path, method: :patch, local: true, class: "settings-form", id: "settings-form", data: { turbo: false } do |f| %>
       <div class="settings-form__field">
         <label class="settings-form__label" for="hcb_email">HCB Email</label>
@@ -94,7 +95,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :send_votes_to_slack, "1", user.send_votes_to_slack, id: "send_votes_to_slack" %>
+          <%= check_box_tag :send_votes_to_slack, "1", preference.send_votes_to_slack, id: "send_votes_to_slack" %>
           <span>Send votes to Slack</span>
         </label>
         <small class="settings-form__hint">Share your votes in #flavortown-share-votes</small>
@@ -102,7 +103,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :leaderboard_optin, "1", user.leaderboard_optin, id: "leaderboard_optin" %>
+          <%= check_box_tag :leaderboard_optin, "1", preference.leaderboard_optin, id: "leaderboard_optin" %>
           <span>Opt in to the leaderboard</span>
         </label>
         <small class="settings-form__hint">Check this if you want to be shown on the leaderboard</small>
@@ -110,7 +111,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :slack_balance_notifications, "1", user.slack_balance_notifications, id: "slack_balance_notifications" %>
+          <%= check_box_tag :stardust_balance_notifications, "1", preference.stardust_balance_notifications, id: "stardust_balance_notifications" %>
           <span>Balance change notifications</span>
         </label>
         <small class="settings-form__hint">Receive a Slack DM when your Stardust balance changes</small>
@@ -118,7 +119,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :send_notifications_for_followed_devlogs, "1", user.send_notifications_for_followed_devlogs, id: "send_notifications_for_followed_devlogs" %>
+          <%= check_box_tag :send_notifications_for_followed_projects, "1", preference.send_notifications_for_followed_projects, id: "send_notifications_for_followed_projects" %>
           <span>Followed project notifications</span>
         </label>
         <small class="settings-form__hint">Receive a Slack DM when a project you're following has a new devlog</small>
@@ -126,7 +127,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :send_notifications_for_new_followers, "1", user.send_notifications_for_new_followers, id: "send_notifications_for_new_followers" %>
+          <%= check_box_tag :send_notifications_for_new_followers, "1", preference.send_notifications_for_new_followers, id: "send_notifications_for_new_followers" %>
           <span>New follower notifications</span>
         </label>
         <small class="settings-form__hint">Receive a Slack DM when someone starts following a project you're making</small>
@@ -134,7 +135,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :send_notifications_for_new_comments, "1", user.send_notifications_for_new_comments, id: "send_notifications_for_new_comments" %>
+          <%= check_box_tag :send_notifications_for_new_comments, "1", preference.send_notifications_for_new_comments, id: "send_notifications_for_new_comments" %>
           <span>New comment notifications</span>
         </label>
         <small class="settings-form__hint">Receive a Slack DM when someone comments on a project you made</small>
@@ -142,15 +143,7 @@
 
       <div class="settings-form__field">
         <label class="settings-form__checkbox">
-          <%= check_box_tag :special_effects_enabled, "1", user.special_effects_enabled, id: "special_effects_enabled" %>
-          <span>Special effects</span>
-        </label>
-        <small class="settings-form__hint">Enable/Disable visual effects during special events</small>
-      </div>
-
-      <div class="settings-form__field">
-        <label class="settings-form__checkbox">
-          <%= check_box_tag :search_engine_indexing_off, "1", user.search_engine_indexing_off, id: "search_engine_indexing_off" %>
+          <%= check_box_tag :search_engine_indexing_off, "1", preference.search_engine_indexing_off, id: "search_engine_indexing_off" %>
           <span>Opt out of search engine indexing</span>
         </label>
         <small class="settings-form__hint">Your profile will not be indexed by search engines</small>

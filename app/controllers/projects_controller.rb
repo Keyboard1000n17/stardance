@@ -266,8 +266,8 @@ class ProjectsController < ApplicationController
 
     follow = current_user.project_follows.build(project: @project)
     if follow.save
-      @project.users.each do |member|
-        if member.send_notifications_for_new_followers && current_user.slack_id && member.slack_id
+      @project.users.includes(:preference).each do |member|
+        if member.preference.send_notifications_for_new_followers && current_user.slack_id && member.slack_id
           SendSlackDmJob.perform_later(
             member.slack_id,
             "#{current_user.display_name} is now following your project #{@project.title}!",
