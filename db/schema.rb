@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_08_001047) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_09_034505) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -295,6 +295,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_001047) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["ledgerable_type", "ledgerable_id"], name: "index_ledger_entries_on_ledgerable"
+    t.index ["user_id", "reason"], name: "index_ledger_entries_unique_welcome_grant", unique: true, where: "((reason)::text = 'Free Stickers Welcome Grant'::text)"
     t.index ["user_id"], name: "index_ledger_entries_on_user_id"
   end
 

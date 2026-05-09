@@ -262,10 +262,14 @@ class ShopController < ApplicationController
   end
 
   def grant_free_stickers_welcome_stardust!
-    unless current_user.ledger_entries.exists?(reason: "Free Stickers Welcome Grant")
-      current_user.ledger_entries.create!(
-        amount: 10, reason: "Free Stickers Welcome Grant", created_by: "System", ledgerable: current_user
-      )
+    begin
+      current_user.ledger_entries.find_or_create_by!(reason: "Free Stickers Welcome Grant") do |entry|
+        entry.amount = 10
+        entry.created_by = "System"
+        entry.ledgerable = current_user
+      end
+    rescue ActiveRecord::RecordNotUnique
+      # Another request already created the grant — nothing to do
     end
     order_url = url_for(controller: "shop", action: "order", shop_item_id: 1, only_path: false)
     session[:tutorial_redirect_url] = HCAService.address_portal_url(return_to: order_url)
