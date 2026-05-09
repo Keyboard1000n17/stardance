@@ -93,6 +93,9 @@ class ShopItem::HCBPreauthGrant < ShopItem
 
   def fulfill!(shop_order)
     ShopCardGrant.with_advisory_lock("hcb_grant_fulfill_#{shop_order.user_id}_#{id}", timeout_seconds: 15) do
+      shop_order.reload
+      return if shop_order.fulfilled?
+
       amount_cents = (usd_cost * shop_order.quantity * 100).to_i
       email = shop_order.user.grant_email
 
