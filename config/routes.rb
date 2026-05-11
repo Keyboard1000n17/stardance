@@ -21,9 +21,6 @@
 #                                              votes GET    /votes(.:format)                                                                                  votes#index
 #                                                    POST   /votes(.:format)                                                                                  votes#create
 #                                           new_vote GET    /votes/new(.:format)                                                                              votes#new
-#                                      explore_index GET    /explore(.:format)                                                                                explore#index
-#                                    explore_gallery GET    /explore/gallery(.:format)                                                                        explore#gallery
-#                                  explore_following GET    /explore/following(.:format)                                                                      explore#following
 #                                 rails_health_check GET    /up(.:format)                                                                                     rails/health#show
 #                                         test_error GET    /test_error(.:format)                                                                             debug#error
 #                                  letter_opener_web        /letter_opener                                                                                    LetterOpenerWeb::Engine
@@ -420,10 +417,6 @@ Rails.application.routes.draw do
     end
   end
 
-  # Explore
-  get "explore", to: "explore#index", as: :explore_index
-  get "explore/gallery", to: "explore#gallery", as: :explore_gallery
-  get "explore/following", to: "explore#following", as: :explore_following
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
@@ -455,7 +448,7 @@ Rails.application.routes.draw do
   get "dev_login/:id", to: "sessions#dev_login", as: :dev_login if Rails.env.development? || Rails.env.test?
 
   # OAuth callback for HCA
-  # get "/oauth/callback", to: "sessions#create"
+  get "/oauth/callback", to: "sessions#create"
 
   # Home
   get "home", to: "home#index"
@@ -640,6 +633,16 @@ Rails.application.routes.draw do
         post :trigger
       end
     end
+
+    resources :missions, param: :slug do
+      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps"
+      resources :prizes,       only: [ :create, :update, :destroy ], controller: "mission_prizes"
+      resources :memberships,  only: [ :create, :update, :destroy ], controller: "mission_memberships"
+      resources :shop_unlocks, only: [ :create, :destroy ],          controller: "mission_shop_unlocks"
+      member do
+        post :restore
+      end
+    end
   end
 
   get "queue", to: "queue#index"
@@ -656,6 +659,11 @@ Rails.application.routes.draw do
     resources :reports, only: [ :create ], module: :projects
     resource :og_image, only: [ :show ], module: :projects, defaults: { format: :png }
     resource :ships, only: [ :new, :create ], module: :projects
+    resource :mission, only: [ :create, :destroy ], module: :projects, controller: "missions"
+    resources :mission_step_completions,
+              only: [ :create, :destroy ],
+              module: :projects,
+              param: :mission_step_id
     member do
       get :readme
       post :mark_fire
@@ -689,6 +697,32 @@ Rails.application.routes.draw do
 
   # Guides
   resources :guides, only: [ :index, :show ]
+
+  # Missions (public listing + show page).
+  # Project-side / reviewer-queue / admin-managed missions surfaces ship in later PRs.
+  resources :missions, only: [ :index, :show ], param: :slug do
+    resource :og_image, only: [ :show ], module: :missions, defaults: { format: :png }
+  end
+
+  # Reviewer queue.
+  resources :mission_submissions, only: [ :index, :show ] do
+    member do
+      post :approve
+      post :reject
+      post :undo
+      get  :redeem
+    end
+  end
+
+  # Owner-managed mission CRUD.
+  namespace :manage do
+    resources :missions, param: :slug, only: [ :show, :edit, :update ] do
+      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps"
+      resources :prizes,       only: [ :create, :update, :destroy ], controller: "mission_prizes"
+      resources :memberships,  only: [ :create, :update, :destroy ], controller: "mission_memberships"
+      resources :shop_unlocks, only: [ :create, :destroy ],          controller: "mission_shop_unlocks"
+    end
+  end
 
   get "/:ref", to: "landing#index", constraints: { ref: /[a-z0-9][a-z0-9_-]{0,63}/ }
 end

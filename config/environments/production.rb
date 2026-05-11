@@ -19,7 +19,7 @@ Rails.application.configure do
   config.public_file_server.headers = { "cache-control" => "public, max-age=#{1.year.to_i}" }
 
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
-  config.asset_host = "https://stardance.hackclub.com"
+  config.asset_host = "https://jool.cskartikey.dev"
 
   # Proxy mode for CDN
   config.active_storage.resolve_model_to_route = :rails_storage_proxy

@@ -12,8 +12,8 @@
 <% own_profile = current_user&.id == @user.id %>
 <% banner_url = @user.banner.attached? ? url_for(@user.banner) : image_path("profile/default-banner.png") %>
 
-<div class="profile-layout">
-  <div class="profile-layout__main">
+<div class="app-layout">
+  <div class="app-layout__main">
     <%= turbo_frame_tag "profile_card" do %>
     <%= form_with model: @user, url: user_path(@user), method: :patch, multipart: true,
                   class: "profile",
@@ -228,7 +228,18 @@
                   <p class="profile-project-card__description"><%= project.description %></p>
                 <% end %>
 
-                <p class="profile-project-card__updated">Last updated <%= time_ago_in_words(project.updated_at) %> ago</p>
+                <% mission = project.current_mission %>
+                <div class="profile-project-card__footer">
+                  <p class="profile-project-card__updated">Last updated <%= time_ago_in_words(project.updated_at) %> ago</p>
+                  <% if mission %>
+                    <span class="profile-project-card__mission-badge" title="Active mission: <%= mission.name %>">
+                      <% if mission.icon.attached? %>
+                        <%= image_tag mission.icon, class: "profile-project-card__mission-badge-icon", alt: "" %>
+                      <% end %>
+                      <span class="profile-project-card__mission-badge-name"><%= mission.name %></span>
+                    </span>
+                  <% end %>
+                </div>
               </div>
             <% end %>
           </li>
@@ -250,7 +261,7 @@
 <% end %>
   </div>
 
-  <%= render "shared/discover_rail" %>
+  <%= render DiscoverRailComponent.new %>
 </div>
 
 <dialog id="followers-modal"

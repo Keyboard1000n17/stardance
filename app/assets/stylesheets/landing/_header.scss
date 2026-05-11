@@ -54,6 +54,37 @@
     filter: brightness(0) invert(1);
   }
 
+  &__login-form {
+    flex-shrink: 0;
+  }
+
+  &__login-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 40px;
+    padding: 0 1.25rem;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.6);
+    border-radius: 999px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 1rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition:
+      background 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #fff;
+      outline: none;
+    }
+  }
+
   @media (max-width: 900px) {
     position: relative;
     flex-wrap: wrap;
@@ -91,6 +122,12 @@
     &__github-logo {
       height: 26px;
     }
+
+    &__login-btn {
+      height: 36px;
+      font-size: 0.9rem;
+    }
+
     z-index: 1;
   }
 }

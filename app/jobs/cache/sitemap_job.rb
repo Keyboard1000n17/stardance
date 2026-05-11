@@ -21,11 +21,12 @@ class Cache::SitemapJob < ApplicationJob
   def build_sitemap
     projects = Project.where.not(ship_status: "draft").select(:id, :updated_at)
     users = User.where(banned: false).select(:id, :updated_at)
+    missions = Mission.available.select(:slug, :updated_at)
 
     ApplicationController.render(
       template: "sitemaps/index",
       formats: [ :xml ],
-      assigns: { projects: projects, users: users }
+      assigns: { projects: projects, users: users, missions: missions }
     )
   end
 end

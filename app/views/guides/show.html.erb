@@ -1,45 +1,49 @@
 <% content_for :title, @guide.title %>
 
-<article class="guide-article">
-  <div class="guide-article__container">
-    <nav class="guide-article__breadcrumb" aria-label="Breadcrumb">
-      <%= link_to "Guides", guides_path, class: "guide-article__breadcrumb-link" %>
-      <span class="guide-article__breadcrumb-sep" aria-hidden="true">/</span>
-      <span class="guide-article__breadcrumb-current"><%= @guide.category_label %></span>
-    </nav>
+<div class="app-layout">
+  <div class="app-layout__main">
+    <article class="guide-article">
+      <nav class="guide-article__breadcrumb" aria-label="Breadcrumb">
+        <%= link_to "Guides", guides_path, class: "guide-article__breadcrumb-link" %>
+        <span class="guide-article__breadcrumb-sep" aria-hidden="true">/</span>
+        <span class="guide-article__breadcrumb-current"><%= @guide.category_label %></span>
+      </nav>
 
-    <header class="guide-article__header">
-      <h1 class="guide-article__title"><%= @guide.title %></h1>
-      <p class="guide-article__lede"><%= @guide.description %></p>
-      <p class="guide-article__meta"><%= @guide.reading_minutes %> min read</p>
-    </header>
+      <header class="guide-article__header">
+        <h1 class="guide-article__title"><%= @guide.title %></h1>
+        <p class="guide-article__lede"><%= @guide.description %></p>
+        <p class="guide-article__meta"><%= @guide.reading_minutes %> min read</p>
+      </header>
 
-    <div class="guide-article__body">
-      <%= render @guide.partial_path %>
-    </div>
+      <div class="guide-article__body">
+        <%= render @guide.partial_path %>
+      </div>
 
-    <% if @guide.related_guides.any? %>
-      <aside class="guide-article__related">
-        <h2 class="guide-article__related-title">Read next</h2>
-        <div class="guide-article__related-grid">
-          <% @guide.related_guides.each do |g| %>
-            <%= link_to guide_path(g.slug), class: "guide-card guide-card--compact" do %>
-              <div class="guide-card__icon" aria-hidden="true">
-                <%= inline_svg_tag "icons/#{g.icon}.svg" %>
-              </div>
-              <div class="guide-card__body">
-                <h3 class="guide-card__title"><%= g.title %></h3>
-                <p class="guide-card__meta"><%= g.reading_minutes %> min read</p>
-              </div>
-              <span class="guide-card__arrow" aria-hidden="true">→</span>
+      <% if @guide.related_guides.any? %>
+        <aside class="guide-article__related">
+          <h2 class="guide-article__related-title">Read next</h2>
+          <div class="guide-article__related-grid">
+            <% @guide.related_guides.each do |g| %>
+              <%= link_to guide_path(g.slug), class: "guide-card guide-card--compact" do %>
+                <div class="guide-card__icon" aria-hidden="true">
+                  <%= inline_svg_tag "icons/#{g.icon}.svg" %>
+                </div>
+                <div class="guide-card__body">
+                  <h3 class="guide-card__title"><%= g.title %></h3>
+                  <p class="guide-card__meta"><%= g.reading_minutes %> min read</p>
+                </div>
+                <span class="guide-card__arrow" aria-hidden="true">→</span>
+              <% end %>
             <% end %>
-          <% end %>
-        </div>
-      </aside>
-    <% end %>
+          </div>
+        </aside>
+      <% end %>
 
-    <div class="guide-article__back">
-      <%= link_to "← All guides", guides_path, class: "guide-article__back-link" %>
-    </div>
+      <div class="guide-article__back">
+        <%= link_to "← All guides", guides_path, class: "guide-article__back-link" %>
+      </div>
+    </article>
   </div>
-</article>
+
+  <%= render DiscoverRailComponent.new %>
+</div>

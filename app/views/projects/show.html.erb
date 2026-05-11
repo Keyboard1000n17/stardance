@@ -14,111 +14,291 @@
 
 <%
   banner_url = @project.banner.attached? ? url_for(@project.banner) : image_path("profile/default-banner.png")
-  members = @project.users.to_a
-  is_member = current_user && members.include?(current_user)
-  follower_count = @project.project_follows.size
-  viewer_follow = current_user && @project.project_follows.find_by(user_id: current_user.id)
-  total_hours = (@project.duration_seconds / 3600.0).round
-  latest_ship_post = @posts.find { |p| p.postable_type == "Post::ShipEvent" }
+  members = @members || @project.users.to_a
+  is_member = @is_member
+  follower_count = @follower_count || @project.project_follows.size
+  viewer_follow = @viewer_follow
+  total_hours = @total_hours || (@project.duration_seconds / 3600.0).round
+  latest_ship_post = @latest_ship_post || @posts.find { |p| p.postable_type == "Post::ShipEvent" }
+  can_edit_project = @can_edit_project
 %>
 
-<div class="profile-layout">
-  <div class="profile-layout__main">
+<div class="app-layout">
+  <div class="app-layout__main">
 
-    <header class="profile__header project-show__header">
-      <div class="profile__banner" style="--banner-image: url('<%= banner_url %>');">
-        <%= link_to home_path,
-                    class: "profile__back",
-                    "aria-label": "Back",
-                    data: {
-                      controller: "back-button",
-                      "back-button-fallback-value": home_path,
-                      action: "click->back-button#go",
-                      turbo_frame: "_top"
-                    } do %>
-          <svg class="profile__back-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 6l-6 6 6 6" />
-          </svg>
-        <% end %>
-      </div>
+    <% if can_edit_project && (params[:editing].present? || @project.errors.any?) %>
+      <%= form_with(model: @project,
+                    url: project_path(@project),
+                    method: :patch,
+                    multipart: true,
+                    local: true,
+                    class: "project-show project-show--editing",
+                    data: { controller: "project-form", action: "submit->project-form#onSubmit" }) do |form| %>
+        <%= hidden_field_tag :inline_project_show, "1" %>
 
-      <div class="profile__card">
-        <div class="profile__body">
-          <div class="profile__top-row">
-            <div class="profile__identity">
-              <h1 class="profile__handle"><%= @project.title %></h1>
-              <div class="project-show__byline">
-                <% if members.any? %>
-                  <ul class="project-show__avatars" aria-hidden="true">
-                    <% members.first(4).each do |member| %>
-                      <li>
-                        <% if member.slack_id.present? %>
-                          <%= image_tag member.avatar, alt: member.display_name, class: "project-show__avatar" %>
-                        <% else %>
-                          <span class="project-show__avatar project-show__avatar--placeholder">
-                            <%= member.display_name.to_s.first&.upcase %>
-                          </span>
-                        <% end %>
-                      </li>
-                    <% end %>
-                  </ul>
-                <% end %>
-                <p class="project-show__authors">
-                  By
-                  <% members.each_with_index do |m, i| %>
-                    <%= " and " if i > 0 && i == members.length - 1 %><%= link_to "@#{m.display_name}", user_path(m), class: "project-show__author", data: { turbo_frame: "_top", turbo_prefetch: "true" } %><%= "," if i < members.length - 2 && members.length > 2 %>
-                  <% end %>
-                </p>
-              </div>
-            </div>
+        <header class="project-show__hero">
+          <div class="project-show__banner">
+            <%= image_tag banner_url, alt: "", class: "project-show__banner-image" %>
+            <%= link_to home_path,
+                        class: "project-show__back",
+                        "aria-label": "Back",
+                        data: {
+                          controller: "back-button",
+                          "back-button-fallback-value": home_path,
+                          action: "click->back-button#go",
+                          turbo_frame: "_top"
+                        } do %>
+              <svg class="project-show__back-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 6l-6 6 6 6" />
+              </svg>
+            <% end %>
 
-            <ul class="profile__stats" aria-label="Project stats">
-              <li class="profile__stat">
-                <span class="profile__stat-num"><%= @project.devlogs_count %></span>
-                <span class="profile__stat-label">Devlogs</span>
-              </li>
-              <li class="profile__stat">
-                <span class="profile__stat-num"><%= total_hours %></span>
-                <span class="profile__stat-label">Total hours</span>
-              </li>
-            </ul>
+            <label class="project-show__banner-upload">
+              <span>Change banner</span>
+              <%= form.file_field :banner, accept: Project::ACCEPTED_CONTENT_TYPES.join(","), class: "project-show__banner-input" %>
+            </label>
           </div>
 
-          <% if @project.description.present? %>
-            <p class="profile__bio"><%= @project.description %></p>
-          <% end %>
+          <div class="project-show__panel">
+            <div class="project-show__summary">
+              <div class="project-show__identity">
+                <%= form.text_field :title,
+                                    class: "project-show__title-input",
+                                    maxlength: 120,
+                                    required: true,
+                                    aria: { label: "Project title" },
+                                    data: {
+                                      action: "input->project-form#validateTitle blur->project-form#validateTitle",
+                                      "project-form-target": "title"
+                                    } %>
 
-          <div class="profile__footer">
-            <p class="profile__follow-counts">
-              <span class="profile__follow-count">
-                <strong><%= follower_count %></strong> <%= "follower".pluralize(follower_count) %>
-              </span>
-            </p>
+                <div class="project-show__byline">
+                  <% if members.any? %>
+                    <ul class="project-show__avatars" aria-hidden="true">
+                      <% members.first(4).each do |member| %>
+                        <li>
+                          <% if member.slack_id.present? %>
+                            <%= image_tag member.avatar, alt: member.display_name, class: "project-show__avatar" %>
+                          <% else %>
+                            <span class="project-show__avatar project-show__avatar--placeholder">
+                              <%= member.display_name.to_s.first&.upcase %>
+                            </span>
+                          <% end %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  <% end %>
+                  <p class="project-show__authors">
+                    By
+                    <% members.each_with_index do |m, i| %>
+                      <%= " and " if i > 0 && i == members.length - 1 %><%= link_to "@#{m.display_name}", user_path(m), class: "project-show__author", data: { turbo_frame: "_top", turbo_prefetch: "true" } %><%= "," if i < members.length - 2 && members.length > 2 %>
+                    <% end %>
+                  </p>
+                </div>
+              </div>
 
-            <div class="profile__actions">
+              <ul class="project-show__stats" aria-label="Project stats">
+                <li>
+                  <strong><%= @project.devlogs_count %></strong>
+                  <span>Devlogs</span>
+                </li>
+                <li>
+                  <strong><%= total_hours %></strong>
+                  <span>Total hours</span>
+                </li>
+              </ul>
+            </div>
+
+            <%= form.text_area :description,
+                               class: "project-show__description-input",
+                               rows: 2,
+                               maxlength: 1000,
+                               placeholder: "What are you building?",
+                               aria: { label: "Project description" },
+                               data: {
+                                 action: "input->project-form#onDescriptionInput input->project-form#syncUpdateCheckbox blur->project-form#validateDescription",
+                                 "project-form-target": "description"
+                               } %>
+
+            <div class="project-show__edit-grid">
+              <label class="project-show__field project-show__field--inline">
+                <span>Hackatime projects</span>
+                <span class="project-show__hackatime-picker"
+                      data-controller="hackatime-project-selector"
+                      data-hackatime-project-selector-initial-projects-value="<%= @project.hackatime_projects.where(user_id: current_user.id).select(:id, :name).map { |project| { id: project.id, name: project.name } }.to_json %>"
+                      data-hackatime-project-selector-project-times-value="<%= @project_times.to_json %>"
+                      data-project-icon-path="<%= asset_path("icons/rocket.svg") %>"
+                      data-close-icon-path="<%= asset_path("icons/close.svg") %>">
+                  <span class="project-show__control project-show__control--select">
+                    <select class="project-show__select"
+                            aria-label="Hackatime projects"
+                            data-hackatime-project-selector-target="select"
+                            data-action="change->hackatime-project-selector#addProject">
+                      <option value="">Select Hackatime project</option>
+                      <% @available_hackatime_projects.each do |hackatime_project| %>
+                        <option value="<%= hackatime_project.id %>" data-name="<%= hackatime_project.name %>"><%= hackatime_project.name %></option>
+                      <% end %>
+                    </select>
+                  </span>
+                  <span class="project-show__hackatime-selected"
+                        data-hackatime-project-selector-target="selectedContainer"></span>
+                  <span data-hackatime-project-selector-target="hiddenInputs"></span>
+                </span>
+              </label>
+
+              <label class="project-show__field project-show__field--inline">
+                <span>AI usage declaration</span>
+                <%= form.text_area :ai_declaration,
+                                   rows: 2,
+                                   maxlength: 1000,
+                                   class: "project-show__control project-show__textarea",
+                                   aria: { label: "AI usage declaration" } %>
+              </label>
+
+              <label class="project-show__started-check">
+                <input type="checkbox" aria-label="This project was started before June 1 2026, or was previously shipped to a Hack Club event.">
+                <span>This project was started <strong>before June 1 2026</strong>, or was <strong>previously shipped</strong> to a Hack Club event.</span>
+              </label>
+
+              <div class="project-show__sparkle" aria-hidden="true"></div>
+
+              <label class="project-show__field project-show__field--inline">
+                <span>Playable URL <span class="project-show__help" title="A live URL where anyone can try your project.">?</span></span>
+                <%= form.url_field :demo_url,
+                                   class: "project-show__control",
+                                   placeholder: "https://example.com",
+                                   data: {
+                                     action: "input->project-form#validateUrl blur->project-form#validateUrl",
+                                     "project-form-target": "demoUrl"
+                                   } %>
+              </label>
+
+              <label class="project-show__field project-show__field--inline">
+                <span>Github URL <span class="project-show__help" title="A public repository URL.">?</span></span>
+                <%= form.url_field :repo_url,
+                                   class: "project-show__control",
+                                   placeholder: "https://github.com/user/repo",
+                                   data: {
+                                     action: "input->project-form#onRepoInput blur->project-form#onRepoBlur",
+                                     "project-form-target": "repoUrl"
+                                   } %>
+              </label>
+
+              <label class="project-show__field project-show__field--inline" data-project-form-target="readmeContainer">
+                <span>Readme URL <span class="project-show__help" title="A raw README URL for your project page.">?</span></span>
+                <%= form.url_field :readme_url,
+                                   class: "project-show__control",
+                                   placeholder: "https://raw.githubusercontent.com/user/repo/main/README.md",
+                                   data: {
+                                     action: "input->project-form#onReadmeInput input->project-form#validateUrl blur->project-form#validateUrl",
+                                     "project-form-target": "readmeUrl"
+                                   } %>
+              </label>
+            </div>
+
+            <div class="project-show__panel-actions">
               <% if @project.fire? %>
                 <span class="project-show__badge project-show__badge--fire">⭐ Super Star Project</span>
               <% end %>
-
-              <% if is_member %>
-                <%= link_to "Edit project info",
-                            edit_project_path(@project),
-                            class: "profile__action-btn profile__action-btn--primary",
-                            data: { turbo_frame: "_top" } %>
-              <% elsif current_user %>
-                <%= link_to (viewer_follow ? "Following" : "Follow"),
-                            (viewer_follow ? unfollow_project_path(@project) : follow_project_path(@project)),
-                            class: [ "profile__action-btn", "profile__action-btn--primary", ("profile__action-btn--following" if viewer_follow) ].compact.join(" "),
-                            data: {
-                              turbo_method: (viewer_follow ? :delete : :post),
-                              turbo_frame: "_top"
-                            } %>
-              <% end %>
+              <%= link_to "Discard changes", project_path(@project), class: "project-show__pill project-show__pill--outline", data: { turbo_frame: "_top" } %>
+              <%= form.submit "Save", class: "project-show__pill project-show__pill--save", data: { "project-form-target": "submit" } %>
             </div>
           </div>
-        </div>
-      </div>
-    </header>
+        </header>
+      <% end %>
+    <% else %>
+      <article class="project-show">
+        <header class="project-show__hero">
+          <div class="project-show__banner">
+            <%= image_tag banner_url, alt: "", class: "project-show__banner-image" %>
+            <%= link_to home_path,
+                        class: "project-show__back",
+                        "aria-label": "Back",
+                        data: {
+                          controller: "back-button",
+                          "back-button-fallback-value": home_path,
+                          action: "click->back-button#go",
+                          turbo_frame: "_top"
+                        } do %>
+              <svg class="project-show__back-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M14 6l-6 6 6 6" />
+              </svg>
+            <% end %>
+          </div>
+
+          <div class="project-show__panel project-show__panel--read">
+            <div class="project-show__summary">
+              <div class="project-show__identity">
+                <h1 class="project-show__title"><%= @project.title %></h1>
+                <div class="project-show__byline">
+                  <% if members.any? %>
+                    <ul class="project-show__avatars" aria-hidden="true">
+                      <% members.first(4).each do |member| %>
+                        <li>
+                          <% if member.slack_id.present? %>
+                            <%= image_tag member.avatar, alt: member.display_name, class: "project-show__avatar" %>
+                          <% else %>
+                            <span class="project-show__avatar project-show__avatar--placeholder">
+                              <%= member.display_name.to_s.first&.upcase %>
+                            </span>
+                          <% end %>
+                        </li>
+                      <% end %>
+                    </ul>
+                  <% end %>
+                  <p class="project-show__authors">
+                    By
+                    <% members.each_with_index do |m, i| %>
+                      <%= " and " if i > 0 && i == members.length - 1 %><%= link_to "@#{m.display_name}", user_path(m), class: "project-show__author", data: { turbo_frame: "_top", turbo_prefetch: "true" } %><%= "," if i < members.length - 2 && members.length > 2 %>
+                    <% end %>
+                  </p>
+                </div>
+              </div>
+
+              <ul class="project-show__stats" aria-label="Project stats">
+                <li>
+                  <strong><%= @project.devlogs_count %></strong>
+                  <span>Devlogs</span>
+                </li>
+                <li>
+                  <strong><%= total_hours %></strong>
+                  <span>Total hours</span>
+                </li>
+              </ul>
+            </div>
+
+            <% if @project.description.present? %>
+              <p class="project-show__description"><%= @project.description %></p>
+            <% end %>
+
+            <div class="project-show__read-footer">
+              <span class="project-show__followers"><strong><%= follower_count %></strong> <%= "follower".pluralize(follower_count) %></span>
+              <div class="project-show__panel-actions">
+                <% if @project.fire? %>
+                  <span class="project-show__badge project-show__badge--fire">⭐ Super Star Project</span>
+                <% end %>
+
+                <% if can_edit_project %>
+                  <%= link_to "Edit project", project_path(@project, editing: true),
+                              class: "project-show__pill project-show__pill--outline",
+                              data: { turbo_frame: "_top" } %>
+                <% end %>
+
+                <% if current_user %>
+                  <%= link_to (viewer_follow ? "Following" : "Follow"),
+                              (viewer_follow ? unfollow_project_path(@project) : follow_project_path(@project)),
+                              class: [ "project-show__pill", "project-show__pill--save", ("project-show__pill--following" if viewer_follow) ].compact.join(" "),
+                              data: {
+                                turbo_method: (viewer_follow ? :delete : :post),
+                                turbo_frame: "_top"
+                              } %>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </header>
+      </article>
+    <% end %>
 
     <% if is_member %>
       <nav class="project-show__actions" aria-label="Project actions">
@@ -135,6 +315,59 @@
                 disabled
                 title="Manage teammates — coming soon">Manage teammates</button>
       </nav>
+    <% end %>
+
+    <% if @show_project_onboarding %>
+      <section class="project-show__onboarding" aria-labelledby="project-show-onboarding-title">
+        <header class="project-show__onboarding-header">
+          <h2 id="project-show-onboarding-title">Welcome to your new project!</h2>
+          <p>
+            Not sure what to do? Follow a guide to set up your project, or jump straight into it by
+            <%= link_to "editing your project info", project_path(@project, editing: true), data: { turbo_frame: "_top" } %>.
+          </p>
+        </header>
+
+        <div class="project-show__onboarding-list">
+          <%= link_to guide_path(:github_repository),
+                      class: "project-show__onboarding-card",
+                      data: { turbo_frame: "_top" } do %>
+            <span class="project-show__onboarding-card-body">
+              <strong>Create your GitHub repository</strong>
+              <span>Learn to use a GitHub repository to store your project's code, and link it to your Stardance project.</span>
+            </span>
+            <span class="project-show__onboarding-card-action">See tutorial →</span>
+          <% end %>
+
+          <% if @show_hackatime_onboarding %>
+            <%= button_to "/auth/hackatime",
+                          method: :post,
+                          class: "project-show__onboarding-card project-show__onboarding-card--button",
+                          form: { class: "project-show__onboarding-form" } do %>
+              <span class="project-show__onboarding-card-body">
+                <strong>Set up hour tracking with Hackatime</strong>
+                <span>Set up Hackatime in your editor to log hours for your project easily.</span>
+              </span>
+              <span class="project-show__onboarding-card-action">See tutorial →</span>
+            <% end %>
+          <% end %>
+
+          <% if @project_onboarding_mission.present? %>
+            <%= link_to mission_path(@project_onboarding_mission.slug),
+                        class: "project-show__onboarding-card project-show__onboarding-card--mission",
+                        data: { turbo_frame: "_top" } do %>
+              <span class="project-show__onboarding-card-body">
+                <strong><%= @project_onboarding_mission.name %></strong>
+                <span><%= truncate(@project_onboarding_mission.description.to_s, length: 110) %></span>
+              </span>
+              <span class="project-show__onboarding-card-action">See tutorial →</span>
+            <% end %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+
+    <% if Flipper.enabled?(:missions, current_user) %>
+      <%= render "projects/mission_panel", project: @project %>
     <% end %>
 
     <% if @show_ai_coding_time_ignored_card %>
@@ -226,7 +459,7 @@
 
   </div>
 
-  <%= render "shared/discover_rail" %>
+  <%= render DiscoverRailComponent.new %>
 </div>
 
 <% if @votes_for_payout.present? %>

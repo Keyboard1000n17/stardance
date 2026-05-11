@@ -24,6 +24,7 @@ class Projects::ShipsController < ApplicationController
         review_instructions: params[:review_instructions].to_s.strip.presence
       )
       @post = @project.posts.create!(user: current_user, postable: ship_event)
+      maybe_create_mission_submission(ship_event)
     end
 
     if initial_ship?
@@ -55,5 +56,50 @@ class Projects::ShipsController < ApplicationController
   def devlogs_since_last_ship
     devlogs = @project.devlog_posts.includes(:user, postable: [ { attachments_attachments: :blob } ])
     @last_ship ? devlogs.where("posts.created_at > ?", @last_ship.created_at) : devlogs
+  end
+
+  # Create a mission submission for this ship if the project has an active
+  # mission attachment. payout_path comes from the ship form checkbox; voting
+  # is forced when the mission has no prizes or the user already redeemed.
+  def maybe_create_mission_submission(ship_event)
+    return unless Flipper.enabled?(:missions, current_user)
+    attachment = @project.current_mission_attachment
+    return unless attachment
+
+    mission = attachment.mission
+    payout_path = resolve_payout_path(mission)
+
+    Mission::Submission.create!(
+      ship_event: ship_event,
+      mission: mission,
+      payout_path: payout_path,
+      status: "awaiting_certification"
+    )
+
+    if defined?(FunnelTrackerService)
+      FunnelTrackerService.track(
+        event_name: "mission_submission_created",
+        user: current_user,
+        properties: {
+          project_id: @project.id, mission_id: mission.id,
+          mission_slug: mission.slug, payout_path: payout_path
+        }
+      )
+    end
+  end
+
+  def resolve_payout_path(mission)
+    return "voting" unless mission.has_prizes?
+    return "voting" if user_redeemed_prize_for?(mission)
+    params[:mission_payout_path].to_s == "voting" ? "voting" : "static_prize"
+  end
+
+  def user_redeemed_prize_for?(mission)
+    Mission::Submission
+      .where(mission_id: mission.id)
+      .joins(ship_event: { post: :user })
+      .where(users: { id: current_user.id })
+      .where.not(shop_order_id: nil)
+      .exists?
   end
 end

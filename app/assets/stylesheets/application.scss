@@ -20,6 +20,7 @@
 @use "components/project_card";
 @use "components/project_show_card";
 @use "components/sidebar";
+@use "components/discover_rail";
 @use "components/ui-heading";
 @use "components/state_card";
 @use "components/project_selection_card";
@@ -39,13 +40,15 @@
 @use "components/comments";
 @use "components/dialogue_box";
 @use "components/welcome_overlay";
-@use "components/music_player";
 @use "components/markdown_content";
 @use "components/announcement_component";
 @use "components/comic_card";
 @use "components/platform_notice";
 @use "components/radio_option";
 @use "components/currency_icon";
+@use "components/mission_panel";
+@use "components/status_pill";
+@use "components/feed";
 
 @use "components/vimeo_embed";
 @use "components/command_palette";
@@ -65,9 +68,14 @@
 @use "pages/shop/my_orders";
 @use "pages/votes/new" as votes_new;
 @use "pages/votes/index" as votes_index;
-@use "pages/explore/index" as explore_index;
 @use "pages/user/show" as users_show;
 @use "pages/errors/not_authorized";
 @use "pages/guides";
+@use "pages/missions/index" as missions_index;
+@use "pages/missions/show" as missions_show;
+@use "pages/mission_submissions/index" as mission_submissions_index;
+@use "pages/mission_submissions/show" as mission_submissions_show;
+@use "pages/manage/missions_edit" as manage_missions_edit;
 @use "pages/admin/_super_mega_dashboard";
+@use "pages/admin/missions" as admin_missions;
 @use "pages/admin/_voting_dashboard";

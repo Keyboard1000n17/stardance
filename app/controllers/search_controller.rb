@@ -30,9 +30,11 @@ class SearchController < ApplicationController
     results = scope
       .order(created_at: :desc)
       .limit(MAX_RESULTS)
-      .pluck(:id, :title, :user_id)
+      .includes(:memberships)
 
-    render json: results.map { |id, title, user_id| { id: id, title: title, slug: id.to_s, user_id: user_id } }
+    render json: results.map { |project|
+      { id: project.id, title: project.title, slug: project.id.to_s, user_id: project.memberships.find(&:owner?)&.user_id }
+    }
   end
 
   private

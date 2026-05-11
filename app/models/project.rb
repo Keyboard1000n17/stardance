@@ -78,6 +78,25 @@ class Project < ApplicationRecord
   has_many :skips, class_name: "Project::Skip", dependent: :destroy
   has_many :project_follows, dependent: :destroy
   has_many :followers, through: :project_follows, source: :user
+
+  has_many :mission_attachments,      class_name: "Project::MissionAttachment",  dependent: :destroy, inverse_of: :project
+  has_many :missions,                 through:    :mission_attachments
+  has_many :mission_step_completions, class_name: "Mission::StepCompletion",     dependent: :destroy
+  has_many :completed_mission_steps,  through:    :mission_step_completions, source: :mission_step
+  has_many :mission_submissions,      class_name: "Mission::Submission",         through: :ship_events
+
+  def current_mission_attachment
+    mission_attachments.where(detached_at: nil).order(attached_at: :desc).first
+  end
+
+  def current_mission
+    current_mission_attachment&.mission
+  end
+
+  def has_completed_mission_step?(step)
+    mission_step_completions.exists?(mission_step_id: step.id)
+  end
+
   # needs to be implemented
   has_one_attached :demo_video
 

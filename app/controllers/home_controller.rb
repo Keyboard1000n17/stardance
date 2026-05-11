@@ -4,6 +4,7 @@ class HomeController < ApplicationController
 
   def index
     authorize :home, :index?
+    @body_class = "app-layout-page"
 
     identities = current_user.identities
 
@@ -34,6 +35,9 @@ class HomeController < ApplicationController
     @show_and_tell_live = Flipper.enabled?(:show_and_tell_live)
     @show_welcome_overlay = show_from_session
     @show_home_intro = !current_user.has_dismissed?("home_intro")
+    load_feed
+    load_composer
+    load_recommended_projects
 
     if @show_welcome_overlay
       @show_hackatime_tutorial = !current_user.tutorial_step_completed?(:setup_hackatime)
@@ -45,6 +49,45 @@ class HomeController < ApplicationController
   end
 
   private
+
+  def load_feed
+    posts = Post.of_devlogs(join: true)
+                .where(post_devlogs: { deleted_at: nil })
+                .includes(:user, :project, devlog: { attachments_attachments: :blob })
+                .order(created_at: :desc)
+                .limit(20)
+
+    @feed_posts = posts.select { |post| post.postable.present? }
+    @liked_devlog_ids = liked_devlog_ids_for(@feed_posts)
+  end
+
+  def liked_devlog_ids_for(posts)
+    devlog_ids = posts.map(&:postable_id)
+    return Set.new if devlog_ids.empty?
+
+    Like.where(user: current_user, likeable_type: "Post::Devlog", likeable_id: devlog_ids).pluck(:likeable_id).to_set
+  end
+
+  def load_composer
+    @devlog = Post::Devlog.new
+    @composer_projects = current_user.projects.order(updated_at: :desc)
+    @selected_project = selected_composer_project
+  end
+
+  def selected_composer_project
+    if params[:project_id].present?
+      @composer_projects.find_by(id: params[:project_id]) || @composer_projects.first
+    else
+      @composer_projects.first
+    end
+  end
+
+  def load_recommended_projects
+    @recommended_projects = Project.excluding_member(current_user)
+                                   .where(deleted_at: nil)
+                                   .with_banner_priority
+                                   .limit(6)
+  end
 
   def require_login
     redirect_to root_path, alert: "Please log in first" and return unless current_user

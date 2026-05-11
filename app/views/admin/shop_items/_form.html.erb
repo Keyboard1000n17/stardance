@@ -203,6 +203,29 @@
             <span class="shop-item-form__hint">User must have earned AT LEAST ONE of the selected achievements to purchase. You can select multiple by checking the boxes.</span>
           </div>
 
+          <div class="shop-item-form__field" style="margin-top: 1rem;">
+            <label class="shop-item-form__checkbox">
+              <%= f.check_box :mission_prize_only %>
+              <span class="shop-item-form__toggle-content">
+                <strong>Mission prize only</strong>
+                <span class="shop-item-form__toggle-desc">Hidden from catalog. Claimable only via the mission redemption flow.</span>
+              </span>
+            </label>
+          </div>
+
+          <div class="shop-item-form__field" style="margin-top: 1rem;">
+            <%= f.label :unlocking_mission_ids, "Unlocked by Missions", class: "shop-item-form__label" %>
+            <div class="shop-item-form__checkbox-list">
+              <% Mission.not_deleted.order(:name).each do |mission| %>
+                <label class="shop-item-form__checkbox">
+                  <%= check_box_tag "shop_item[unlocking_mission_ids][]", mission.id, shop_item.unlocking_mission_ids.include?(mission.id), id: "shop_item_unlocking_mission_ids_#{mission.id}" %>
+                  <span><%= mission.name %> (<%= mission.slug %>)</span>
+                </label>
+              <% end %>
+            </div>
+            <span class="shop-item-form__hint">User must have completed AT LEAST ONE of these missions to purchase. Leave empty for no mission gate.</span>
+          </div>
+
           <div id="ship_requirement_fields" style="display: none; margin-top: 1rem;">
             <div class="shop-item-form__field">
               <%= f.label :required_ships_count, "Required Ships Count", class: "shop-item-form__label" %>

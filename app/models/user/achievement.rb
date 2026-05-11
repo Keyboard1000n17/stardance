@@ -29,20 +29,38 @@ class User
 
     belongs_to :user
 
-    validates :achievement_slug, presence: true, inclusion: { in: ::Achievement.all_slugs.map(&:to_s) }
+    validates :achievement_slug, presence: true
     validates :achievement_slug, uniqueness: { scope: :user_id }
+    validate :achievement_slug_recognized
     validates :earned_at, presence: true
 
     after_create :grant_stardust_reward
 
+    # Returns either a static `::Achievement` (Data.define struct) for slugs
+    # in `::Achievement.all_slugs` OR a `Mission::AchievementProxy` for
+    # dynamic per-mission slugs matching `/\Amission_[a-z0-9_-]+_completed\z/`.
+    # Both honor the same interface (name, description, icon, slug,
+    # has_stardust_reward?, stardust_reward).
     def achievement
-      ::Achievement.find(achievement_slug)
+      return ::Achievement.find(achievement_slug) if static_achievement?
+      Mission::AchievementProxy.find(achievement_slug)
     end
 
     private
 
+    def static_achievement?
+      ::Achievement.all_slugs.map(&:to_s).include?(achievement_slug.to_s)
+    end
+
+    def achievement_slug_recognized
+      return if static_achievement?
+      return if Mission::AchievementProxy.matches?(achievement_slug)
+
+      errors.add(:achievement_slug, "is not a known achievement")
+    end
+
     def grant_stardust_reward
-      return unless achievement.has_stardust_reward?
+      return unless achievement&.has_stardust_reward?
 
       ledger_entries.create!(
         amount: achievement.stardust_reward,

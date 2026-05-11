@@ -1,4 +1,4 @@
-<div class="shop-item-card<%= ' shop-item-card--achievement-locked' if locked_by_achievement %><%= ' shop-item-card--out-of-stock' if out_of_stock? %><%= ' shop-item-card--on-sale' if on_sale %><%= ' shop-item-card--with-bow' if show_bow %>"
+<div class="shop-item-card<%= ' shop-item-card--achievement-locked' if locked_by_achievement %><%= ' shop-item-card--mission-locked' if mission_locked %><%= ' shop-item-card--out-of-stock' if out_of_stock? %><%= ' shop-item-card--on-sale' if on_sale %><%= ' shop-item-card--with-bow' if show_bow %>"
      data-categories="<%= categories.join(',') %>"
      data-regions="<%= enabled_regions.join(',') %>"
      data-achievement-locked="<%= locked_by_achievement %>"
@@ -56,6 +56,7 @@
         <h4 class="shop-item-card__title"><%= name %></h4>
         <div class="shop-item-card__description"><%= md(description) %></div>
         <%= achievement_requirement_html %>
+        <%= mission_lock_html %>
         <% if enabled_until.present? %>
           <div class="shop-item-card__enabled-until">Enabled until <%= enabled_until.strftime("%b %d, %Y") %></div>
         <% end %>
@@ -87,6 +88,7 @@
         <h4 class="shop-item-card__title"><%= name %></h4>
         <div class="shop-item-card__description"><%= md(description) %></div>
         <%= achievement_requirement_html %>
+        <%= mission_lock_html %>
         <% if enabled_until.present? %>
           <div class="shop-item-card__enabled-until">Enabled until <%= enabled_until.strftime("%b %d, %Y") %></div>
         <% end %>

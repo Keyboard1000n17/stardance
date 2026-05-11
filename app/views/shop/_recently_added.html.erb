@@ -11,6 +11,8 @@
         <% sale_price = item.price_for_region(user_region) %>
         <% item_achievement_infos = item.required_achievement_objects %>
         <% item_achievement_locked = item.achievement_locked_for?(current_user) %>
+        <% item_mission_locked = item.mission_locked_for?(current_user) %>
+        <% item_unlocking_missions = item_mission_locked ? item.unlocking_missions.pluck(:name) : [] %>
         <%= render ShopItemCardComponent.new(
           item_id: item.id,
           name: item.name,
@@ -31,7 +33,9 @@
           enabled_until: item.enabled_until,
           locked_by_achievement: item_achievement_locked,
           required_achievement_names: item_achievement_infos.map(&:name),
-          required_achievement_hints: item_achievement_infos.map(&:description)
+          required_achievement_hints: item_achievement_infos.map(&:description),
+          mission_locked: item_mission_locked,
+          unlocking_mission_names: item_unlocking_missions
         ) %>
       <% end %>
       </div>

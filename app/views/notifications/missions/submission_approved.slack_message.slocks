@@ -1,0 +1,7 @@
+header ":sparkles: Your mission submission was approved!"
+
+section "*<#{mission_url}|#{mission_name}>* — your submission for *<#{project_url}|#{project_title}>* has been approved.", markdown: true
+
+actions [
+  button("View submission", "view_submission", url: submission_url)
+]

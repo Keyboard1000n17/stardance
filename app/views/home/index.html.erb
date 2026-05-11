@@ -1,405 +1,48 @@
-<% if @show_welcome_overlay %>
-  <%= render WelcomeOverlayComponent.new %>
-<% end %>
+<% content_for :title, "Home" %>
 
-<div class="home-index">
-  <div class="home-index__header">
-    <%= render HeadingComponent.new(title: "Home", tone: :blue, size: :full) %>
-  </div>
+<div class="app-layout">
+  <main class="app-layout__main feed-home" aria-label="Home feed">
+    <%= render Posts::ComposerComponent.new(
+          post: @devlog,
+          current_user: current_user,
+          projects: @composer_projects,
+          selected_project: @selected_project
+        ) %>
 
-  <% if @show_and_tell_live %>
-    <div class="show-and-tell-banner">
-      <span class="show-and-tell-banner__live-dot"></span>
-      <span class="show-and-tell-banner__text">🎤 Show & Tell is happening right now!</span>
-      <%= link_to "Join the Huddle", "https://app.slack.com/huddle/T0266FRGM/C09MPB8NE8H", target: "_blank", class: "show-and-tell-banner__link" %>
-    </div>
-  <% end %>
+    <% if @feed_posts.any? %>
+      <% @feed_posts.each_with_index do |post, index| %>
+        <%= render Posts::CardComponent.new(post: post, current_user: current_user) %>
 
-  <% flavortime_release_download_base = "https://github.com/hackclub/flavortime/releases/latest/download" %>
-  <% flavortime_download_links = {
-    macos: "#{flavortime_release_download_base}/flavortime-macos-universal.dmg",
-    windows: "#{flavortime_release_download_base}/flavortime-windows-x64.exe",
-    linux: "#{flavortime_release_download_base}/flavortime-linux-x64.AppImage"
-  } %>
-  <% user_agent = request.user_agent.to_s.downcase %>
-  <% default_download_platform = if user_agent.include?("macintosh") || user_agent.include?("mac os")
-                                  :macos
-                                elsif user_agent.include?("linux") && !user_agent.include?("android")
-                                  :linux
-                                else
-                                  :windows
-                                end %>
-  <% platform_labels = {
-    macos: "macOS (universal)",
-    windows: "Windows (x64)",
-    linux: "Linux (x64 AppImage)"
-  } %>
-  <% platform_short_labels = {
-    macos: "Mac",
-    windows: "Windows",
-    linux: "Linux"
-  } %>
-  <% platform_details = {
-    macos: "universal",
-    windows: "x64",
-    linux: "x64 AppImage"
-  } %>
-
-  <% if @show_welcome_overlay %>
-    <div class="dialogue-box-container"
-         data-controller="home-dialogue"
-         data-home-dialogue-show-hackatime-tutorial-value="<%= @show_hackatime_tutorial %>"
-         data-home-dialogue-show-slack-tutorial-value="<%= @show_slack_tutorial %>"
-         style="display: none;">
-      <!-- Welcome Dialogue -->
-      <div class="dialogue-box-wrapper dialogue-box-wrapper--welcome"
-        data-dialogue-type="welcome"
-        data-dialogue-iteration-text-value='<%= [
-          "Welcome home, explorer! This is your home base on Stardance.",
-          "This is where you'll find your tutorial steps, track your progress, and see what you need to do next.",
-          "You'll see cards for each step you need to complete. Once you finish them all, you'll be fully set up and ready to build!",
-          "Let's start by checking out the tutorial steps below. They'll guide you through everything you need to know."
-        ].to_json %>'
-        data-dialogue-iteration-sprites-value='<%= (1..12).map { |i| image_path("orpheus_sprites/#{i}.png") }.to_json %>'
-        data-action="keydown.enter@window->dialogue-iteration#next click@window->dialogue-iteration#next">
-        <div class="dialogue-box-backdrop"></div>
-        <div class="dialogue-box">
-          <div class="dialogue-box__header">
-            <h1>Astronaut Orpheus</h1>
-            <button type="button" class="dialogue-box__mute-btn" data-dialogue-iteration-target="muteButton" data-action="click->dialogue-iteration#toggleMute" aria-label="Toggle sound">
-              <%= inline_svg_tag "icons/volume-on.svg", class: "dialogue-box__mute-icon", data: { dialogue_iteration_target: "volumeOnIcon" } %>
-              <%= inline_svg_tag "icons/volume-off.svg", class: "dialogue-box__mute-icon", data: { dialogue_iteration_target: "volumeOffIcon" }, style: "display: none;" %>
-            </button>
-          </div>
-          <div class="dialogue-box__image" data-action="click->dialogue-iteration#squeakCharacter" data-dialogue-iteration-target="character">
-            <%= image_tag "orpheus_sprites/1.png", alt: "Astronaut Orpheus", data: { dialogue_iteration_target: "sprite" } %>
-          </div>
-          <div class="dialogue-box__text">
-            <div class="dialogue-box__text-content">
-              <span data-dialogue-iteration-target="content">Welcome home, explorer! This is your home base on Stardance.</span>
-            </div>
-            <button type="button" class="dialogue-box__text-btn">
-              Click to continue...<span>&#8964;</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <% if @show_hackatime_tutorial %>
-        <!-- Hackatime Tutorial Dialogue -->
-        <div class="dialogue-box-wrapper dialogue-box-wrapper--hackatime"
-          data-dialogue-type="hackatime"
-          style="display: none;"
-          data-dialogue-iteration-text-value='<%= [
-            "On Stardance, the projects that you build are time tracked!",
-            "You install an extension in your code editor and the time tracking is automatic.",
-            "We need to track how much time you spend to reward you with Stardust!",
-            "And that's how you're gonna earn Stardust :p!",
-            "Let's connect your Hackatime account so we can start tracking your coding time."
-          ].to_json %>'
-          data-dialogue-iteration-sprites-value='<%= (1..12).map { |i| image_path("orpheus_sprites/#{i}.png") }.to_json %>'
-          data-action="keydown.enter@window->dialogue-iteration#next click@window->dialogue-iteration#next">
-          <div class="dialogue-box-backdrop"></div>
-          <div class="dialogue-box">
-            <div class="dialogue-box__header">
-              <h1>Astronaut Orpheus</h1>
-              <button type="button" class="dialogue-box__mute-btn" data-dialogue-iteration-target="muteButton" data-action="click->dialogue-iteration#toggleMute" aria-label="Toggle sound">
-                <%= inline_svg_tag "icons/volume-on.svg", class: "dialogue-box__mute-icon", data: { dialogue_iteration_target: "volumeOnIcon" } %>
-                <%= inline_svg_tag "icons/volume-off.svg", class: "dialogue-box__mute-icon", data: { dialogue_iteration_target: "volumeOffIcon" }, style: "display: none;" %>
-              </button>
-            </div>
-            <div class="dialogue-box__image" data-action="click->dialogue-iteration#squeakCharacter" data-dialogue-iteration-target="character">
-              <%= image_tag "orpheus_sprites/1.png", alt: "Astronaut Orpheus", data: { dialogue_iteration_target: "sprite" } %>
-            </div>
-            <div class="dialogue-box__text">
-              <div class="dialogue-box__text-content">
-                <span data-dialogue-iteration-target="content">On Stardance, the projects that you build are time tracked!</span>
-              </div>
-              <button type="button" class="dialogue-box__text-btn">
-                Click to continue...<span>&#8964;</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      <% end %>
-
-      <% if @show_slack_tutorial %>
-        <!-- Slack Tutorial Dialogue -->
-        <div class="dialogue-box-wrapper dialogue-box-wrapper--slack"
-          data-dialogue-type="slack"
-          style="display: none;"
-          data-dialogue-iteration-text-value='<%= [
-            "One more thing, explorer!",
-            "Join our Slack community to connect with other explorers, share your projects, and get help when you need it.",
-            "It's a great place to meet fellow explorers and be part of the Stardance community!"
-          ].to_json %>'
-          data-dialogue-iteration-sprites-value='<%= (1..12).map { |i| image_path("orpheus_sprites/#{i}.png") }.to_json %>'
-          data-action="keydown.enter@window->dialogue-iteration#next click@window->dialogue-iteration#next">
-          <div class="dialogue-box-backdrop"></div>
-          <div class="dialogue-box">
-            <div class="dialogue-box__header">
-              <h1>Astronaut Orpheus</h1>
-              <button type="button" class="dialogue-box__mute-btn" data-dialogue-iteration-target="muteButton" data-action="click->dialogue-iteration#toggleMute" aria-label="Toggle sound">
-                <%= inline_svg_tag "icons/volume-on.svg", class: "dialogue-box__mute-icon", data: { dialogue_iteration_target: "volumeOnIcon" } %>
-                <%= inline_svg_tag "icons/volume-off.svg", class: "dialogue-box__mute-icon", data: { dialogue_iteration_target: "volumeOffIcon" }, style: "display: none;" %>
-              </button>
-            </div>
-            <div class="dialogue-box__image" data-action="click->dialogue-iteration#squeakCharacter" data-dialogue-iteration-target="character">
-              <%= image_tag "orpheus_sprites/1.png", alt: "Astronaut Orpheus", data: { dialogue_iteration_target: "sprite" } %>
-            </div>
-            <div class="dialogue-box__text">
-              <div class="dialogue-box__text-content">
-                <span data-dialogue-iteration-target="content">One more thing, explorer!</span>
-              </div>
-              <button type="button" class="dialogue-box__text-btn">
-                Click to continue...<span>&#8964;</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-  <% end %>
-
-  <% if current_user&.banned? %>
-    <div class="banned-banner">
-      <div class="banned-banner__content">
-        <h2 class="banned-banner__title">Account Banned</h2>
-
-        <p class="banned-banner__message">Your account has been banned and you cannot access other parts of the site.</p>
-        <p>
-          Please contact @Fraud Squad for further communications! if you are not on the hackclub slack please email <a href="mailto:fraudsquad@hackclub.com">fraudsquad@hackclub.com</a>
-        </p>
-      </div>
-    </div>
-  <% else %>
-  <% if current_user.verification_ineligible? %>
-    <div class="home-verification-notice home-verification-notice--compact home-verification-notice--wide">
-      <%= render StateCardComponent.new(
-        title: "Not Eligible",
-        description: "Your account has been marked as ineligible for this program. If you believe this is an error, please contact identity@hackclub.com.",
-        variant: :danger,
-        badge_text: "ineligible",
-        icon: "info"
-      ) %>
-    </div>
-  <% elsif current_user.verification_verified? && !current_user.ysws_eligible? %>
-    <div class="home-verification-notice home-verification-notice--compact home-verification-notice--wide">
-      <%= render StateCardComponent.new(
-        title: "Outside age range",
-        description: "You're verified, but this program is only available to teenagers :-/",
-        variant: :warning,
-        badge_text: "sorry...",
-        icon: "info"
-      ) %>
-    </div>
-  <% elsif current_user.verification_needs_submission? && current_user.tutorial_step_completed?(:identity_verified) %>
-    <div class="home-verification-notice home-verification-notice--compact home-verification-notice--wide">
-      <% rejection_message = [@verification_rejection_reason&.dig("reason")&.humanize, @verification_rejection_reason&.dig("details")].compact_blank.join(": ").presence %>
-      <%= render StateCardComponent.new(
-        title: "one more try!",
-        description: "we need you to resubmit your ID verification..." + (rejection_message ? " #{rejection_message}" : ""),
-        variant: :danger,
-        badge_text: "action needed",
-        icon: "info",
-        cta_text: "verify again",
-        cta_href: HCAService.verify_portal_url(return_to: home_url)
-      ) %>
-    </div>
-  <% end %>
-  <% if Date.current < Date.new(2026, 3, 9) && current_user&.ref == "willsbuilds" && !current_user&.has_dismissed?("willsbuilds_banner") %>
-    <div class="willsbuilds-banner">
-      <%= link_to "/shop/order?shop_item_id=101", class: "willsbuilds-banner__link" do %>
-        <%= image_tag "willsbuilds.jpg", alt: "Willsbuilds", class: "willsbuilds-banner__image" %>
-        <span class="willsbuilds-banner__text">
-          <span class="willsbuilds-banner__title">WillsBuilds' Items</span>
-          <span class="willsbuilds-banner__subtitle">now in the shop!</span>
-        </span>
-      <% end %>
-      <button class="willsbuilds-banner__close" aria-label="Dismiss" data-dismiss-url="<%= my_dismissals_path %>" onclick="fetch(this.dataset.dismissUrl, {method: 'POST', headers: {'X-CSRF-Token': document.querySelector('meta[name=csrf-token]').content, 'Content-Type': 'application/x-www-form-urlencoded'}, body: 'thing_name=willsbuilds_banner'}); this.closest('.willsbuilds-banner').remove();">
-        <%= inline_svg_tag "icons/close.svg" %>
-      </button>
-    </div>
-  <% end %>
-
-  <button class="home-open-sauce" data-controller="modal" data-modal-target-value="home-opensauce-modal" data-action="click->modal#open">
-    <%= image_tag "opensauce_left.avif", alt: "William Osman's Coke", class: "home-open-sauce__left-image" %>
-    <h2>Hack Club x Open Sauce</h2>
-    <h3>new items <span>available!</span></h3>
-    <%= image_tag "opensauce_right.avif", alt: "William Osman's Coke", class: "home-open-sauce__right-image" %>
-  </button>
-
-  <dialog id="home-opensauce-modal" class="modal" data-controller="modal">
-    <h3 class="modal__title" style="border-radius: calc(var(--border-radius)*.6);">Hack Club x Open Sauce</h3>
-    <h4>
-      <p>Hack Club has partnered with Open Sauce to bring you free tickets and travel scholarships to Open Sauce 2026! Get them from the shop. Bonus: You can now also buy William Osman's <a href="https://www.youtube.com/watch?v=1qzcum2P1Ko" target="_blank" rel="noopener noreferrer">pirated coke</a>!</p>
-      <%= link_to "Go to the shop", "/shop", class: "modal__button" %>
-      <%= image_tag "landing-page-opensauce.avif", alt: "Modal Image", class: "modal__image" %>
-    </h4>
-  </dialog>
-
-  <div class="home-announcement">
-    <%= render AnnouncementComponent.new(
-      image: "flavortown_apr11_sticker.avif",
-      title: "Get a free sticker!",
-      description: "Ship a project (or reship an existing one) before Sunday, April 12th (7:00 PM EST) and we'll send you an awesome sticker!"
-    ) %>
-  </div>
-
-  <div class="home-setup">
-    <%= render HomeTutorialStepsComponent.new(
-      tutorial_steps: @tutorial_steps,
-      completed_steps: @completed_steps,
-      current_user: current_user
-    ) %>
-  </div>
-  <%= link_to "https://pyramid.hackclub.com/c/flavortown/?ref=ft-dash", class: "home-pyramid-banner", target: "_blank", rel: "noopener noreferrer" do %>
-    <%= image_tag "pyramid/logo.png", alt: "Pyramid Scheme icon", class: "home-pyramid-banner__icon" %>
-    <span class="home-pyramid-banner__copy">
-      <span class="home-pyramid-banner__title">Referral Program: Pyramid Scheme</span>
-      <span class="home-pyramid-banner__text">Get a Stardance referral link and invite your friends, put up posters and make videos to earn additional prizes!</span>
-    </span>
-    <span class="home-pyramid-banner__cta" aria-hidden="true">↗</span>
-  <% end %>
-  <section class="home-flavortime-banner" aria-label="Flavortime">
-    <div class="home-flavortime-banner__content">
-      <h2 class="home-flavortime-banner__title">Flavortime <%= image_tag "flavortime/clock-icon.png", alt: "", class: "home-flavortime-banner__title-icon", aria: { hidden: true } %></h2>
-      <p class="home-flavortime-banner__text">Share your referral link and/or time spent coding on Discord!</p>
-      <div class="home-flavortime-banner__downloads">
-        <%= link_to flavortime_download_links[default_download_platform],
-            class: "home-flavortime-banner__primary-download",
-            target: "_blank",
-            rel: "noopener noreferrer" do %>
-          <svg class="home-flavortime-banner__download-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
-          <span class="home-flavortime-banner__download-label">Download for <%= platform_short_labels[default_download_platform] %> <span class="home-flavortime-banner__download-detail">(<%= platform_details[default_download_platform] %>)</span></span>
-        <% end %>
-        <p class="home-flavortime-banner__download-links">
-          <span class="home-flavortime-banner__download-prefix">Alternatively,</span> download for
-          <% other_platforms = %i[macos windows linux].reject { |p| p == default_download_platform } %>
-          <% other_platforms.each_with_index do |platform, i| %>
-            <%= link_to platform_labels[platform], flavortime_download_links[platform], class: "home-flavortime-banner__download-link", target: "_blank", rel: "noopener noreferrer" %>
-            <% if i < other_platforms.length - 1 %>
-              <span class="home-flavortime-banner__download-separator">|</span>
+        <% if index.zero? && @recommended_projects.any? %>
+          <%= render Feed::ShelfComponent.new(
+                title: "Recommended projects",
+                items: @recommended_projects
+              ) do |shelf| %>
+            <% @recommended_projects.each do |project| %>
+              <% shelf.with_item do %>
+                <%= render Projects::ShelfCardComponent.new(project: project) %>
+              <% end %>
             <% end %>
           <% end %>
-        </p>
-      </div>
-    </div>
-    <%= image_tag "flavortime/flavortime-background.webp", alt: "Flavortime mascot", class: "home-flavortime-banner__mascot" %>
-  </section>
-  <% if current_user.verification_pending? %>
-    <div class="home-verification-notice home-verification-notice--compact">
-      <%= render StateCardComponent.new(
-        title: "Verification Pending",
-        description: "Your identity verification is being reviewed. This usually takes a few days.",
-        variant: :warning,
-        badge_text: "Pending",
-        icon: "time"
-      ) %>
-    </div>
-  <% end %>
-  <% end %>
-  <% if Flipper.enabled?(:kitchen_comic, current_user) %>
-    <div class="home-comic">
-      <%= image_tag "kitchen_comic/title.avif", alt: "How to Stardance", class: "home-comic__title" %>
-      <div class="home-comic__cards">
-        <%= render ComicCardComponent.new(
-          image: "kitchen_comic/1.avif",
-          alt: "Get an idea",
-          caption: "Get an idea!",
-          modal_title: "Get an idea!",
-          step_num: 1,
-          modal_text: "<p>You can make anything — software or hardware (or both) — as long as you can track it using <a href='https://hackatime.hackclub.com' target='_blank'>Hackatime</a>, our very own software to track time spent hacking!</p>"
-        ) %>
-        <%= image_tag "kitchen_comic/arrow.avif", alt: "Arrow", class: "home-comic__arrow" %>
-        <%= render ComicCardComponent.new(
-          image: "kitchen_comic/2.avif",
-          alt: "Make your project",
-          caption: "Make your project!",
-          modal_title: "Make your project!",
-          step_num: 2,
-          modal_text: "<p>Set up Hackatime using <a href='https://hackatime.hackclub.com/my/wakatime_setup' target='_blank'>these</a> instructions and log your hours using devlogs — simple posts with text + images/videos that you post after making significant progress on your project. Remember to post these devlogs regularly — not posting a devlog after logging over 10 hours might result in your time being lost!</p>"
-        ) %>
-        <%= image_tag "kitchen_comic/arrow.avif", alt: "Arrow", class: "home-comic__arrow" %>
-        <%= render ComicCardComponent.new(
-          image: "kitchen_comic/3.avif",
-          alt: "Ship your project",
-          caption: "Ship your project!",
-          modal_title: "Ship your project!",
-          step_num: 3,
-          modal_text: "<p>Once your project is in a shipable state (i.e. you have a way for others to experience it through a website, app binary, etc.) — ship it! Once shipped, you must wait for your project to be approved by the <a href='https://us.review.hackclub.com' target='_blank'>Shipwrights</a>. This can take a few days (check the queue <a href='https://us.review.hackclub.com/queue' target='_blank'>here</a>) but don't worry — all they do is check if your project is shipable with the correct links, and sometimes give you helpful advice to improve it!</p><br><p>Lastly, always remember that while projects have to be demo-ready before being shipped, you can always continue working on them afterwards and re-ship.</p>"
-        ) %>
-        <%= image_tag "kitchen_comic/arrow.avif", alt: "Arrow", class: "home-comic__arrow" %>
-        <%= render ComicCardComponent.new(
-          image: "kitchen_comic/4.avif",
-          alt: "Vote on projects",
-          caption: "Vote on projects!",
-          modal_title: "Vote on projects!",
-          step_num: 4,
-          modal_text: "<p>You're almost ready to get Stardust for the hours you spent on your project — you just have to vote to unlock the payout! Voting is done by rating each project on a bunch of simple metrics:</p> <ul><li><b>Originality:</b> Is the project innovative and original, or just a clone of an overused concept?</li><li><b>Technical:</b> How complex is the project? Did the author use new frameworks or learn something cool?</li><li><b>Usability:</b> Is the project easy and fun to use, or is it buggy and frustrating?</li><li><b>Storytelling:</b> Does the author devlog regularly? Is the development timeline fun to scroll through?</li></ul> <p>Voting is done so people (including you) making good projects get more Stardust per hour. For every project shipped, you must vote on 14 projects to get Stardust!</p>"
-        ) %>
-        <%= image_tag "kitchen_comic/arrow.avif", alt: "Arrow", class: "home-comic__arrow" %>
-        <%= render ComicCardComponent.new(
-          image: "kitchen_comic/5.avif",
-          alt: "Earn Stardust",
-          caption: "Earn Stardust!",
-          modal_title: "Earn Stardust!",
-          step_num: 5,
-          modal_text: "<p>Congratulations! You're now ready to get Stardust for your hard work. You earn anywhere between 1 to 30 Stardust per each hour you hack on a project — the better your project does in voting, the more Stardust you get! Make sure to ship high quality projects to get bigger payouts.</p>"
-        ) %>
-        <%= image_tag "kitchen_comic/arrow.avif", alt: "Arrow", class: "home-comic__arrow" %>
-        <%= render ComicCardComponent.new(
-          image: "kitchen_comic/6.avif",
-          alt: "Win prizes",
-          caption: "Win prizes!",
-          modal_title: "Win prizes!",
-          step_num: 6,
-          modal_text: %q{<p>Once you've earned enough Stardust, you can place an order in the <a href='https://flavortown.hackclub.com/shop'>Shop</a>! You can get anything from domain grants and Raspberry Pi's to iPads and Macbooks.</p><br><p>After placing an order, you must wait again for it to be reviewed by the Fraud Squad — they just check to make sure nothing fishy is going on. Unfortunately, considering the scale at which Hack Club operates, we sometimes get bad actors trying to defraud our nonprofit, thus deeming this step necessary, especially for larger prizes. But you can rest easy — if you don't try do anything wrong, you'll never get in trouble!</p><br><p>One last thing: Hack Club always pays for shipping, but some special prizes may incur customs (a charge levied by your country's government on imported goods) if you live outside the US — which we will not be able to cover. Don't worry though, you'll know which items may incur customs during checkout so you can make an informed decision!</p>}
-        ) %>
-        <%= image_tag "kitchen_comic/arrow.avif", alt: "Arrow", class: "home-comic__arrow" %>
-      </div>
-    </div>
-  <% end %>
-  <div class="home-stats">
-    <%= render HomeStatsComponent.new(user: current_user) %>
-  </div>
-  <% if @recently_added_items.any? %>
-    <section class="home-recently-added">
-      <div class="home-recently-added__header">
-        <h2 class="home-recently-added__title">Recently Added to Shop</h2>
-        <p class="home-recently-added__subtitle">fresh off the shelf, check these out!</p>
-      </div>
-      <div class="home-recently-added__items">
-        <% @recently_added_items.each do |item| %>
-          <% next unless item.image.present? && item.enabled_in_region?(@user_region) %>
-          <% sale_price = item.price_for_region(@user_region) %>
-          <%= render ShopItemCardComponent.new(
-            item_id: item.id,
-            name: item.name,
-            description: item.description,
-            hours: item.fixed_estimate(sale_price).to_i,
-            price: item.ticket_cost,
-            image_url: item.image.variant(:carousel_lg),
-            item_type: item.type,
-            balance: @user_balance,
-            enabled_regions: item.enabled_region_codes,
-            regional_price: sale_price,
-            logged_in: current_user.present?,
-            remaining_stock: item.remaining_stock,
-            limited: item.limited?,
-            on_sale: item.on_sale?,
-            sale_percentage: item.sale_percentage,
-            original_price: item.base_price_for_region(@user_region),
-            created_at: item.created_at,
-            show_bow: true,
-            show_time_ago: true,
-            enabled_until: item.enabled_until
-          ) %>
         <% end %>
-      </div>
-    </section>
-  <% end %>
-  <div class="home-help">
-    <%= render HomeHelpCardsComponent %>
-  </div>
+      <% end %>
+    <% else %>
+      <% if @recommended_projects.any? %>
+        <%= render Feed::ShelfComponent.new(
+              title: "Recommended projects",
+              items: @recommended_projects
+            ) do |shelf| %>
+          <% @recommended_projects.each do |project| %>
+            <% shelf.with_item do %>
+              <%= render Projects::ShelfCardComponent.new(project: project) %>
+            <% end %>
+          <% end %>
+        <% end %>
+      <% end %>
+
+      <p class="feed-home__empty">No devlogs yet. Post what you are working on to start the feed.</p>
+    <% end %>
+  </main>
+
+  <%= render DiscoverRailComponent.new %>
 </div>

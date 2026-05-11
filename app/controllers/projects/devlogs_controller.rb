@@ -149,7 +149,7 @@ class Projects::DevlogsController < ApplicationController
 
   def require_hackatime_project
     unless @project.hackatime_keys.present?
-      redirect_to edit_project_path(@project), alert: "You must link at least one Hackatime project before posting a devlog" and return
+      redirect_to @project, alert: "You must link at least one Hackatime project before posting a devlog" and return
     end
   end
 

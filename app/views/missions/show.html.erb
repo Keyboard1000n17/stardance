@@ -1,0 +1,92 @@
+<% content_for :title, @mission.name %>
+<% content_for :og_title, "#{@mission.name} — Stardance Mission" %>
+<% content_for :og_description, truncate(@mission.description.to_s, length: 200) %>
+<% content_for :og_image, mission_og_image_url(@mission.slug, format: :png) rescue nil %>
+
+<div class="app-layout">
+  <div class="app-layout__main">
+    <article class="mission-show">
+      <% if @mission.banner.attached? %>
+        <div class="mission-show__banner">
+          <%= image_tag @mission.banner, alt: "", class: "mission-show__banner-img" %>
+        </div>
+      <% end %>
+
+      <header class="mission-show__header">
+        <% if @mission.icon.attached? %>
+          <div class="mission-show__icon">
+            <%= image_tag @mission.icon, alt: "" %>
+          </div>
+        <% end %>
+
+        <div class="mission-show__heading">
+          <p class="mission-show__breadcrumb">
+            <%= link_to "Missions", missions_path, class: "mission-show__breadcrumb-link" %>
+            <% if policy(@mission).manage? %>
+              · <%= link_to "Manage", edit_manage_mission_path(@mission.slug), class: "mission-show__breadcrumb-link" %>
+            <% end %>
+          </p>
+          <h1 class="mission-show__title"><%= @mission.name %></h1>
+
+          <% if @mission.difficulty.present? %>
+            <p class="mission-show__tags">
+              <span class="mission-tag mission-tag--difficulty mission-tag--difficulty-<%= @mission.difficulty %>"><%= @mission.difficulty.titleize %></span>
+            </p>
+          <% end %>
+
+          <% unless @mission.available_to_builders? %>
+            <p class="mission-show__windowed-banner">
+              <% if @mission.coming_soon? %>
+                ⏳ Starts <%= @mission.start_at.strftime("%b %-d, %Y") %>.
+              <% elsif @mission.ended? %>
+                ⛳ This mission ended <%= time_ago_in_words(@mission.end_at) %> ago.
+              <% else %>
+                🚫 This mission is currently disabled.
+              <% end %>
+            </p>
+          <% end %>
+        </div>
+      </header>
+
+      <section class="mission-show__description">
+        <%= md(@mission.description) %>
+      </section>
+
+      <% if @ordered_prizes.any? %>
+        <section class="mission-show__prizes" aria-labelledby="mission-show-prizes">
+          <h2 id="mission-show-prizes" class="mission-show__section-title">Prizes</h2>
+          <ul class="mission-show__prize-list">
+            <% @ordered_prizes.each do |prize| %>
+              <li class="mission-show__prize">
+                <strong><%= prize.shop_item.name %></strong>
+                <% if prize.shop_item.description.present? %>
+                  <span class="mission-show__prize-description"><%= prize.shop_item.description %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+          <p class="mission-show__prizes-note">
+            Approved submissions can redeem one prize. You'll pick which prize at redemption time.
+          </p>
+        </section>
+      <% end %>
+
+      <% if @ordered_steps.any? %>
+        <section class="mission-show__steps" aria-labelledby="mission-show-steps">
+          <h2 id="mission-show-steps" class="mission-show__section-title">Guide</h2>
+          <ol class="mission-show__step-list">
+            <% @ordered_steps.each_with_index do |step, idx| %>
+              <li class="mission-show__step">
+                <div class="mission-show__step-eyebrow">Step <%= idx + 1 %></div>
+                <h3 class="mission-show__step-title"><%= step.title %></h3>
+                <div class="mission-show__step-body"><%= md(step.body) %></div>
+              </li>
+            <% end %>
+          </ol>
+        </section>
+      <% end %>
+    </article>
+  </div>
+
+  <%= render "shared/discover_rail" rescue nil %>
+</div>

@@ -36,6 +36,24 @@
     }
   }
 
+  &--mission-locked {
+    opacity: 0.8;
+    filter: grayscale(30%);
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  &__mission-requirement {
+    font-size: 0.85rem;
+    color: var(--color-brown-700, #6b3a1a);
+    background: var(--color-yellow-soft, rgba(251, 191, 36, 0.18));
+    padding: 4px 8px;
+    border-radius: 6px;
+    margin-top: var(--space-xs);
+  }
+
   &--on-sale {
     border: 2px solid #dc2626;
   }

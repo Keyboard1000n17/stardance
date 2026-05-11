@@ -1,0 +1,51 @@
+<% content_for :title, "Missions" %>
+<% content_for :og_title, "Missions on Stardance" %>
+<% content_for :og_description, "Themed tracks with optional guides and prizes — pick a mission, ship a project, get reviewed." %>
+
+<div class="app-layout">
+  <div class="app-layout__main">
+    <header class="missions-index__header">
+      <h1 class="missions-index__title">Missions</h1>
+      <p class="missions-index__lede">
+        Pick a themed track, ship a project under it, and get reviewed. Some missions hand out static prizes; all of them count toward shop unlocks when approved.
+      </p>
+    </header>
+
+    <% if @available_missions.any? %>
+      <section class="missions-index__section" aria-labelledby="missions-index-available">
+        <h2 id="missions-index-available" class="missions-index__section-title">Available now</h2>
+        <ul class="missions-index__grid">
+          <% @available_missions.each do |mission| %>
+            <li><%= render "missions/mission_card", mission: mission %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% else %>
+      <p class="missions-index__empty">No missions are available right now — check back soon.</p>
+    <% end %>
+
+    <% if @upcoming_missions.any? %>
+      <section class="missions-index__section" aria-labelledby="missions-index-upcoming">
+        <h2 id="missions-index-upcoming" class="missions-index__section-title">Coming soon</h2>
+        <ul class="missions-index__grid">
+          <% @upcoming_missions.each do |mission| %>
+            <li><%= render "missions/mission_card", mission: mission, badge: "Starts #{mission.start_at.strftime('%b %-d')}" %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+
+    <% if @ended_missions.any? %>
+      <section class="missions-index__section missions-index__section--past" aria-labelledby="missions-index-past">
+        <h2 id="missions-index-past" class="missions-index__section-title">Past missions</h2>
+        <ul class="missions-index__grid">
+          <% @ended_missions.each do |mission| %>
+            <li><%= render "missions/mission_card", mission: mission, badge: "Ended" %></li>
+          <% end %>
+        </ul>
+      </section>
+    <% end %>
+  </div>
+
+  <%= render "shared/discover_rail" rescue nil %>
+</div>

@@ -1,0 +1,9 @@
+header ":x: Your mission submission was rejected"
+
+section "*<#{mission_url}|#{mission_name}>* — your submission for *<#{project_url}|#{project_title}>* was rejected.", markdown: true
+
+section "*Reason:* #{rejection_message}", markdown: true
+
+actions [
+  button("View submission", "view_submission", url: submission_url)
+]

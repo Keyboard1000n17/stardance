@@ -36,6 +36,7 @@
 #  limited                           :boolean
 #  long_description                  :text
 #  max_qty                           :integer
+#  mission_prize_only                :boolean          default(FALSE), not null
 #  name                              :string
 #  old_prices                        :integer          default([]), is an Array
 #  one_per_person_ever               :boolean
@@ -76,6 +77,7 @@
 #
 #  index_shop_items_on_created_by_user_id        (created_by_user_id)
 #  index_shop_items_on_default_assigned_user_id  (default_assigned_user_id)
+#  index_shop_items_on_mission_prize_only        (mission_prize_only)
 #  index_shop_items_on_user_id                   (user_id)
 #
 # Foreign Keys
@@ -103,7 +105,7 @@ class ShopItem < ApplicationRecord
 
   def self.cached_shop_page_data
     Rails.cache.fetch(SHOP_PAGE_CACHE_KEY, expires_in: 5.minutes) do
-      buyable = enabled.listed.buyable_standalone.includes(image_attachment: :blob).to_a
+      buyable = enabled.listed.buyable_standalone.where(mission_prize_only: false).includes(image_attachment: :blob).to_a
       item_ids = buyable.map(&:id)
 
       reserved_counts = ShopOrder
@@ -195,6 +197,11 @@ class ShopItem < ApplicationRecord
   validate :validate_achievement_slugs
 
   has_many :shop_orders, dependent: :restrict_with_error
+
+  has_many :mission_prizes,        class_name: "Mission::Prize",      dependent: :restrict_with_error
+  has_many :prize_missions,        through: :mission_prizes, source: :mission
+  has_many :mission_shop_unlocks,  class_name: "Mission::ShopUnlock", dependent: :destroy
+  has_many :unlocking_missions,    through: :mission_shop_unlocks, source: :mission
 
   def agh_contents=(value)
     if value.is_a?(String) && value.present?
@@ -303,6 +310,16 @@ class ShopItem < ApplicationRecord
 
   def required_achievement_objects
     requires_achievement.map { |slug| Achievement.find(slug) }
+  end
+
+  # True iff this item is gated by mission_shop_unlocks AND the user has not
+  # completed any of the unlocking missions yet. Items with no shop_unlocks
+  # are never mission-locked; mission_prize_only items are unlocked by
+  # showing up via the redemption flow, not this gate.
+  def mission_locked_for?(user)
+    return false unless mission_shop_unlocks.exists?
+    return true unless user
+    (unlocking_missions.pluck(:id) & user.completed_mission_ids.to_a).empty?
   end
 
   private

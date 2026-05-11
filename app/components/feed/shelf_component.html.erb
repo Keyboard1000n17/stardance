@@ -1,0 +1,16 @@
+<section class="feed-shelf" aria-label="<%= title %>">
+  <div class="feed-shelf__header">
+    <h2 class="feed-shelf__title"><%= title %></h2>
+    <% if href.present? %>
+      <%= link_to "see more", href, class: "feed-shelf__link" %>
+    <% end %>
+  </div>
+
+  <div class="feed-shelf__rail">
+    <% items.each do |item| %>
+      <div class="feed-shelf__item">
+        <%= item %>
+      </div>
+    <% end %>
+  </div>
+</section>

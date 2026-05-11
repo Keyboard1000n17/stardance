@@ -1,6 +1,16 @@
 .shop-order {
   margin-top: 2em;
 
+  &__redemption-banner {
+    margin-bottom: var(--space-m);
+    padding: var(--space-s) var(--space-m);
+    border-radius: 10px;
+    background: var(--color-yellow-soft, rgba(251, 191, 36, 0.2));
+    border: 1px solid var(--color-yellow-450, #fbbf24);
+    color: var(--color-brown-700);
+    font-size: 0.95rem;
+  }
+
   &__back {
     margin-bottom: 1.5rem;
     width: 100%;

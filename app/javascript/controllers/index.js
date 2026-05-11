@@ -85,9 +85,6 @@ application.register("markdown-preview", MarkdownPreviewController);
 import ModalController from "./modal_controller";
 application.register("modal", ModalController);
 
-import MusicPlayerController from "./music_player_controller";
-application.register("music-player", MusicPlayerController);
-
 import NavHistoryController from "./nav_history_controller";
 application.register("nav-history", NavHistoryController);
 
@@ -108,6 +105,9 @@ application.register("profile-edit", ProfileEditController);
 
 import ProfileModalController from "./profile_modal_controller";
 application.register("profile-modal", ProfileModalController);
+
+import ProjectCreationController from "./project_creation_controller";
+application.register("project-creation", ProjectCreationController);
 
 import ProjectFireController from "./project_fire_controller";
 application.register("project-fire", ProjectFireController);

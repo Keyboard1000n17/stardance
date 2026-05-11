@@ -17,8 +17,6 @@
   <% end %>
 <% end %>
 
-<%= render MusicPlayerComponent.new(audio_urls: [audio_path("fireentity - shop.mp3"), audio_path("fireentity - voting.mp3"),audio_path("fireentity - explore.mp3")], default_index: 1) %>
-
 <div class="votes-new">
   <% if @project.nil? %>
     <p class="votes-new__no-projects">No more projects to vote on!</p>

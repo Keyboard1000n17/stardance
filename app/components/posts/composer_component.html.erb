@@ -1,0 +1,66 @@
+<section class="feed-composer" aria-label="Create a devlog">
+  <div class="feed-composer__chips" aria-label="Posting project">
+    <% visible_projects.each do |project| %>
+      <% selected = project == selected_project %>
+      <%= link_to project.title,
+            home_path(project_id: project.id),
+            class: class_names("feed-composer__chip", "feed-composer__chip--active": selected),
+            aria: (selected ? { current: "true" } : {}) %>
+    <% end %>
+
+    <%= link_to "new project +", new_project_path, class: "feed-composer__chip feed-composer__chip--new" %>
+  </div>
+
+  <% if enabled? %>
+    <%= form_with model: [selected_project, post],
+          url: project_devlogs_path(selected_project),
+          html: { multipart: true, data: { controller: "upload-form" } },
+          class: "feed-composer__form",
+          local: true do |f| %>
+      <div class="feed-composer__main">
+        <%= image_tag current_user.avatar, alt: "", class: "feed-composer__avatar" %>
+
+        <div class="feed-composer__field">
+          <%= f.label :body, "What are you working on?", class: "feed-composer__label" %>
+          <%= f.text_area :body,
+                class: "feed-composer__textarea",
+                rows: 3,
+                maxlength: Post::Devlog::BODY_MAX_LENGTH,
+                placeholder: "What are you working on?",
+                aria: { label: "Devlog text" } %>
+        </div>
+      </div>
+
+      <div class="feed-composer__footer">
+        <div class="feed-composer__tools">
+          <label class="feed-composer__tool" aria-label="Attach media">
+            <%= inline_svg_tag "icons/paper.svg", class: "feed-composer__tool-icon" %>
+            <%= f.file_field :attachments,
+                  multiple: true,
+                  accept: Post::Devlog::ACCEPTED_CONTENT_TYPES.join(","),
+                  class: "feed-composer__file-input" %>
+          </label>
+
+          <button type="button" class="feed-composer__tool" aria-label="Emoji picker">
+            <%= inline_svg_tag "icons/star_outline.svg", class: "feed-composer__tool-icon" %>
+          </button>
+        </div>
+
+        <%= render ButtonComponent.new(
+              text: "Post",
+              color: :bg_yellow,
+              type: :submit,
+              disable_with: "Posting...",
+              class: "feed-composer__submit",
+              data: { "upload-form-target": "submit" }
+            ) %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="feed-composer__empty">
+      <%= image_tag current_user.avatar, alt: "", class: "feed-composer__avatar" %>
+      <p class="feed-composer__empty-copy">Create a project before posting your first devlog.</p>
+      <%= render ButtonComponent.new(text: "New project", color: :bg_yellow, href: new_project_path, class: "feed-composer__submit") %>
+    </div>
+  <% end %>
+</section>

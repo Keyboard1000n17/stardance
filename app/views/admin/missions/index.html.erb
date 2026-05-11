@@ -1,0 +1,42 @@
+<% content_for :title, "Admin · Missions" %>
+
+<div class="admin-missions">
+  <header class="admin-missions__header">
+    <h1>Missions</h1>
+    <%= link_to "New mission", new_admin_mission_path, class: "btn btn--green" %>
+  </header>
+
+  <nav class="admin-missions__filter">
+    <%= link_to "All", admin_missions_path %> ·
+    <%= link_to "Disabled", admin_missions_path(filter: "disabled") %> ·
+    <%= link_to "Deleted", admin_missions_path(filter: "deleted") %>
+  </nav>
+
+  <table class="admin-missions__table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Slug</th>
+        <th>Enabled</th>
+        <th>Window</th>
+        <th>Submissions</th>
+        <th>Deleted</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% @missions.each do |m| %>
+        <tr>
+          <td><%= link_to m.name, admin_mission_path(m.slug) %></td>
+          <td><code><%= m.slug %></code></td>
+          <td><%= m.enabled? ? "yes" : "no" %></td>
+          <td>
+            <%= m.start_at&.to_date %> →
+            <%= m.end_at&.to_date %>
+          </td>
+          <td><%= @submission_counts[m.id] || 0 %></td>
+          <td><%= m.deleted_at? ? "deleted #{time_ago_in_words(m.deleted_at)} ago" : "—" %></td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>
