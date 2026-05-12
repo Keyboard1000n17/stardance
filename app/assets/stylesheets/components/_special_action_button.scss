@@ -1,0 +1,103 @@
+.special-action-btn {
+  --special-action-btn-fill: var(--color-brand-highlight);
+
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 24px;
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background: var(--special-action-btn-fill);
+  background-clip: padding-box;
+  outline: 2px solid var(--special-action-btn-fill);
+  outline-offset: 0;
+  color: var(--color-set-1-bg);
+  font-family: var(--font-family-text);
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  cursor: pointer;
+  isolation: isolate;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    background-color 200ms ease,
+    outline-color 200ms ease,
+    outline-offset 200ms ease,
+    color 200ms ease;
+
+  &__star {
+    position: absolute;
+    top: 50%;
+    right: -40px;
+    width: 100px;
+    height: 100px;
+    transform: translateY(-50%) rotate(-18deg);
+    z-index: -1;
+    fill: var(--special-action-btn-fill);
+    transform-origin: 50% 50%;
+    pointer-events: none;
+    transition:
+      transform 250ms ease,
+      fill 200ms ease;
+  }
+
+  &__label {
+    position: relative;
+    z-index: 1;
+  }
+
+  &__icon {
+    position: relative;
+    z-index: 1;
+    width: 18px;
+    height: 18px;
+    fill: currentColor;
+    transition: transform 200ms ease;
+  }
+
+  &:hover {
+    --special-action-btn-fill: var(--color-brand-highlight-secondary);
+    outline-offset: 2px;
+
+    .special-action-btn__star {
+      transform: translateY(-50%) rotate(54deg);
+    }
+
+    .special-action-btn__icon {
+      transform: translateX(10px);
+    }
+  }
+
+  &:focus-visible {
+    --special-action-btn-fill: var(--color-brand-highlight-secondary);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(255, 229, 100, 0.45);
+
+    .special-action-btn__star {
+      transform: translateY(-50%) rotate(54deg);
+    }
+
+    .special-action-btn__icon {
+      transform: translateX(10px);
+    }
+  }
+
+  &:active {
+    --special-action-btn-fill: #ffffff;
+    outline-offset: -2px;
+
+    .special-action-btn__star {
+      transform: translateY(-50%) rotate(54deg);
+    }
+  }
+
+  &:disabled,
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
