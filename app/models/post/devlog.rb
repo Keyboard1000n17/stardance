@@ -14,10 +14,16 @@
 #  tutorial                        :boolean          default(FALSE), not null
 #  created_at                      :datetime         not null
 #  updated_at                      :datetime         not null
+#  devlog_review_id                :bigint
 #
 # Indexes
 #
-#  index_post_devlogs_on_deleted_at  (deleted_at)
+#  index_post_devlogs_on_deleted_at        (deleted_at)
+#  index_post_devlogs_on_devlog_review_id  (devlog_review_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (devlog_review_id => devlog_reviews.id)
 #
 class Post::Devlog < ApplicationRecord
   include Postable
@@ -31,6 +37,9 @@ class Post::Devlog < ApplicationRecord
 
   # Version history
   has_many :versions, class_name: "DevlogVersion", foreign_key: :devlog_id, dependent: :destroy
+
+  # Review association
+  has_one :devlog_review, foreign_key: :post_devlog_id, dependent: :destroy
 
   ACCEPTED_CONTENT_TYPES = %w[
     image/jpeg

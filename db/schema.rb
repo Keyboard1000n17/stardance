@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_12_000005) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -163,6 +163,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.index ["commentable_type", "commentable_id", "created_at"], name: "index_comments_on_commentable_and_created_at"
     t.index ["commentable_type", "commentable_id"], name: "index_comments_on_commentable"
     t.index ["user_id"], name: "index_comments_on_user_id"
+  end
+
+  create_table "devlog_reviews", force: :cascade do |t|
+    t.integer "approved_minutes"
+    t.datetime "created_at", null: false
+    t.text "justification"
+    t.integer "original_minutes"
+    t.bigint "post_devlog_id", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "ysws_review_id", null: false
+    t.index ["post_devlog_id"], name: "index_devlog_reviews_on_post_devlog_id"
+    t.index ["ysws_review_id"], name: "index_devlog_reviews_on_ysws_review_id"
   end
 
   create_table "devlog_versions", force: :cascade do |t|
@@ -429,6 +441,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.integer "comments_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "deleted_at"
+    t.bigint "devlog_review_id"
     t.integer "duration_seconds"
     t.text "hackatime_projects_key_snapshot"
     t.datetime "hackatime_pulled_at"
@@ -437,6 +450,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.boolean "tutorial", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_post_devlogs_on_deleted_at"
+    t.index ["devlog_review_id"], name: "index_post_devlogs_on_devlog_review_id"
   end
 
   create_table "post_fire_events", force: :cascade do |t|
@@ -1007,9 +1021,36 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.index ["verdict"], name: "index_votes_on_verdict"
   end
 
+  create_table "ysws_reviews", force: :cascade do |t|
+    t.datetime "airtable_synced_at", precision: nil
+    t.integer "approved_minutes"
+    t.datetime "created_at", null: false
+    t.datetime "demo_checked_at", precision: nil
+    t.integer "original_minutes"
+    t.bigint "post_ship_event_id", null: false
+    t.bigint "project_id", null: false
+    t.datetime "repo_checked_at", precision: nil
+    t.datetime "reviewed_at", precision: nil
+    t.bigint "reviewer_id", null: false
+    t.bigint "ship_cert_id"
+    t.datetime "spotchecked_at", precision: nil
+    t.bigint "spotchecked_by_id"
+    t.text "summary_justification"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["post_ship_event_id"], name: "index_ysws_reviews_on_post_ship_event_id"
+    t.index ["project_id"], name: "index_ysws_reviews_on_project_id"
+    t.index ["reviewer_id"], name: "index_ysws_reviews_on_reviewer_id"
+    t.index ["ship_cert_id"], name: "index_ysws_reviews_on_ship_cert_id"
+    t.index ["spotchecked_by_id"], name: "index_ysws_reviews_on_spotchecked_by_id"
+    t.index ["user_id"], name: "index_ysws_reviews_on_user_id"
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "comments", "users"
+  add_foreign_key "devlog_reviews", "post_devlogs"
+  add_foreign_key "devlog_reviews", "ysws_reviews"
   add_foreign_key "devlog_versions", "post_devlogs", column: "devlog_id"
   add_foreign_key "devlog_versions", "users"
   add_foreign_key "flavortime_sessions", "users"
@@ -1036,6 +1077,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   add_foreign_key "mission_submissions", "post_ship_events", column: "ship_event_id"
   add_foreign_key "mission_submissions", "shop_orders"
   add_foreign_key "mission_submissions", "users", column: "reviewed_by_id"
+  add_foreign_key "post_devlogs", "devlog_reviews"
   add_foreign_key "posts", "projects"
   add_foreign_key "posts", "users"
   add_foreign_key "project_follows", "projects"
@@ -1055,7 +1097,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   add_foreign_key "shop_card_grants", "shop_items"
   add_foreign_key "shop_card_grants", "users"
   add_foreign_key "shop_items", "users"
-  add_foreign_key "shop_items", "users", column: "created_by_user_id", on_delete: :nullify
+  add_foreign_key "shop_items", "users", column: "created_by_user_id", on_delete: :nullify, validate: false
   add_foreign_key "shop_items", "users", column: "default_assigned_user_id", on_delete: :nullify
   add_foreign_key "shop_order_reviews", "shop_orders"
   add_foreign_key "shop_order_reviews", "users"
@@ -1080,4 +1122,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   add_foreign_key "votes", "post_ship_events", column: "ship_event_id"
   add_foreign_key "votes", "projects"
   add_foreign_key "votes", "users"
+  add_foreign_key "ysws_reviews", "post_ship_events"
+  add_foreign_key "ysws_reviews", "post_ship_events", column: "ship_cert_id"
+  add_foreign_key "ysws_reviews", "projects"
+  add_foreign_key "ysws_reviews", "users"
+  add_foreign_key "ysws_reviews", "users", column: "reviewer_id"
+  add_foreign_key "ysws_reviews", "users", column: "spotchecked_by_id"
 end
