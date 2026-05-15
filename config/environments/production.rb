@@ -70,7 +70,7 @@ Rails.application.configure do
   # config.action_mailer.raise_delivery_errors = false
 
   # Set host to be used by links generated in mailer templates and URL helpers (e.g. sitemap job).
-  config.action_controller.default_url_options = { host: "jool.cskartikey", protocol: "https" }
+  config.action_controller.default_url_options = { host: "jool.cskartikey.dev", protocol: "https" }
   config.action_mailer.default_url_options = { host: "stardance.hackclub.com", protocol: "https" }
 
   # Configure Loops SMTP for transactional emails
