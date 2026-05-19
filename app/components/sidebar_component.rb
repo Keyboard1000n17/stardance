@@ -48,7 +48,7 @@ class SidebarComponent < ViewComponent::Base
     items << { slug: "fulfil",  label: "fulfil",  path: helpers.admin_shop_orders_path(view: "fulfillment"), icon: "shopping_cart_1_fill" } if user.fulfillment_person? && !user.admin?
     items << { slug: "seller",  label: "seller",  path: helpers.seller_orders_path, icon: "shopping_cart_1_fill" } if user.seller?
     items << { slug: "helper",  label: "helper",  path: helpers.helper_root_path, icon: "help" } if helpers.policy(:helper).access_helper_dashboard?
-    items << { slug: "certify", label: "certify", path: helpers.reviewer_ships_path, icon: "ship" } if user.project_certifier?
+    items << { slug: "certify", label: "certify", path: "https://review.hackclub.com/", icon: "ship" } if user.project_certifier?
 
     items
   end
