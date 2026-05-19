@@ -630,6 +630,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_19_091148) do
     t.datetime "synced_at"
     t.datetime "updated_at", null: false
     t.string "user_agent"
+    t.string "user_ref"
     t.index ["confirmation_token"], name: "index_rsvps_on_confirmation_token", unique: true
   end
 
