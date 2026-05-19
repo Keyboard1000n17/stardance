@@ -1,95 +1,32 @@
 // User profile page (replaces the legacy Flavortown profile).
 // Layout: banner → profile card overlapping → tab strip → tab content.
+// Three-column layout (.app-layout) is defined in layout/_base.scss.
 
-// The page has three visual columns: fixed sidebar on the left, main content
-// in the center of the viewport, fixed right rail on the right. The sidebars
-// live in `position: fixed` so the main column can center on the *full*
-// viewport regardless of the sidebars' widths.
-body.user-profile-page.signed-in {
-  margin-left: 0;
-  margin-right: 0;
-
-  @media (max-width: 960px) {
-    margin-left: var(--space-m);
-    margin-right: var(--space-m);
-    margin-bottom: 180px; // preserve safe area for the bottom-bar sidebar
-  }
+// `<turbo-frame>` is a custom element — browsers render unknown elements as
+// `display: inline` by default, which on this page collapses the frame around
+// its content and stops the inner profile form from filling the main-column
+// width. Force block / flex layout on each frame, then cap the width at 922px
+// and centre it: this matches the project page (.project-show), so the visual
+// gap between sidebar text, content, and the discover rail is consistent
+// across both pages.
+turbo-frame#profile_card,
+turbo-frame#profile_tabs {
+  width: min(100%, 922px);
+  align-self: center;
 }
 
-.profile-layout {
-  --layout-gap: 24px;
-  --nav-reserved: 340px; // sidebar width + 20px inset
-  --aside-reserved: 457px; // aside width + 32px inset
-  --main-max: 1200px;
-
-  // Sit between the fixed sidebars rather than spanning the full viewport,
-  // so main's centering happens inside the *available* space and the visual
-  // gaps to nav and aside come out even.
-  margin-left: calc(var(--nav-reserved) + var(--layout-gap));
-  margin-right: calc(var(--aside-reserved) + var(--layout-gap));
-  padding: var(--space-xxl) 0 var(--space-xxl);
+turbo-frame#profile_card {
+  display: block;
 }
 
-.profile-layout__main {
-  max-width: var(--main-max);
-  margin: 0 auto;
-  width: 100%;
-}
-
-// The profile_tabs Turbo Frame wraps the tab nav + tab content; give it the
-// same flex/gap rhythm the rest of `.profile-layout__main` uses so the gap
-// between tabs and content is preserved.
 turbo-frame#profile_tabs {
   display: flex;
   flex-direction: column;
   gap: var(--space-m);
 }
 
-@media (max-width: 1500px) {
-  .profile-layout {
-    --nav-reserved: 266px; // narrower sidebar at this breakpoint
-    --layout-gap: 16px;
-  }
-}
-
-@media (max-width: 1280px) {
-  .profile-layout {
-    --aside-reserved: 0px; // aside is hidden at this breakpoint
-  }
-}
-
-@media (max-width: 960px) {
-  .profile-layout {
-    --nav-reserved: 0px; // sidebar drops to the bottom at this breakpoint
-    max-width: 100%;
-  }
-}
-
-.profile-layout__main {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-m);
-}
-
-.profile-layout__aside {
-  position: fixed;
-  right: var(--space-xl);
-  top: var(--space-xxl);
-  width: 425px;
-  max-height: calc(100vh - var(--space-xxl) - var(--space-xl));
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-m);
-
-  @media (max-width: 1280px) {
-    display: none;
-  }
-}
-
 .profile {
   --profile-banner-aspect: 4.7 / 1;
-  --profile-radius: 8px;
 
   display: block;
   width: 100%;
@@ -100,44 +37,57 @@ turbo-frame#profile_tabs {
   flex-direction: column;
 }
 
-// Banner
+// Banner — uses an <img class="profile__banner-image"> child for the cover
+// photo (matches the project page's <img>-based banner: better a11y,
+// lazy-loading, and lets the profile-edit Stimulus controller swap the src
+// directly for live preview).
 .profile__banner {
   position: relative;
   width: 100%;
   aspect-ratio: var(--profile-banner-aspect);
   background-color: var(--color-space-bg-2);
-  background-image: var(--banner-image);
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
   border-top-left-radius: var(--profile-radius);
   border-top-right-radius: var(--profile-radius);
   overflow: hidden;
 }
 
+.profile__banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+// Back-button styling matches the project page (64×64, larger position
+// offsets, semi-opaque surface fill, blur backdrop) so the two pages feel
+// like the same product.
 .profile__back {
   position: absolute;
-  top: var(--space-m);
-  left: var(--space-m);
-  width: 48px;
-  height: 48px;
+  top: 19px;
+  left: 24px;
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
   border: none;
-  background: var(--color-space-surface-soft);
+  background: var(--color-space-surface-strong);
   color: var(--color-space-text);
   cursor: pointer;
   display: grid;
   place-items: center;
   backdrop-filter: blur(4px);
+  text-decoration: none;
+  transition: filter 150ms ease;
 
-  &:hover {
-    filter: brightness(1.1);
+  &:hover,
+  &:focus-visible {
+    filter: brightness(1.15);
+    outline: none;
   }
 }
 
 .profile__back-icon {
-  width: 1.4rem;
-  height: 1.4rem;
+  width: 30px;
+  height: 30px;
   color: currentColor;
 }
 
@@ -167,14 +117,25 @@ turbo-frame#profile_tabs {
   cursor: pointer;
 }
 
-// Profile card (overlapping bottom of banner)
+// Profile card (overlapping bottom of banner). Per branding §1.1 / §3, this
+// is the canonical "set 3" surface: profile sections / top-of-page cards on
+// the official #606684 fill with no border.
+//
+// Layout: a flex column with three slots — the top slot is the
+// avatar + identity + stats row, and the next two (bio, footer) flow
+// underneath it so they sit flush with the avatar's left edge rather than
+// being indented under the body column.
 .profile__card {
   position: relative;
   display: flex;
+  flex-direction: column;
+  // 16px gap + 24px even padding mirrors .project-show__panel so left/right
+  // edges, the inter-row rhythm, and the stats→action vertical distance line
+  // up exactly between the two pages.
   gap: 16px;
-  padding: 28px 24px 24px;
+  padding: 24px;
   margin-top: -1px; // join visually
-  background: var(--color-space-surface);
+  background: var(--color-set-3-bg);
   color: var(--color-space-text);
   border-bottom-left-radius: var(--profile-radius);
   border-bottom-right-radius: var(--profile-radius);
@@ -185,39 +146,45 @@ turbo-frame#profile_tabs {
 }
 
 .profile__avatar {
-  width: 57px;
-  height: 57px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   display: block;
 }
 
-.profile__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
+// Top row of the profile card: identity group (avatar + name + joined) on the
+// left, stats on the right.
 .profile__top-row {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  gap: var(--space-l);
+  gap: var(--space-m);
   flex-wrap: wrap;
 }
 
+// `.profile__identity` is the avatar + name + joined-date cluster.
+// align-items: center vertically centers the avatar with the text column
+// (handle on top, joined-date below) so the avatar sits at the midpoint of
+// the two lines rather than aligning to their top.
 .profile__identity {
   display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.profile__identity-text {
+  display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-xs);
   min-width: 0;
 }
 
 .profile__handle {
   margin: 0;
-  font-size: 2.5rem; // 40px
+  // Branding §2.1 "Heading" role: Exo 2, 40px, bold.
+  font-size: var(--font-size-xxxxl);
   font-weight: 700;
   line-height: 1;
   color: var(--color-space-text);
@@ -237,7 +204,7 @@ turbo-frame#profile_tabs {
   margin: 0;
   padding: 0;
   display: flex;
-  gap: 32px;
+  gap: var(--space-l);
   flex-wrap: wrap;
 }
 
@@ -249,7 +216,9 @@ turbo-frame#profile_tabs {
 }
 
 .profile__stat-num {
-  font-size: 1.375rem; // 22px
+  // Branding §2.1 Body scale: 19px. Matches the project page's
+  // .project-show__stats strong rule for cross-page parity.
+  font-size: 1.1875rem;
   font-weight: 700;
 }
 
@@ -258,9 +227,10 @@ turbo-frame#profile_tabs {
   opacity: 0.6;
 }
 
-// Bio
+// Bio. Branding §2.1 Body scale: 19px (matches the project page's
+// .project-show__description and stat numbers).
 .profile__bio {
-  font-size: 1.375rem; // 22px
+  font-size: 1.1875rem;
   line-height: 1.3;
   // No `white-space: pre-wrap` here: render_bio already converts \n to <br>
   // and pre-wrap would render the ERB-template indentation around the
@@ -310,13 +280,13 @@ turbo-frame#profile_tabs {
   // x-position as the read-mode bio sitting above.
   padding: var(--space-xs) var(--space-s);
   margin: 0 calc(-1 * var(--space-s));
-  border-radius: 6px;
+  border-radius: var(--profile-radius);
   border: 1px dashed var(--color-space-border);
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--color-overlay-light-soft);
   color: var(--color-space-text);
   // Match read-mode bio typography exactly so text doesn't shift on edit.
   font-family: inherit;
-  font-size: 1.375rem; // 22px, same as .profile__bio
+  font-size: 1.1875rem;
   line-height: 1.3;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -357,8 +327,8 @@ turbo-frame#profile_tabs {
   overflow-y: auto;
   background: var(--color-space-bg-2);
   border: 1px solid var(--color-space-border);
-  border-radius: 6px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  border-radius: var(--profile-radius);
+  box-shadow: 0 6px 18px var(--color-shadow-deep);
 }
 
 .profile__bio-suggest-item {
@@ -391,7 +361,7 @@ turbo-frame#profile_tabs {
 
 .profile__bio-hint kbd {
   font-family: inherit;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--color-overlay-light);
   padding: 1px 5px;
   border-radius: 3px;
 }
@@ -435,39 +405,80 @@ turbo-frame#profile_tabs {
   align-items: center;
 }
 
+// Profile action buttons (Edit / Follow / Save / Cancel). Sits inside the
+// set-3 profile card, so this uses the light-bg small-action variant per
+// branding §4.0 / §4.1. Base is the secondary action (transparent +
+// outlined); `--primary` flips to a white fill (Edit / Save), `--following`
+// uses the destructive treatment (salmon).
 .profile__action-btn {
   padding: 3px 16px;
   border-radius: 999px;
-  border: 1px solid var(--color-space-text);
+  border: 2px solid var(--color-space-text);
   background: transparent;
   color: var(--color-space-text);
-  font-size: 1rem; // 16px
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
   cursor: pointer;
   font-family: inherit;
   text-decoration: none;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
 
-  &:hover {
-    background: rgba(255, 255, 255, 0.08);
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
+  // Secondary pressed — swap white border + text for highlight.
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    color: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+  }
+
+  // Primary — light-bg state ladder: white normal → highlight-secondary on
+  // hover → highlight on press. Each step gets slightly more saturated so
+  // pressing reads as "more filled".
   &--primary {
-    background: var(--color-space-surface);
+    background: var(--color-space-text);
+    border-color: var(--color-space-text);
+    color: var(--color-set-1-bg);
   }
 
-  &--follow {
-    padding: 8px 28px;
-    font-size: 1.25rem; // 20px
-    font-weight: 600;
+  &--primary:hover:not(:disabled):not([aria-disabled="true"]),
+  &--primary:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-highlight-secondary);
+    border-color: var(--color-brand-highlight-secondary);
+    outline: none;
   }
 
+  &--primary:active:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+    color: var(--color-set-1-bg);
+  }
+
+  // `--following` is the "Follow → Unfollow" toggle: in the followed state,
+  // the user is one click away from a destructive action. Use the salmon
+  // treatment per branding §4.1.
   &--following {
+    background: transparent;
+    border-color: var(--color-brand-salmon);
+    color: var(--color-brand-salmon);
+
     .profile__follow-label-hover {
       display: none;
     }
 
-    &:hover {
-      background: rgba(255, 80, 80, 0.18);
-      border-color: rgba(255, 120, 120, 0.7);
+    &:hover:not(:disabled):not([aria-disabled="true"]),
+    &:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+      background: var(--color-brand-salmon);
+      border-color: var(--color-brand-salmon);
+      color: var(--color-set-1-bg);
+      outline: none;
 
       .profile__follow-label-default {
         display: none;
@@ -487,20 +498,24 @@ turbo-frame#profile_tabs {
 // Tabs
 .profile-tabs {
   display: flex;
-  gap: 14px;
+  gap: var(--space-s);
 }
 
+// Tab pills borrow the branding §4.2 "large action button" typography —
+// 19px bold — since each tab spans a section of the profile and needs the
+// same visual weight as a primary action.
 .profile-tabs__tab {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 24px;
+  padding: 10px 18px;
   border: 2px solid var(--color-space-border);
   border-radius: 999px;
   text-decoration: none;
   color: var(--color-space-text);
-  font-size: 1.375rem; // 22px
+  font-size: var(--font-size-xxl);
+  font-weight: 700;
   background: transparent;
 
   &--active {
@@ -508,7 +523,7 @@ turbo-frame#profile_tabs {
   }
 
   &:hover:not(&--active) {
-    background: rgba(94, 102, 135, 0.18);
+    background: var(--color-space-surface-soft);
   }
 }
 
@@ -520,13 +535,13 @@ turbo-frame#profile_tabs {
 }
 
 .profile-tab-content__empty {
-  padding: var(--space-xl);
+  padding: var(--space-l);
   text-align: center;
   color: var(--color-space-text);
   border: 2px dashed var(--color-space-border);
   border-radius: var(--profile-radius);
   opacity: 0.7;
-  font-size: 1.4rem;
+  font-size: var(--font-size-l);
   margin: 0;
 }
 
@@ -544,15 +559,18 @@ turbo-frame#profile_tabs {
   display: block;
 }
 
+// Per branding §1.1 / §3 ("dark blue container, set 2"), clickable project
+// cards land on the canonical #343651 fill with a 2px border and the 8px
+// radius shared by every container.
 .profile-project-card {
   display: flex;
-  gap: 21px;
-  padding-right: 24px;
-  background: var(--color-space-surface-soft);
+  gap: var(--space-m);
+  padding-right: var(--space-m);
+  background: var(--color-set-2-bg);
   // Use box-shadow as a fake border so the banner image can extend over it
   // without being clipped by border-radius.
   box-shadow: 0 0 0 2px var(--color-space-border);
-  border-radius: 16px;
+  border-radius: var(--profile-radius);
   color: var(--color-space-text);
   text-decoration: none;
   overflow: hidden;
@@ -564,15 +582,15 @@ turbo-frame#profile_tabs {
 }
 
 .profile-project-card__banner {
-  width: 220px;
+  width: 180px;
   flex-shrink: 0;
   align-self: stretch;
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--color-overlay-light-soft);
   overflow: hidden;
   // Inherit the parent card's left-side rounding so the image's corners
   // visually overlap the card's box-shadow border.
-  border-top-left-radius: 16px;
-  border-bottom-left-radius: 16px;
+  border-top-left-radius: var(--profile-radius);
+  border-bottom-left-radius: var(--profile-radius);
 }
 
 .profile-project-card__banner-img {
@@ -585,7 +603,7 @@ turbo-frame#profile_tabs {
 .profile-project-card__body {
   flex: 1;
   min-width: 0;
-  padding: 24px 0;
+  padding: var(--space-m) 0;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -602,7 +620,7 @@ turbo-frame#profile_tabs {
 
 .profile-project-card__title {
   margin: 0;
-  font-size: 2.5rem; // 40px
+  font-size: var(--font-size-xxl);
   font-weight: 700;
   line-height: 1;
   color: var(--color-space-text);
@@ -631,14 +649,14 @@ turbo-frame#profile_tabs {
 }
 
 .profile-project-card__meta-icon {
-  width: 28px;
-  height: 28px;
+  width: 22px;
+  height: 22px;
   color: currentColor;
 }
 
 .profile-project-card__meta-icon--time {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
 }
 
 .profile-project-card__authors {
@@ -654,7 +672,7 @@ turbo-frame#profile_tabs {
 
 .profile-project-card__description {
   margin: 0;
-  font-size: 1.375rem; // 22px
+  font-size: var(--font-size-l);
   line-height: 1.3;
 }
 
@@ -664,17 +682,109 @@ turbo-frame#profile_tabs {
   opacity: 0.6;
 }
 
+.profile-project-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  flex-wrap: wrap;
+}
+
+// Mission badge — decorative metadata pill. Branding §7 reserves salmon for
+// destructive/warn, so this uses lilac (the default primary accent per §1.3).
+// Dark text on a pastel accent uses set-1 background hex, not pure black
+// (branding §1 / §7 rule 1).
+.profile-project-card__mission-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  background: var(--color-brand-lilac);
+  color: var(--color-set-1-bg);
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.profile-project-card__mission-badge-icon {
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 4px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.profile-project-card__mission-badge-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .profile-project-card--new {
   background: transparent;
   border-style: dashed;
   justify-content: center;
-  padding: 24px;
-  font-size: 1.375rem; // 22px
+  padding: var(--space-m);
+  font-size: var(--font-size-l);
   opacity: 0.75;
 
   &:hover {
     opacity: 1;
     filter: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .profile {
+    --profile-banner-aspect: 16 / 7;
+  }
+
+  .profile__card {
+    padding: var(--space-m);
+    gap: var(--space-s);
+  }
+
+  .profile__top-row,
+  .profile__footer {
+    align-items: stretch;
+  }
+
+  .profile__handle {
+    font-size: var(--font-size-xxl);
+  }
+
+  .profile__stats {
+    width: 100%;
+    justify-content: space-between;
+    gap: var(--space-s);
+  }
+
+  .profile-tabs {
+    gap: var(--space-xs);
+    overflow-x: auto;
+    padding-bottom: var(--space-xxs);
+  }
+
+  .profile-tabs__tab {
+    flex: 0 0 auto;
+    min-width: 128px;
+    padding-inline: var(--space-m);
+  }
+
+  .profile-project-card {
+    flex-direction: column;
+    padding-right: 0;
+  }
+
+  .profile-project-card__banner {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--profile-radius) var(--profile-radius) 0 0;
+  }
+
+  .profile-project-card__body {
+    padding: 0 var(--space-m) var(--space-m);
   }
 }
 
@@ -689,7 +799,7 @@ turbo-frame#profile_tabs {
   max-height: 80vh;
 
   &::backdrop {
-    background: rgba(0, 0, 0, 0.55);
+    background: var(--color-backdrop);
     backdrop-filter: blur(2px);
   }
 }
@@ -785,62 +895,5 @@ turbo-frame#profile_tabs {
 
   a {
     color: inherit;
-  }
-}
-
-// Right rail (placeholder content until populated in a later PR)
-.right-rail__search {
-  position: relative;
-}
-
-.right-rail__search-input {
-  width: 100%;
-  height: 55px;
-  padding: 0 48px 0 16px;
-  border: 2px solid var(--color-space-text);
-  border-radius: var(--profile-radius);
-  background: transparent;
-  color: var(--color-space-text);
-  font-family: inherit;
-  font-size: 1.375rem; // 22px
-
-  &::placeholder {
-    color: var(--color-space-text);
-    opacity: 0.85;
-  }
-}
-
-.right-rail__search-icon {
-  position: absolute;
-  right: 16px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  color: var(--color-space-text);
-  pointer-events: none;
-}
-
-.right-rail__section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-s);
-  margin-top: var(--space-xs);
-}
-
-.right-rail__heading {
-  margin: 0;
-  font-size: 1.375rem; // 22px
-  font-weight: 400;
-  color: var(--color-space-text);
-}
-
-.right-rail__placeholder {
-  background: rgba(217, 217, 217, 0.5);
-  border-radius: var(--profile-radius);
-  height: 80px;
-
-  &--tall {
-    height: 331px;
   }
 }

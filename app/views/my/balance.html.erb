@@ -1,13 +1,8 @@
 <% content_for :title, "My Balance" %>
 <%= turbo_frame_tag "balance_history" do %>
   <div class="balance-history">
-    <div class="balance-history__header"
-         data-controller="stardust-clicker"
-         data-stardust-clicker-clicks-value="<%= current_user.stardust_clicks %>"
-         data-stardust-clicker-post-url-value="<%= my_stardust_click_path %>"
-         data-stardust-clicker-orchestra-url-value="<%= audio_path('Orchestra_hit.ogg') %>"
-         data-stardust-clicker-headshot-url-value="<%= audio_path('headshot.mp3') %>">
-      <h1>My Balance: <span class="stardust-clicker__stardust" data-stardust-clicker-target="stardust" data-action="click->stardust-clicker#click"><%= image_tag "icons/stardust.png", alt: "Stardust", class: "currency-icon" %></span> <%= current_user.balance %></h1>
+    <div class="balance-history__header">
+      <h1>My Balance: <span><%= image_tag "icons/stardust.png", alt: "Stardust", class: "currency-icon" %></span> <%= current_user.balance %></h1>
     </div>
 
     <% if @balance.any? %>

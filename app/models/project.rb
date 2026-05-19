@@ -57,6 +57,15 @@ class Project < ApplicationRecord
     user ? where.not(id: user.projects) : all
   }
   scope :fire, -> { where.not(marked_fire_at: nil) }
+  scope :with_ship_events, -> { joins(:ship_events).distinct }
+  scope :with_ship_events_between, ->(start_date, end_date) {
+    joins(:posts)
+      .where(posts: {
+        postable_type: "Post::ShipEvent",
+        created_at: start_date.beginning_of_day..end_date.end_of_day
+      })
+      .distinct
+  }
   scope :with_banner_priority, -> {
     left_joins(:banner_attachment)
       .includes(banner_attachment: :blob)
@@ -79,6 +88,25 @@ class Project < ApplicationRecord
   has_many :skips, class_name: "Project::Skip", dependent: :destroy
   has_many :project_follows, dependent: :destroy
   has_many :followers, through: :project_follows, source: :user
+
+  has_many :mission_attachments,      class_name: "Project::MissionAttachment",  dependent: :destroy, inverse_of: :project
+  has_many :missions,                 through:    :mission_attachments
+  has_many :mission_step_completions, class_name: "Mission::StepCompletion",     dependent: :destroy
+  has_many :completed_mission_steps,  through:    :mission_step_completions, source: :mission_step
+  has_many :mission_submissions,      class_name: "Mission::Submission",         through: :ship_events
+
+  def current_mission_attachment
+    mission_attachments.where(detached_at: nil).order(attached_at: :desc).first
+  end
+
+  def current_mission
+    current_mission_attachment&.mission
+  end
+
+  def has_completed_mission_step?(step)
+    mission_step_completions.exists?(mission_step_id: step.id)
+  end
+
   # needs to be implemented
   has_one_attached :demo_video
 
@@ -319,7 +347,7 @@ class Project < ApplicationRecord
     shipping_requirements.select { |elem| !elem[:passed] || elem[:label] }
   end
 
-  def shippable? = shipping_requirements.all? { |r| r[:passed] }
+  def shippable? = true
 
   def ship_blocking_errors = shipping_requirements.reject { |r| r[:passed] }.map { |r| r[:label] }
 
@@ -353,14 +381,6 @@ class Project < ApplicationRecord
 
   def fire?
     marked_fire_at.present?
-  end
-
-  def mark_fire!(user)
-    update!(marked_fire_at: Time.current, marked_fire_by: user)
-  end
-
-  def unmark_fire!
-    update!(marked_fire_at: nil, marked_fire_by: nil)
   end
 
   def readme_is_raw_github_url?

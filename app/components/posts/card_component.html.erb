@@ -1,0 +1,90 @@
+<article id="<%= dom_id(post) %>" class="<%= card_classes %>">
+  <header class="feed-post-card__header">
+    <% if author.present? %>
+      <%= link_to user_path(author), class: "feed-post-card__avatar-link", aria: { label: "@#{author_name}" } do %>
+        <%= image_tag author.avatar, alt: "", class: "feed-post-card__avatar" %>
+      <% end %>
+    <% else %>
+      <span class="feed-post-card__avatar feed-post-card__avatar--placeholder" aria-hidden="true">S</span>
+    <% end %>
+
+    <div class="feed-post-card__meta">
+      <p class="feed-post-card__byline">
+        <% if author.present? %>
+          <%= link_to "@#{author_name}", user_path(author), class: "feed-post-card__author" %>
+        <% else %>
+          <span class="feed-post-card__author">@stardancer</span>
+        <% end %>
+
+        <% if project.present? %>
+          <span class="feed-post-card__context">on</span>
+          <%= link_to project.title, project_path(project), class: "feed-post-card__project" %>
+        <% end %>
+
+        <time class="feed-post-card__time" datetime="<%= post.created_at.iso8601 %>" title="<%= l(post.created_at, format: :long) %>">
+          · <%= time_ago_in_words(post.created_at) %>
+        </time>
+      </p>
+
+      <% if devlog? && postable.respond_to?(:duration_seconds) && postable.duration_seconds.present? %>
+        <p class="feed-post-card__duration"><%= helpers.format_seconds(postable.duration_seconds) %> logged</p>
+      <% end %>
+    </div>
+  </header>
+
+  <% if body.present? %>
+    <div class="feed-post-card__body">
+      <%= helpers.md(body) %>
+    </div>
+  <% end %>
+
+  <% if attachment_count.positive? %>
+    <div class="feed-post-card__media">
+      <div class="feed-post-card__media-viewport post__viewport">
+        <div class="feed-post-card__media-track post__track">
+          <% attachments.each_with_index do |attachment, index| %>
+            <figure class="feed-post-card__media-slide post__slide" <%= "hidden" if index.positive? %>>
+              <% if attachment.variable? %>
+                <%= image_tag attachment.variant(:large), alt: "", class: "feed-post-card__image" %>
+              <% elsif attachment.content_type.to_s.start_with?("image/") %>
+                <%= image_tag attachment, alt: "", class: "feed-post-card__image" %>
+              <% elsif attachment.content_type.to_s.start_with?("video/") %>
+                <%= video_tag url_for(attachment), controls: true, class: "feed-post-card__video" %>
+              <% else %>
+                <%= link_to attachment.filename.to_s, url_for(attachment), class: "feed-post-card__file" %>
+              <% end %>
+            </figure>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+
+  <footer class="feed-post-card__actions">
+    <% if show_comments && devlog? %>
+      <%= link_to project.present? ? project_path(project, anchor: dom_id(post)) : "#",
+            class: "feed-post-card__action",
+            aria: { label: "#{postable.comments_count} comments" } do %>
+        <%= inline_svg_tag "icons/paper.svg", class: "feed-post-card__action-icon" %>
+        <span id="<%= comments_count_id %>"><%= postable.comments_count %></span>
+      <% end %>
+    <% end %>
+
+    <span class="feed-post-card__action feed-post-card__action--disabled" aria-label="Reposts are not available yet">
+      <%= inline_svg_tag "icons/refresh.svg", class: "feed-post-card__action-icon" %>
+      <span>0</span>
+    </span>
+
+    <% if show_likes && likeable.present? %>
+      <div class="feed-post-card__like">
+        <%= render "likes/button", likeable: likeable %>
+      </div>
+    <% end %>
+
+    <% if show_actions %>
+      <button type="button" class="feed-post-card__more" aria-label="More actions">
+        <span aria-hidden="true">•••</span>
+      </button>
+    <% end %>
+  </footer>
+</article>

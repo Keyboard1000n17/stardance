@@ -2,67 +2,150 @@
 #
 # Table name: users
 #
-#  id                                      :bigint           not null, primary key
-#  banned                                  :boolean          default(FALSE), not null
-#  banned_at                               :datetime
-#  banned_reason                           :text
-#  bio                                     :text
-#  club_link                               :string
-#  club_name                               :string
-#  display_name                            :string
-#  email                                   :string
-#  enriched_ref                            :string
-#  first_name                              :string
-#  flavortown_message_count_14d            :integer
-#  flavortown_support_message_count_14d    :integer
-#  granted_roles                           :string           default([]), not null, is an Array
-#  has_gotten_free_stickers                :boolean          default(FALSE)
-#  has_pending_achievements                :boolean          default(FALSE), not null
-#  hcb_email                               :string
-#  internal_notes                          :text
-#  last_name                               :string
-#  leaderboard_optin                       :boolean          default(FALSE), not null
-#  manual_ysws_override                    :boolean
-#  metrics_synced_at                       :datetime
-#  projects_count                          :integer
-#  projects_shipped_count                  :integer
-#  ref                                     :string
-#  regions                                 :string           default([]), is an Array
-#  search_engine_indexing_off              :boolean          default(FALSE), not null
-#  send_notifications_for_followed_devlogs :boolean          default(TRUE), not null
-#  send_notifications_for_new_comments     :boolean          default(TRUE), not null
-#  send_notifications_for_new_followers    :boolean          default(TRUE), not null
-#  send_votes_to_slack                     :boolean          default(FALSE), not null
-#  session_token                           :string
-#  shop_region                             :enum
-#  slack_balance_notifications             :boolean          default(FALSE), not null
-#  slack_messages_updated_at               :datetime
-#  special_effects_enabled                 :boolean          default(TRUE), not null
-#  stardust_clicks                         :integer          default(0), not null
-#  synced_at                               :datetime
-#  things_dismissed                        :string           default([]), not null, is an Array
-#  tutorial_steps_completed                :string           default([]), is an Array
-#  verification_status                     :string           default("needs_submission"), not null
-#  vote_anonymously                        :boolean          default(FALSE), not null
-#  vote_balance                            :integer          default(0), not null
-#  votes_count                             :integer
-#  voting_locked                           :boolean          default(FALSE), not null
-#  ysws_eligible                           :boolean          default(FALSE), not null
-#  created_at                              :datetime         not null
-#  updated_at                              :datetime         not null
-#  airtable_record_id                      :string
-#  slack_id                                :string
+#  id                           :bigint           not null, primary key
+#  age_attestation              :string
+#  banned                       :boolean          default(FALSE), not null
+#  banned_at                    :datetime
+#  banned_reason                :text
+#  bio                          :text
+#  display_name                 :string
+#  email                        :string
+#  enriched_ref                 :string
+#  experience_level             :string
+#  first_name                   :string
+#  granted_roles                :string           default([]), not null, is an Array
+#  has_gotten_free_stickers     :boolean          default(FALSE)
+#  has_pending_achievements     :boolean          default(FALSE), not null
+#  hcb_email                    :string
+#  interests                    :string           default([]), is an Array
+#  internal_notes               :text
+#  last_name                    :string
+#  manual_ysws_override         :boolean
+#  mission_review_notifications :boolean          default(TRUE), not null
+#  onboarded_at                 :datetime
+#  ref                          :string
+#  regions                      :string           default([]), is an Array
+#  session_token                :string
+#  shop_region                  :enum
+#  synced_at                    :datetime
+#  things_dismissed             :string           default([]), not null, is an Array
+#  tutorial_steps_completed     :string           default([]), is an Array
+#  verification_status          :string           default("needs_submission"), not null
+#  vote_balance                 :integer          default(0), not null
+#  votes_count                  :integer
+#  voting_locked                :boolean          default(FALSE), not null
+#  ysws_eligible                :boolean          default(FALSE), not null
+#  created_at                   :datetime         not null
+#  updated_at                   :datetime         not null
+#  slack_id                     :string
 #
 # Indexes
 #
-#  index_users_on_airtable_record_id  (airtable_record_id) UNIQUE
 #  index_users_on_email               (email)
+#  index_users_on_lower_email_unique  (lower((email)::text)) UNIQUE WHERE ((email IS NOT NULL) AND ((email)::text <> ''::text))
+#  index_users_on_onboarded_at        (onboarded_at)
 #  index_users_on_session_token       (session_token) UNIQUE
 #  index_users_on_slack_id            (slack_id) UNIQUE
 #
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  setup do
+    clear_enqueued_jobs
+  end
+
+  test "roles are granted and removed through the user API" do
+    user = users(:one)
+    user.update!(granted_roles: [])
+
+    user.grant_role!(:helper)
+
+    assert user.has_role?(:helper)
+    assert user.helper?
+    assert_equal "Helper", user.highest_role
+
+    user.remove_role!(:helper)
+
+    assert_not user.has_role?(:helper)
+  end
+
+  test "tutorial steps and dismissals mutate array state once" do
+    user = users(:one)
+    user.update_columns(tutorial_steps_completed: [], things_dismissed: [])
+
+    assert user.complete_tutorial_step!(:setup_hackatime)
+    assert user.tutorial_step_completed?(:setup_hackatime)
+    assert_no_difference -> { user.reload.tutorial_steps.count } do
+      user.complete_tutorial_step!(:setup_hackatime)
+    end
+
+    assert user.dismiss_thing!("flagship_ad")
+    assert user.has_dismissed?("flagship_ad")
+    assert_no_difference -> { user.reload.things_dismissed.count } do
+      user.dismiss_thing!("flagship_ad")
+    end
+
+    user.undismiss_thing!("flagship_ad")
+    assert_not user.reload.has_dismissed?("flagship_ad")
+  end
+
+  test "verification payload updates status and ignores nonfatal ineligible responses" do
+    user = users(:one)
+    user.update!(verification_status: "needs_submission", ysws_eligible: false)
+
+    assert_equal :updated, user.apply_hca_verification_payload!(
+      { "verification_status" => "verified", "ysws_eligible" => true },
+      persist_with_callbacks: false
+    )
+    assert user.reload.identity_verified?
+    assert user.ysws_eligible?
+
+    assert_equal :ignored_ineligible, user.apply_hca_verification_payload!(
+      { "verification_status" => "ineligible", "ysws_eligible" => false, "fatal_rejection" => false },
+      persist_with_callbacks: false
+    )
+    assert user.reload.identity_verified?
+  end
+
+  test "manual ysws override wins over stored eligibility" do
+    user = users(:one)
+    user.update!(ysws_eligible: false, manual_ysws_override: true)
+
+    assert user.ysws_eligible?
+  end
+
+  test "balance cache can be invalidated" do
+    user = users(:one)
+
+    assert_equal user.ledger_entries.sum(:amount), user.balance
+
+    user.invalidate_balance_cache!
+
+    assert_equal user.balance, user.cached_balance
+  end
+
+  test "provider identity lookups use User identity records" do
+    user = users(:one)
+    User::Identity.insert_all!(
+      [
+        {
+          user_id: user.id,
+          provider: "hackatime",
+          uid: "hackatime-baseline",
+          created_at: Time.current,
+          updated_at: Time.current
+        }
+      ]
+    )
+
+    identity = User::Identity.find_by!(provider: "hackatime", uid: "hackatime-baseline")
+    assert_equal identity, user.reload.hackatime_identity
+    assert_equal user, User.find_by_hackatime("hackatime-baseline")
+    assert user.hackatime_identity.present?
+  end
+
   test "grant_email returns hcb_email when present" do
     user = users(:one)
     user.hcb_email = "hcb@example.com"

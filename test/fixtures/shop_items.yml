@@ -42,6 +42,7 @@
 #  limited                           :boolean
 #  long_description                  :text
 #  max_qty                           :integer
+#  mission_prize_only                :boolean          default(FALSE), not null
 #  name                              :string
 #  old_prices                        :integer          default([]), is an Array
 #  one_per_person_ever               :boolean
@@ -82,6 +83,7 @@
 #
 #  index_shop_items_on_created_by_user_id        (created_by_user_id)
 #  index_shop_items_on_default_assigned_user_id  (default_assigned_user_id)
+#  index_shop_items_on_mission_prize_only        (mission_prize_only)
 #  index_shop_items_on_user_id                   (user_id)
 #
 # Foreign Keys

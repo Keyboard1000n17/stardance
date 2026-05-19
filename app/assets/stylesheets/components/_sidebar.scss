@@ -1,6 +1,6 @@
 .sidebar {
-  --sidebar-width: 320px;
-  --sidebar-inset: 20px;
+  --sidebar-width: 280px;
+  --sidebar-inset: 16px;
   --sidebar-inset-y: var(--space-s); // tiny top + bottom edges
 
   position: fixed;
@@ -8,7 +8,7 @@
   bottom: var(--sidebar-inset-y);
   left: var(--sidebar-inset);
   width: var(--sidebar-width);
-  padding: var(--space-xl) var(--space-l);
+  padding: var(--space-l) var(--space-m);
   display: flex;
   flex-direction: column;
   z-index: 10;
@@ -83,7 +83,7 @@
   display: block;
   width: 100%;
   height: auto;
-  max-width: 260px;
+  max-width: 220px;
 }
 
 .sidebar__nav {
@@ -96,7 +96,7 @@
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: var(--space-l);
+  gap: var(--space-m);
   padding: 0;
   margin: 0;
 }
@@ -109,7 +109,7 @@
   padding: var(--space-xxs) 0;
   color: var(--color-space-text);
   font-family: var(--font-family-text);
-  font-size: var(--font-size-xxxxl);
+  font-size: var(--font-size-xxxl);
   line-height: 1.2;
   text-decoration: none;
   width: 100%;
@@ -186,6 +186,18 @@ button.sidebar__nav-link {
   border-left: 0;
 }
 
+.sidebar__nav-link {
+  transition: font-size 0.15s ease;
+}
+
+.sidebar__nav-link--active {
+  font-size: calc(var(--font-size-xxxl) * 1.15);
+}
+
+.sidebar__nav-link--active .sidebar__nav-icon-wrapper {
+  --sidebar-icon-size: 3.5rem;
+}
+
 .sidebar__nav-link--active .sidebar__nav-label {
   font-family: "Playfair Display", "Times New Roman", Georgia, serif;
   font-style: italic;
@@ -200,8 +212,9 @@ button.sidebar__nav-link {
 }
 
 .sidebar__nav-icon-wrapper {
-  --sidebar-icon-size: 2.5rem;
+  --sidebar-icon-size: 3rem;
 
+  position: relative;
   display: grid;
   place-items: center;
   inline-size: var(--sidebar-icon-size);
@@ -210,6 +223,34 @@ button.sidebar__nav-link {
   flex-shrink: 0;
   background: transparent;
   color: var(--color-space-accent);
+  transition:
+    inline-size 0.15s ease,
+    block-size 0.15s ease;
+}
+
+// PNG icon pair (illustrative nav icons): stack idle + active on top of each
+// other inside the wrapper, then fade between them based on whether the parent
+// nav link carries the --active modifier.
+.sidebar__nav-icon--idle,
+.sidebar__nav-icon--active {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transition: opacity 0.15s ease;
+}
+
+.sidebar__nav-icon--active {
+  opacity: 0;
+}
+
+.sidebar__nav-link--active .sidebar__nav-icon--idle {
+  opacity: 0;
+}
+
+.sidebar__nav-link--active .sidebar__nav-icon--active {
+  opacity: 1;
 }
 
 .sidebar__nav-avatar {
@@ -229,6 +270,12 @@ button.sidebar__nav-link {
   font-size: 1.2rem;
 }
 
+.sidebar__nav-avatar--guest {
+  background: var(--color-space-accent-soft);
+  object-fit: contain;
+  padding: 3px;
+}
+
 .sidebar__nav-label {
   white-space: nowrap;
   flex-shrink: 0;
@@ -243,9 +290,9 @@ button.sidebar__nav-link {
   display: flex;
   align-items: center;
   gap: var(--space-s);
-  padding: var(--space-s) var(--space-m);
+  padding: var(--space-xs) var(--space-s);
   border-radius: calc(var(--border-radius) / 1.5);
-  background: var(--color-space-card);
+  background: var(--color-space-accent-soft);
   color: var(--color-space-text);
   white-space: nowrap;
   overflow: hidden;
@@ -255,7 +302,7 @@ button.sidebar__nav-link {
   display: flex;
   flex-direction: column;
   line-height: 1.1;
-  font-size: var(--font-size-l);
+  font-size: var(--font-size-m);
   flex: 1;
   min-width: 0;
   overflow: hidden;
@@ -310,17 +357,33 @@ button.sidebar__nav-link {
 
 @media (max-width: 1500px) {
   .sidebar {
-    --sidebar-width: 250px;
+    --sidebar-width: 220px;
 
-    padding: var(--space-l) var(--space-m);
+    padding: var(--space-m) var(--space-s);
+  }
+
+  .sidebar__logo-img {
+    max-width: 190px;
   }
 
   .sidebar__nav-icon-wrapper {
-    --sidebar-icon-size: 2.1rem;
+    --sidebar-icon-size: 2.4rem;
+  }
+
+  .sidebar__nav-link--active .sidebar__nav-icon-wrapper {
+    --sidebar-icon-size: 2.8rem;
   }
 
   .sidebar__nav-link {
-    font-size: var(--font-size-xxxl);
+    font-size: var(--font-size-xxl);
+  }
+
+  .sidebar__nav-list {
+    gap: var(--space-s);
+  }
+
+  .sidebar__user-meta {
+    font-size: var(--font-size-s);
   }
 }
 

@@ -1,291 +1,1435 @@
-.projects-show {
-  padding: var(--space-xxl) var(--space-l);
+// Project show page.
+// The top project area mirrors the Figma inline-editing frame while keeping
+// existing controller/model validations and feed rendering intact.
 
-  &__container {
-    max-width: 1000px;
-    margin: 0 auto;
-    display: grid;
-    gap: var(--space-xl);
+.project-show,
+.project-show__actions,
+.project-show__feed,
+.project-show__notice,
+.project-show__onboarding,
+.project-show__payout-votes {
+  width: min(100%, 922px);
+  align-self: center;
+}
+
+// Local CSS vars previously lived here (--project-show-surface, -border,
+// -cream, -ink, -radius). They've all been promoted to global brand tokens
+// in config/_variables.scss per docs/branding.md §1.5. References:
+//   --project-show-surface  → --color-set-3-bg
+//   --project-show-border   → --color-space-border
+//   --project-show-cream    → --color-brand-highlight
+//   --project-show-ink      → --color-set-1-bg
+//   --project-show-radius   → --profile-radius
+.project-show {
+  color: var(--color-space-text);
+}
+
+.project-show__hero {
+  display: flex;
+  flex-direction: column;
+  border-radius: var(--profile-radius);
+}
+
+.project-show__banner {
+  position: relative;
+  // Matches the profile page's banner shape and lets the banner scale with
+  // the content column on smaller viewports.
+  aspect-ratio: 4.7 / 1;
+  border-top-left-radius: var(--profile-radius);
+  border-top-right-radius: var(--profile-radius);
+  overflow: hidden;
+  background: var(--color-space-surface-soft);
+}
+
+.project-show__banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.project-show__back {
+  position: absolute;
+  top: 19px;
+  left: 24px;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-space-surface-strong);
+  color: var(--color-space-text);
+  text-decoration: none;
+  backdrop-filter: blur(4px);
+  transition: filter 150ms ease;
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(1.15);
+    outline: none;
+  }
+}
+
+.project-show__back-icon {
+  width: 30px;
+  height: 30px;
+}
+
+.project-show__banner-upload {
+  position: absolute;
+  right: 24px;
+  bottom: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 4px 16px;
+  border: 2px solid var(--color-border-input-focus);
+  border-radius: 999px;
+  background: var(--color-space-surface-strong);
+  color: var(--color-space-text);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.project-show__banner-input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.project-show__panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: 365px;
+  padding: 24px;
+  border-bottom-left-radius: var(--profile-radius);
+  border-bottom-right-radius: var(--profile-radius);
+  background: var(--color-set-3-bg);
+  color: var(--color-space-text);
+}
+
+.project-show__panel--read {
+  min-height: 0;
+}
+
+.project-show__summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.project-show__identity {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.project-show__title,
+.project-show__title-input {
+  margin: 0;
+  width: 100%;
+  min-width: 0;
+  color: var(--color-space-text);
+  font: inherit;
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.project-show__title-input {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  outline: none;
+
+  &:focus {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 6px;
+  }
+}
+
+.project-show__stats {
+  list-style: none;
+  margin: 0;
+  padding: 4px 0 0;
+  display: flex;
+  gap: 32px;
+  color: var(--color-space-text);
+}
+
+.project-show__stats-item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 44px;
+}
+
+.project-show__stats-num {
+  font-size: 1.1875rem;
+  line-height: 1;
+}
+
+.project-show__stats-label {
+  font-size: 1rem;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+// Shared description typography. Read-mode description is just plain text
+// (no border, no padding); the textarea adds chrome of its own below so the
+// edit affordance is visible.
+.project-show__description,
+.project-show__description-input {
+  width: 100%;
+  margin: 0;
+  background: transparent;
+  color: var(--color-space-text);
+  font: inherit;
+  font-size: 1.1875rem;
+  line-height: 1.28;
+}
+
+.project-show__description-input {
+  padding: 4px 8px;
+  border: 2px solid var(--color-border-input);
+  border-radius: var(--profile-radius);
+  min-height: 34px;
+  resize: vertical;
+  outline: none;
+
+  &::placeholder {
+    color: hsla(0, 0%, 100%, 0.65);
   }
 
-  &__title-actions {
+  &:focus {
+    border-color: var(--color-border-input-focus);
+  }
+}
+
+.project-show__edit-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.project-show__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--color-space-text);
+  font-size: 1.1875rem;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.project-show__field--inline {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(0, 700px);
+  align-items: center;
+  gap: 20px;
+}
+
+.project-form--shake {
+  animation: input-shake 0.32s ease both;
+}
+
+.project-form--readme-locked input,
+.project-show__field--locked .project-show__control {
+  opacity: 0.65;
+  cursor: not-allowed;
+  filter: saturate(0.7);
+}
+
+.project-show__control {
+  width: 100%;
+  min-height: 45px;
+  padding: 8px 12px;
+  border: 2px solid var(--color-border-input);
+  border-radius: var(--profile-radius);
+  background: transparent;
+  color: var(--color-space-text);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+
+  &::placeholder {
+    color: hsla(0, 0%, 100%, 0.5);
+  }
+
+  &:focus {
+    border-color: var(--color-border-input-focus);
+  }
+}
+
+.project-show__textarea {
+  min-height: 86px;
+  resize: vertical;
+}
+
+.project-show__control--select {
+  display: flex;
+  min-height: 52px;
+  padding: 0;
+  overflow: hidden;
+}
+
+.project-show__select {
+  width: 100%;
+  min-height: 52px;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: var(--color-space-text);
+  font: inherit;
+  font-size: 1rem;
+  outline: none;
+  cursor: pointer;
+
+  option {
+    color: var(--color-set-1-bg);
+  }
+}
+
+.project-show__hackatime-picker {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-show__hackatime-selected {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-show__hackatime-picker {
+  .hackatime-project-selector__project {
     display: flex;
-    gap: var(--space-s);
-    align-self: flex-end;
+    align-items: center;
+    gap: 10px;
+    min-height: 45px;
+    padding: 8px 12px;
+    border: 2px solid hsla(0, 0%, 100%, 0.25);
+    border-radius: var(--profile-radius);
+    background: hsla(245, 67%, 7%, 0.16);
   }
 
-  &__icon-btn {
-    background-color: var(--color-brown-400);
-    border-radius: calc(var(--border-radius) * 0.8);
-    padding: var(--space-xs) var(--space-l);
-  }
+  .hackatime-project-selector__project-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    color: var(--color-brand-highlight);
 
-  &__icon-btn svg {
-    color: var(--color-brown-700) !important;
-    height: 1.35em;
-    width: 1.35em;
-  }
-
-  &__timeline {
-    padding-left: 4em;
-    position: relative;
-
-    @media (max-width: 900px) {
-      padding-left: 0;
+    svg,
+    img {
+      width: 20px;
+      height: 20px;
+      display: block;
     }
   }
 
-  &__timeline::before {
+  .hackatime-project-selector__project-content {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .hackatime-project-selector__project-name {
+    color: var(--color-space-text);
+    font-size: 1rem;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+
+  .hackatime-project-selector__project-meta {
+    color: var(--color-space-text);
+    // Branding §2.1 Label scale — closest canonical to the prior 14px.
+    font-size: 1rem;
+    line-height: 1.2;
+    opacity: 0.55;
+  }
+
+  .hackatime-project-selector__project-remove {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-space-text);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: hsla(0, 0%, 100%, 0.12);
+      outline: none;
+    }
+
+    svg,
+    img {
+      width: 16px;
+      height: 16px;
+      display: block;
+    }
+  }
+}
+
+.project-show__started-check {
+  display: grid;
+  grid-template-columns: 21px minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
+  min-height: 50px;
+  padding: 0 0 0 4px;
+  color: var(--color-space-text);
+  font-size: 1.1875rem;
+  line-height: 1.18;
+}
+
+.project-show__started-check-input {
+  width: 21px;
+  height: 21px;
+  appearance: none;
+  border: 1px solid var(--color-border-input-focus);
+  border-radius: 3px;
+  background: transparent;
+
+  &:checked {
+    background: var(--color-brand-highlight);
+    box-shadow: inset 0 0 0 4px var(--color-set-3-bg);
+  }
+}
+
+.project-show__sparkle {
+  width: 72px;
+  height: 21px;
+  align-self: center;
+  position: relative;
+
+  &::before,
+  &::after {
     content: "";
     position: absolute;
+    top: 50%;
+    height: 1px;
+    width: 34px;
+    background: hsla(0, 0%, 100%, 0.38);
+  }
+
+  &::before {
     left: 0;
-    top: 0;
-    bottom: 0;
-    width: 10px;
-    background-image: url("data:image/svg+xml,%3csvg width='8' height='90' viewBox='0 0 4 20' fill='none' xmlns='http://www.w3.org/2000/svg'%3e%3crect x='0' y='0' width='4' height='30' rx='2' fill='%23AD7757' /%3e%3c/svg%3e");
-    background-repeat: repeat-y;
+  }
+
+  &::after {
+    right: 0;
+  }
+}
+
+.project-show__sparkle::selection {
+  background: transparent;
+}
+
+.project-show__help {
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.5rem;
+  font-weight: 700;
+  opacity: 0.4;
+  vertical-align: middle;
+}
+
+.project-show__panel-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+}
+
+// Small action button (branding §4.1) — sits inside a set-3 panel, so this
+// is the *light-bg* variant. Base is the secondary action: transparent fill,
+// white text, white 2px border. Variants below fill in the primary
+// (Edit / Save) and destructive (Unfollow) treatments.
+.project-show__pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 16px;
+  border-radius: 999px;
+  border: 2px solid var(--color-space-text);
+  background: transparent;
+  color: var(--color-space-text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+
+  &:disabled,
+  &[aria-disabled="true"] {
     opacity: 0.5;
-
-    @media (max-width: 900px) {
-      display: none;
-    }
+    cursor: not-allowed;
   }
 
-  &__submission-tracking {
-    background: var(--color-brown-200);
-    border-radius: var(--border-radius);
-    padding: var(--space-l);
-    border: 2px solid var(--color-brown-400);
+  // Secondary pressed — swap white border + text for highlight cream.
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    color: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+  }
+}
 
-    h3 {
-      margin: 0 0 var(--space-2xs) 0;
-      font-size: 1.2rem;
-    }
+// `--outline` is an alias for the base style (transparent fill + outline) so
+// templates can opt into it explicitly. No additional CSS.
+.project-show__pill--outline {
+  // inherits base
+}
 
-    p {
-      margin: 0 0 var(--space-m) 0;
-      color: var(--color-text-muted);
-      font-size: 0.9rem;
-    }
+// Primary action (Save / Edit) on a light bg. State ladder steps DARKER
+// from white → highlight-secondary → highlight, so the visual feedback is a
+// progressively-more-filled pill.
+.project-show__pill--save {
+  background: var(--color-space-text);
+  border-color: var(--color-space-text);
+  color: var(--color-set-1-bg);
+
+  &:hover:not(:disabled):not([aria-disabled="true"]),
+  &:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-highlight-secondary);
+    border-color: var(--color-brand-highlight-secondary);
+    outline: none;
   }
 
-  &__status-tracker {
-    display: flex;
-    justify-content: space-around;
-    gap: var(--space-m);
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+    color: var(--color-set-1-bg);
+  }
+}
+
+// Destructive action (Unfollow / Delete). Per branding §4.1 destructive uses
+// salmon (`--color-brand-salmon`) — transparent + salmon-bordered when
+// resting, salmon-filled on hover so the destructive intent is unambiguous.
+.project-show__pill--following {
+  border-color: var(--color-brand-salmon);
+  color: var(--color-brand-salmon);
+
+  &:hover:not(:disabled):not([aria-disabled="true"]),
+  &:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-salmon);
+    border-color: var(--color-brand-salmon);
+    color: var(--color-set-1-bg);
+    outline: none;
+  }
+}
+
+.project-show__read-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-m);
+  flex-wrap: wrap;
+}
+
+.project-show__followers {
+  font-size: 1rem;
+}
+
+// Author avatars stack horizontally with a slight overlap, like a multi-user
+// chip in chat apps.
+.project-show__byline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.project-show__avatars {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+}
+
+.project-show__avatars-item {
+  margin-left: -8px;
+  display: inline-flex;
+
+  &:first-child {
+    margin-left: 0;
+  }
+}
+
+.project-show__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  // Border matches the panel surface so the stacked-avatar "gap" reads as
+  // negative space rather than an extra outline colour.
+  border: 2px solid var(--color-set-3-bg);
+  display: block;
+  background: var(--color-space-accent-soft);
+
+  &--placeholder {
+    display: grid;
+    place-items: center;
+    color: var(--color-space-text);
+    font-weight: 700;
+    font-size: 0.95rem;
+  }
+}
+
+.project-show__authors {
+  margin: 0;
+  font-size: 1.1875rem; // 19px
+  color: var(--color-space-text);
+  line-height: 1;
+}
+
+.project-show__author {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Super Star badge — pill chip with dark text. Fully rounded so it reads as
+// a chip (badges aren't containers per branding §6, where 8px applies — pill
+// shape lines up with the rest of the small chips on the page).
+.project-show__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 1rem;
+  font-weight: 700;
+  white-space: nowrap;
+
+  // Branding §1.2 reserves the extra-highlight gradient for one-or-two
+  // moments per page. A "fire" / super-star project badge is exactly that.
+  &--fire {
+    background: var(--gradient-extra-highlight) center / cover no-repeat;
+    color: var(--color-set-1-bg);
+  }
+}
+
+// Action row sits between the header and the latest-ship card.
+.project-show__actions {
+  display: flex;
+  gap: 14px;
+  align-items: stretch;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+// Large action button (branding §4.2) — sits on the page background (set 1),
+// so this uses the dark-bg variant. Secondary base = set-2 fill with a
+// muted set-3-coloured border + white text; primary fills with the cream
+// highlight.
+.project-show__action {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 32px;
+  border-radius: 999px;
+  border: 2px solid var(--color-set-3-bg);
+  background: var(--color-set-2-bg);
+  color: var(--color-space-text);
+  text-decoration: none;
+  font-family: inherit;
+  font-size: 1.1875rem; // 19px
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
   }
 
-  &__status-step {
+  // Secondary hover — border + text shift to brand-highlight-secondary
+  // (keeps the dark fill so the change is purely a chrome lift).
+  &--secondary:hover:not(:disabled),
+  &--secondary:focus-visible:not(:disabled) {
+    border-color: var(--color-brand-highlight-secondary);
+    color: var(--color-brand-highlight-secondary);
+  }
+
+  // Secondary pressed — push further to the deeper highlight cream.
+  &:active:not(:disabled),
+  &--secondary:active:not(:disabled) {
+    color: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+  }
+
+  // Primary action — cream highlight fill, dark text. Hover lightens to the
+  // secondary highlight, pressed goes pure white.
+  &--primary {
+    background: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+    color: var(--color-set-1-bg);
+  }
+
+  &--primary:hover:not(:disabled),
+  &--primary:focus-visible:not(:disabled) {
+    background: var(--color-brand-highlight-secondary);
+    border-color: var(--color-brand-highlight-secondary);
+  }
+
+  &--primary:active:not(:disabled) {
+    background: var(--color-space-text);
+    border-color: var(--color-space-text);
+    color: var(--color-set-1-bg);
+  }
+
+  &--secondary {
+    // inherits base — set-2 fill with set-3-coloured border + white text
+  }
+}
+
+// End-icon slot for large action buttons. Per branding §4.2 the trailing icon
+// translates right on hover; the button body itself doesn't move.
+.project-show__action-icon {
+  display: inline-block;
+  margin-left: 8px;
+  transition: transform 150ms ease;
+
+  .project-show__action:hover:not(:disabled) &,
+  .project-show__action:focus-visible:not(:disabled) & {
+    transform: translateX(4px);
+  }
+}
+
+// Image-icon variant — sized to sit alongside the 19px button text. The
+// asset is the same illustrative PNG used in the sidebar for the "home"
+// nav item, so the rocket on "Create new ship" matches the home icon
+// visually.
+.project-show__action-icon--img {
+  width: 1.6em;
+  height: 1.6em;
+  vertical-align: middle;
+  // Pull the icon up slightly so its visual centre lines up with the
+  // capital-letter baseline rather than the descender line.
+  margin-top: -0.15em;
+}
+
+// Local onboarding vars previously lived here. Same brand-token mapping as
+// the parent .project-show — all gone in favour of global tokens.
+.project-show__onboarding {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  padding-top: 16px;
+  color: var(--color-space-text);
+}
+
+.project-show__onboarding-header {
+  max-width: 580px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.project-show__onboarding-header-title {
+  margin: 0 0 8px;
+  font-size: 2.5rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.project-show__onboarding-header-body {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.project-show__onboarding-header-link {
+  color: var(--color-brand-highlight);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.project-show__onboarding-list {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+}
+
+.project-show__onboarding-form {
+  margin: 0;
+}
+
+.project-show__onboarding-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 24px;
+  align-items: center;
+  min-height: 124px;
+  width: 100%;
+  padding: 24px 28px 24px 122px;
+  border: 2px solid var(--color-space-border);
+  border-radius: var(--profile-radius);
+  background: transparent;
+  color: var(--color-space-text);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    filter 150ms ease;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--color-space-surface-faint);
+    border-color: var(--color-space-border);
+    outline: none;
+  }
+}
+
+.project-show__onboarding-card--button {
+  appearance: none;
+}
+
+.project-show__onboarding-card--mission {
+  border-color: var(--color-brand-highlight);
+  background: var(--color-brand-highlight-soft);
+
+  &:hover,
+  &:focus-visible {
+    background: hsla(51, 73%, 84%, 0.5);
+    border-color: var(--color-brand-highlight);
+  }
+}
+
+.project-show__onboarding-card-body {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.project-show__onboarding-card-body-title {
+  font-size: 1.1875rem;
+  line-height: 1;
+}
+
+.project-show__onboarding-card-body-text {
+  max-width: 580px;
+  font-size: 1.1875rem;
+  line-height: 1;
+}
+
+.project-show__onboarding-card-action {
+  color: var(--color-brand-highlight);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+// Latest ship card — set 4 (the canonical "highlighted container" surface
+// per branding §1.1) with a cream highlight border for added visual lift.
+.project-show__latest-ship {
+  position: relative;
+  background: var(--color-set-4-bg);
+  border-radius: var(--profile-radius);
+  box-shadow: 0 0 0 2px var(--color-brand-highlight);
+  padding: 12px 32px 24px 24px;
+}
+
+.project-show__latest-ship-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 86px; // aligns with content body (avatar 57 + 16px gap + 13 inset)
+  color: var(--color-space-text);
+  // Branding §2.1 Label scale — small caption above the heading.
+  font-size: 1rem;
+  opacity: 0.75;
+  margin-bottom: 4px;
+}
+
+.project-show__latest-ship-icon {
+  width: 24px;
+  height: 24px;
+  color: currentColor;
+}
+
+.project-show__latest-ship-body {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.project-show__latest-ship-avatar {
+  flex-shrink: 0;
+}
+
+.project-show__avatar--lg {
+  width: 57px;
+  height: 57px;
+  border: none;
+}
+
+.project-show__latest-ship-content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.project-show__latest-ship-heading {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px;
+  font-size: 1.1875rem; // 19px
+  color: var(--color-space-text);
+  line-height: 1;
+}
+
+.project-show__latest-ship-author {
+  font-weight: 700;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.project-show__latest-ship-on {
+  font-weight: 400;
+}
+
+.project-show__latest-ship-project {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.project-show__latest-ship-time {
+  opacity: 0.5;
+}
+
+.project-show__latest-ship-text {
+  margin: 0;
+  font-size: 1.1875rem; // 19px
+  line-height: 1.3;
+  color: var(--color-space-text);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.project-show__latest-ship-stats {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  opacity: 0.75;
+}
+
+.project-show__latest-ship-media {
+  border-radius: var(--profile-radius);
+  overflow: hidden;
+  background: var(--color-overlay-light-soft);
+}
+
+.project-show__latest-ship-image {
+  display: block;
+  width: 100%;
+  max-height: 360px;
+  object-fit: cover;
+}
+
+.project-show__latest-ship-cta {
+  display: flex;
+  gap: 18px;
+  align-items: stretch;
+}
+
+// Small action buttons on the latest-ship card. The latest-ship surface is
+// set 4 (a light surface), so this is the *light-bg* variant per
+// branding §4.0. Same secondary/primary state matrix as `.project-show__pill`.
+.project-show__latest-ship-btn {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px 16px;
+  border-radius: 999px;
+  border: 2px solid var(--color-space-text);
+  background: transparent;
+  color: var(--color-space-text);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-decoration: none;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  // Secondary pressed.
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    color: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+  }
+
+  // Primary — light-bg state ladder: white → highlight-secondary → highlight.
+  &--primary {
+    background: var(--color-space-text);
+    border-color: var(--color-space-text);
+    color: var(--color-set-1-bg);
+  }
+
+  &--primary:hover:not(:disabled):not([aria-disabled="true"]),
+  &--primary:focus-visible:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-highlight-secondary);
+    border-color: var(--color-brand-highlight-secondary);
+    outline: none;
+  }
+
+  &--primary:active:not(:disabled):not([aria-disabled="true"]) {
+    background: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+    color: var(--color-set-1-bg);
+  }
+}
+
+// Devlog feed
+.project-show__feed {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+}
+
+// AI coding time notice. Per branding §1.1 / §3, "main container" surfaces
+// containing text/notifications are set 1 (#08061E) with a 2px border.
+.project-show__notice {
+  position: relative;
+  padding: 24px;
+  border-radius: var(--profile-radius);
+  background: var(--color-set-1-bg);
+  box-shadow: 0 0 0 2px var(--color-space-border);
+  color: var(--color-space-text);
+}
+
+.project-show__notice-title {
+  margin: 0 0 var(--space-xs);
+  // Branding §2.1 Body size, bold — used as a "small section title".
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+.project-show__notice-body {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+
+.project-show__notice-link {
+  color: var(--color-space-accent);
+  text-decoration: underline;
+}
+
+.project-show__notice-dismiss {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: var(--color-space-text);
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+// Payout votes panel — same set-1 surface as the notice.
+.project-show__payout-votes {
+  padding: 24px;
+  border-radius: var(--profile-radius);
+  background: var(--color-set-1-bg);
+  box-shadow: 0 0 0 2px var(--color-space-border);
+  color: var(--color-space-text);
+}
+
+.project-show__payout-votes-title {
+  margin: 0 0 var(--space-xs);
+  // Branding §2.1 Body size, bold.
+  font-size: 1.1875rem;
+  font-weight: 700;
+}
+
+.project-show__payout-votes-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-m);
+}
+
+.project-show__payout-votes-progress {
+  flex: 1;
+  height: 14px;
+  appearance: none;
+
+  &::-webkit-progress-bar {
+    background: var(--color-overlay-light);
+    border-radius: 999px;
+  }
+
+  &::-webkit-progress-value {
+    background: var(--color-space-accent);
+    border-radius: 999px;
+  }
+}
+
+.project-show__payout-votes-text {
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+// Mobile
+@media (max-width: 720px) {
+  // banner height handled by aspect-ratio above — no override needed.
+
+  .project-show__back {
+    width: 48px;
+    height: 48px;
+  }
+
+  .project-show__panel {
+    padding: var(--space-m);
+  }
+
+  .project-show__summary,
+  .project-show__field--inline {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: var(--space-2xs);
-    opacity: 0.5;
-
-    &--completed,
-    &--active {
-      opacity: 1;
-    }
-
-    &--completed .projects-show__status-icon {
-      color: #16a34a;
-    }
-
-    &--active .projects-show__status-icon {
-      color: #f59e0b;
-    }
+    align-items: stretch;
+    gap: var(--space-s);
   }
 
-  &__status-icon {
-    font-size: 1.5rem;
+  .project-show__title,
+  .project-show__title-input {
+    font-size: 2rem;
   }
 
-  &__status-label {
-    font-size: 0.85rem;
-    text-align: center;
+  .project-show__stats {
+    padding: 0;
   }
 
-  &__payout-votes {
-    margin: 1.5em 0 1em 0;
+  .project-show__field,
+  .project-show__description,
+  .project-show__description-input,
+  .project-show__started-check {
+    font-size: 1.125rem;
   }
 
-  &__payout-votes-title {
-    color: var(--color-brown-700);
-    font-size: 1.5rem;
-    font-weight: bold;
-    text-align: center;
-    font-family: var(--font-family-subtitle);
-
-    #votes-progress-info {
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
+  .project-show__actions {
+    flex-direction: column;
+    position: static;
   }
 
-  &__payout-votes-row {
-    position: relative;
+  .project-show__onboarding {
+    gap: var(--space-m);
+    padding-top: 0;
   }
 
-  &__payout-votes-progress {
-    width: 100%;
-    height: 30px;
-    appearance: none;
-    border-radius: 10px;
-    overflow: hidden;
-    background-color: var(--color-brown-400);
-    border: 2px solid var(--color-brown-700);
-
-    &::-webkit-progress-bar {
-      background-color: var(--color-brown-400);
-      border: 2px solid var(--color-brown-700);
-    }
-
-    &::-webkit-progress-value {
-      background-color: var(--color-brown-700);
-    }
-
-    &::-moz-progress-bar {
-      background-color: var(--color-brown-700);
-    }
-
-    &::-ms-fill {
-      background-color: var(--color-brown-400);
-      border: 2px solid var(--color-brown-700);
-    }
+  .project-show__onboarding-header-title {
+    font-size: 2rem;
   }
 
-  &__payout-votes-text {
-    position: absolute;
-    top: 0.1em;
-    left: 50%;
-    transform: translateX(-50%);
-    font-size: 1.4rem;
-    color: var(--color-bg);
-  }
-
-  .modal {
-    border: none;
-    border-radius: var(--border-radius);
-    border: 0.5rem solid var(--color-brown-700);
-    padding: var(--space-l);
-    background: var(--color-bg);
-    box-shadow: var(--shadow);
-    max-width: 700px;
-    width: 90%;
-    color: var(--color-text-body);
-    position: fixed;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-
-    &::backdrop {
-      background: rgba(0, 0, 0, 0.5);
-      backdrop-filter: blur(2px);
-    }
-
-    &__title {
-      font-family: var(--font-family-subtitle);
-      font-size: 2rem;
-      margin-bottom: 0.5em;
-    }
-
-    &__actions {
-      margin-top: var(--space-m);
-      display: flex;
-      justify-content: flex-end;
-      gap: 1em;
-    }
-
-    &__actions-close {
-      background-color: var(--color-brown-500);
-      font-size: 1rem;
-      padding: 0.2rem 0.5rem;
-      border: 2px solid var(--color-brown-700);
-      border-radius: 5px;
-      color: var(--color-bg);
-      cursor: pointer;
-
-      &:hover {
-        filter: brightness(1.1);
-      }
-    }
-  }
-
-  #project-report-modal {
-    h2 {
-      font-weight: normal;
-      font-size: 1.2rem;
-      font-family: var(--font-family-text);
-      margin: 0;
-      margin-bottom: 0.5em;
-    }
-
-    .form-field {
-      border: none;
-    }
-
-    .form-checkbox {
-      label {
-        margin-top: -0.4em;
-        font-family: var(--font-family-text);
-      }
-    }
-
-    .form-group {
-      margin-top: -1em;
-
-      textarea {
-        border: 2px solid var(--color-brown-700);
-        margin-bottom: 0.5em;
-        font-family: var(--font-family-text);
-      }
-
-      small {
-        font-weight: bold;
-        font-family: var(--font-family-subtitle);
-        font-size: 1rem;
-      }
-    }
-  }
-
-  &__info-card {
-    margin: 0.5em 0;
-    width: 100%;
-    position: relative;
-    background-color: var(--color-yellow-300);
-    border: 0.2em solid var(--color-brown-700);
-    border-radius: var(--border-radius);
+  .project-show__onboarding-card {
+    grid-template-columns: 1fr;
+    gap: var(--space-m);
+    min-height: 0;
     padding: var(--space-m);
-
-    h2 {
-      font-size: 1.5rem;
-    }
-
-    h3 {
-      font-size: 1.25rem;
-      font-weight: normal;
-
-      a {
-        color: var(--color-brown-500);
-
-        &:hover {
-          color: var(--color-brown-700);
-        }
-      }
-    }
   }
 
-  &__info-card-dismiss-button {
-    position: absolute;
-    top: -0.5em;
-    right: -0.5em;
-    font-size: 1.5rem;
-    background-color: var(--color-brown-700);
-    border: none;
-    padding: 0.2em 0.5em;
-    border-radius: 50%;
-    color: var(--color-bg);
-    font-weight: bold;
-    cursor: pointer;
+  .project-show__onboarding-card-body-title,
+  .project-show__onboarding-card-body-text {
+    font-size: 1.125rem;
+    line-height: 1.15;
   }
+
+  .project-show__panel-actions {
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+}
+
+.composer-modal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: min(680px, 92vw);
+  width: 100%;
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  translate: -50% 0;
+  margin: 0;
+  overflow: visible;
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  .feed-composer {
+    background: var(--color-space-bg-2, #0d0b2e);
+  }
+}
+
+.project-show__hackatime-picker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.project-show__hackatime-box {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 45px;
+  padding: 6px 12px;
+  border: 2px solid var(--color-border-input);
+  border-radius: var(--profile-radius);
+  background: transparent;
+  color: var(--color-space-text);
+  cursor: text;
+
+  &:focus-within {
+    border-color: var(--color-border-input-focus);
+  }
+}
+
+.project-show__hackatime-tags {
+  display: contents;
+}
+
+.project-show__hackatime-placeholder {
+  font-size: 13px;
+  color: var(--color-space-text);
+  opacity: 0.45;
+  pointer-events: none;
+  user-select: none;
+}
+
+.project-show__hackatime-connect {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-yellow-200);
+  background: none;
+  border: 1px dashed var(--color-yellow-200);
+  border-radius: 8px;
+  padding: 8px 14px;
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    opacity 0.15s;
+
+  &:hover {
+    opacity: 0.85;
+  }
+}
+
+.project-show__hackatime-empty {
+  font-size: 13px;
+  color: var(--color-space-text);
+  opacity: 0.5;
+}
+
+.project-show__hackatime-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--color-set-2-bg);
+  border: 1px solid var(--color-space-border);
+  font-size: 14px;
+  color: var(--color-space-text);
+  white-space: nowrap;
+}
+
+.project-show__hackatime-tag-name {
+  font-weight: 700;
+}
+
+.project-show__hackatime-tag-time {
+  opacity: 0.6;
+  font-size: 13px;
+}
+
+.project-show__hackatime-tag-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-space-text);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.project-show__hackatime-tag-remove-icon {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.project-show__hackatime-add {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.25rem;
+  height: 1.25rem;
+  padding: 0;
+  border: 1px solid hsla(0, 0%, 100%, 0.3);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--color-space-text);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.15s;
+  flex-shrink: 0;
+
+  &:hover {
+    opacity: 1;
+  }
+}
+
+.project-show__hackatime-add-icon {
+  width: 0.6rem;
+  height: 0.6rem;
+}
+
+.project-show__hackatime-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  margin-top: 4px;
+  padding: 4px;
+  border-radius: var(--profile-radius);
+  border: 2px solid var(--color-border-input);
+  background: var(--color-set-2-bg);
+  display: flex;
+  flex-direction: column;
+  max-height: 220px;
+  overflow-y: auto;
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.project-show__hackatime-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-space-text);
+  font-family: inherit;
+  font-size: 1rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+
+  &:hover:not(:disabled) {
+    background: var(--color-set-3-bg);
+  }
+
+  &--taken {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+}
+
+.project-show__hackatime-dropdown-name {
+  font-weight: 700;
+}
+
+.project-show__hackatime-dropdown-time {
+  opacity: 0.5;
+}
+
+.project-show__hackatime-dropdown-taken {
+  margin-left: auto;
+  font-size: 13px;
+  font-style: italic;
+  opacity: 0.7;
 }

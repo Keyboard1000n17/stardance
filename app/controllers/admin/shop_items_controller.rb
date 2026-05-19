@@ -222,9 +222,11 @@ module Admin
         :enabled_until,
         :source_region,
         :requires_verification_call,
+        :mission_prize_only,
         requires_achievement: [],
         attached_shop_item_ids: [],
-        blocked_countries: []
+        blocked_countries: [],
+        unlocking_mission_ids: []
       )
     end
 
@@ -235,7 +237,9 @@ module Admin
         :limited, :stock, :max_qty, :one_per_person_ever,
         :requires_ship, :required_ships_count, :required_ships_start_date, :required_ships_end_date,
         :source_region, :buyable_by_self, :accessory_tag, :show_image_in_shop,
-        requires_achievement: [], blocked_countries: []
+        :mission_prize_only,
+        requires_achievement: [], blocked_countries: [],
+        unlocking_mission_ids: []
       )
     end
   end

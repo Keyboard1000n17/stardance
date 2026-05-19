@@ -1,0 +1,48 @@
+<%= form_with(
+      url: project_ships_review_path(@project),
+      method: :post,
+      id: "ship-review-form",
+      local: true,
+      class: "ship__form"
+    ) do |form| %>
+
+  <div class="ship__field">
+    <label class="ship__label" for="review_instructions">Special instructions</label>
+    <p class="ship__hint">Include setup steps, test accounts, environment requirements, or anything they should know. Max 2,000 characters.</p>
+    <%= form.text_area :review_instructions,
+          id: "review_instructions",
+          class: "ship__input ship__input--textarea",
+          rows: 6,
+          maxlength: 2000,
+          placeholder: "Example: Run 'npm install && npm start' to launch locally. Test the multiplayer mode by opening two browser tabs." %>
+  </div>
+
+  <% if Flipper.enabled?(:missions, current_user) %>
+    <% mission = @project.current_mission %>
+    <div class="ship__field">
+      <label class="ship__label">Mission</label>
+      <p class="ship__hint">Pick a mission to submit this project for to earn extra prizes and perks!</p>
+      <% if mission %>
+        <div class="ship__mission-attached">
+          <span class="ship__mission-name"><%= mission.name %></span>
+          <%= hidden_field_tag :mission_payout_path, "static_prize" %>
+        </div>
+      <% else %>
+        <p class="ship__mission-none">
+          No mission attached.
+          <%= link_to "Browse missions", missions_path, class: "ship__mission-link" %>
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <div class="ship__actions">
+    <%= link_to "← Back", new_project_ships_path(@project, step: 1), class: "ship__back-link" %>
+    <%= render SpecialActionButtonComponent.new(
+          text: "Save and continue",
+          type: :submit,
+          form: "ship-review-form",
+          disable_with: "Saving..."
+        ) %>
+  </div>
+<% end %>

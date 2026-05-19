@@ -2,7 +2,7 @@
 <%= turbo_frame_tag "helper_balance_history" do %>
   <div class="balance-history">
     <div class="balance-history__header">
-      <h1>My Balance: <span class="stardust-clicker__stardust"><%= image_tag "icons/stardust.png", alt: "Stardust", class: "currency-icon" %></span> <%= @user.balance %></h1>
+      <h1>My Balance: <span><%= image_tag "icons/stardust.png", alt: "Stardust", class: "currency-icon" %></span> <%= @user.balance %></h1>
     </div>
 
     <% if @balance.any? %>

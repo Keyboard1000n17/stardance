@@ -1,0 +1,63 @@
+<p>
+  A GitHub repository is the home for your project's code. Stardance uses it to help reviewers and voters see what you built, how it changed over time, and whether the source is public enough for someone else to run.
+</p>
+
+<h2>Create the repository</h2>
+
+<ol>
+  <li>Go to GitHub and choose <strong>New repository</strong>.</li>
+  <li>Name it after your project, or use a short name that is easy to recognize.</li>
+  <li>Keep the repository <strong>public</strong> so reviewers can clone and inspect it.</li>
+  <li>Add a README if you do not already have one locally.</li>
+</ol>
+
+<div class="guide-callout">
+  <span class="guide-callout__icon" aria-hidden="true">i</span>
+  <div class="guide-callout__body">
+    <p>Private repositories, zip files, and Drive folders slow review down. A public GitHub repo is the cleanest path.</p>
+  </div>
+</div>
+
+<h2>Push your code</h2>
+
+<p>
+  If your project already exists on your computer, initialize git and connect it to the GitHub repository:
+</p>
+
+<pre><code>git init
+git add .
+git commit -m "initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
+git push -u origin main</code></pre>
+
+<p>
+  If you created the repository with a README on GitHub first, clone it instead, then move your project files into that folder:
+</p>
+
+<pre><code>git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git</code></pre>
+
+<h2>Link it to Stardance</h2>
+
+<p>
+  Open your project on Stardance, choose <strong>Edit project</strong>, and paste the root repository URL into the GitHub URL field.
+</p>
+
+<p>Use this shape:</p>
+
+<pre><code>https://github.com/YOUR_USERNAME/YOUR_REPO</code></pre>
+
+<p>Do not use URLs that end in <code>.git</code>, point to <code>/tree/main</code>, or point to one specific file.</p>
+
+<h2>Before you ship</h2>
+
+<ul>
+  <li>Make sure the repo is public.</li>
+  <li>Commit meaningful chunks of work as you build.</li>
+  <li>Keep secrets, API keys, and <code>.env</code> files out of git.</li>
+  <li>Add a README that explains what the project is and how to run it.</li>
+</ul>
+
+<p>
+  Once the repo is linked, Stardance can point reviewers and voters to the source without you having to explain it every time.
+</p>

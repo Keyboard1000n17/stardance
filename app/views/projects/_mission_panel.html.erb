@@ -1,0 +1,102 @@
+<%# Locals: project (Project) %>
+<%
+  attachment = project.current_mission_attachment
+  mission = attachment&.mission
+  is_member = current_user && project.users.exists?(id: current_user.id)
+%>
+
+<% if mission.nil? %>
+  <% if is_member %>
+    <section class="mission-panel mission-panel--empty" aria-label="Mission attachment">
+      <p class="mission-panel__empty-text">
+        Want a themed track for this project?
+        <%= link_to "Browse missions", missions_path %>.
+      </p>
+    </section>
+  <% end %>
+<% else %>
+  <section class="mission-panel" aria-label="Mission progress">
+    <header class="mission-panel__header">
+      <% if mission.icon.attached? %>
+        <%= image_tag mission.icon, alt: "", class: "mission-panel__icon" %>
+      <% end %>
+      <div class="mission-panel__heading">
+        <p class="mission-panel__eyebrow">On a mission</p>
+        <h2 class="mission-panel__title">
+          <%= link_to mission.name, mission_path(mission.slug), class: "mission-panel__title-link" %>
+        </h2>
+      </div>
+      <% if is_member %>
+        <%= button_to "Detach",
+                      project_mission_path(project),
+                      method: :delete,
+                      data: { confirm: "Detach this project from #{mission.name}?" },
+                      class: "mission-panel__detach" %>
+      <% end %>
+    </header>
+
+    <% steps = mission.steps.ordered.to_a %>
+    <% if steps.any? %>
+      <% completed_ids = project.completed_mission_steps.pluck(:id).to_set %>
+      <% completed_count = steps.count { |s| completed_ids.include?(s.id) } %>
+      <% all_done = completed_count == steps.length %>
+
+      <% current = steps.find { |s| !completed_ids.include?(s.id) } %>
+
+      <% if all_done %>
+        <div class="mission-panel__all-done">
+          🎉 You've completed every step of this mission. Time to ship!
+        </div>
+      <% elsif current %>
+        <div class="mission-panel__current-step">
+          <p class="mission-panel__current-step-eyebrow">
+            Step <%= steps.index(current) + 1 %> of <%= steps.length %>
+          </p>
+          <h3 class="mission-panel__current-step-title"><%= current.title %></h3>
+          <div class="mission-panel__current-step-body markdown-content">
+            <%= md(current.body) %>
+          </div>
+          <% if is_member %>
+            <%= button_to "Mark step complete",
+                          project_mission_step_completions_path(project, mission_step_id: current.id),
+                          method: :post,
+                          class: "mission-panel__complete-btn" %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <details class="mission-panel__step-list-wrapper">
+        <summary>
+          All steps
+          <span class="mission-panel__step-list-summary-count"><%= completed_count %>/<%= steps.length %></span>
+        </summary>
+        <ol class="mission-panel__step-list">
+          <% steps.each_with_index do |step, idx| %>
+            <% done = completed_ids.include?(step.id) %>
+            <li class="mission-panel__step <%= 'mission-panel__step--complete' if done %> <%= 'mission-panel__step--current' if step == current %>">
+              <span class="mission-panel__step-num"><%= idx + 1 %>.</span>
+              <span class="mission-panel__step-title"><%= step.title %></span>
+              <% if is_member %>
+                <% if done %>
+                  <%= button_to "Undo",
+                                project_mission_step_completion_path(project, mission_step_id: step.id),
+                                method: :delete,
+                                class: "mission-panel__step-action" %>
+                <% else %>
+                  <%= button_to "Mark done",
+                                project_mission_step_completions_path(project, mission_step_id: step.id),
+                                method: :post,
+                                class: "mission-panel__step-action" %>
+                <% end %>
+              <% end %>
+            </li>
+          <% end %>
+        </ol>
+      </details>
+    <% else %>
+      <div class="mission-panel__loose-body markdown-content">
+        <%= md(truncate(mission.description.to_s, length: 600)) %>
+      </div>
+    <% end %>
+  </section>
+<% end %>

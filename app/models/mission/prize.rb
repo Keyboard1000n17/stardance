@@ -1,0 +1,48 @@
+# == Schema Information
+#
+# Table name: mission_prizes
+#
+#  id           :bigint           not null, primary key
+#  deleted_at   :datetime
+#  position     :integer          default(0), not null
+#  created_at   :datetime         not null
+#  updated_at   :datetime         not null
+#  mission_id   :bigint           not null
+#  shop_item_id :bigint           not null
+#
+# Indexes
+#
+#  index_mission_prizes_active_unique    (mission_id,shop_item_id) UNIQUE WHERE (deleted_at IS NULL)
+#  index_mission_prizes_on_deleted_at    (deleted_at)
+#  index_mission_prizes_on_mission_id    (mission_id)
+#  index_mission_prizes_on_shop_item_id  (shop_item_id)
+#
+# Foreign Keys
+#
+#  fk_rails_...  (mission_id => missions.id)
+#  fk_rails_...  (shop_item_id => shop_items.id)
+#
+class Mission::Prize < ApplicationRecord
+  self.table_name = "mission_prizes"
+
+  include SoftDeletable
+
+  has_paper_trail
+
+  belongs_to :mission, inverse_of: :prizes
+  belongs_to :shop_item
+
+  validates :position, presence: true, numericality: { only_integer: true }
+  validate :shop_item_must_be_prize_only
+
+  scope :ordered, -> { order(:position, :id) }
+
+  private
+
+  def shop_item_must_be_prize_only
+    return if shop_item.nil?
+    return if shop_item.mission_prize_only?
+
+    errors.add(:shop_item, "must have mission_prize_only set to true")
+  end
+end

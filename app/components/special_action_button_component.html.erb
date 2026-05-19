@@ -1,0 +1,27 @@
+<% star_svg = capture do %>
+  <svg class="special-action-btn__star" viewBox="0 0 100 100" aria-hidden="true" focusable="false">
+    <path d="M38.24 33.82
+             Q 50 6.18 61.76 33.82
+             Q 91.67 36.46 69.02 56.18
+             Q 75.75 85.45 50 70
+             Q 24.25 85.45 30.98 56.18
+             Q 8.33 36.46 38.24 33.82 Z" />
+  </svg>
+<% end %>
+
+<% pill_inner = capture do %>
+  <span class="special-action-btn__label"><%= content? ? content : display_text %></span>
+  <%= icon_tag %>
+<% end %>
+
+<% if link? %>
+  <%= link_to href, **link_attributes do %>
+    <%= star_svg %>
+    <%= pill_inner %>
+  <% end %>
+<% else %>
+  <%= tag.button type: type, **button_attributes do %>
+    <%= star_svg %>
+    <%= pill_inner %>
+  <% end %>
+<% end %>

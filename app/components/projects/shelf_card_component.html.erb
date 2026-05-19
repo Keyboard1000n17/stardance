@@ -1,0 +1,16 @@
+<%= link_to project_path(project), class: "project-shelf-card" do %>
+  <span class="project-shelf-card__media">
+    <% if project.banner.attached? %>
+      <%= image_tag project.banner.variant(:card), alt: "", class: "project-shelf-card__image" %>
+    <% else %>
+      <%= image_tag "default-banner.png", alt: "", class: "project-shelf-card__image" %>
+    <% end %>
+  </span>
+
+  <span class="project-shelf-card__body">
+    <span class="project-shelf-card__title"><%= project.title %></span>
+    <% if description.present? %>
+      <span class="project-shelf-card__description"><%= truncate(strip_tags(description), length: 120) %></span>
+    <% end %>
+  </span>
+<% end %>

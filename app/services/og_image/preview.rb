@@ -4,11 +4,11 @@ module OgImage
       OgImage::Project,
       OgImage::Start,
       OgImage::Home,
-      OgImage::Explore,
       OgImage::Gallery,
       OgImage::Extensions,
       OgImage::Shop,
-      OgImage::User
+      OgImage::User,
+      OgImage::Missions
     ].freeze
 
     class << self

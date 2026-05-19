@@ -7,31 +7,40 @@ class SidebarComponent < ViewComponent::Base
 
   attr_reader :user
 
-  def initialize(user:)
+  def initialize(user:, active_slug_override: nil)
     @user = user
+    @active_slug_override = active_slug_override.presence
   end
 
   # Ordered list of nav items rendered in the sidebar. Each entry:
   #   slug:           data-onboarding-target value + identifier
   #   label:          visible text
   #   path:           href (or "#" for inert items)
-  #   icon:           file basename in app/assets/images/icons (e.g. "home" -> home.svg),
-  #                   or :avatar for the user's profile picture
+  #   icon:           one of:
+  #                     - String basename (e.g. "home") -> icons/home.svg, inline-SVG tinted via currentColor
+  #                     - Hash { idle:, active: } -> two PNGs in icons/, swapped when nav link is active
+  #                     - :avatar -> user's profile picture
   #   locked:         when truthy, render as a locked <button> with a tooltip
   #   locked_message: tooltip copy for locked items
   #   active_prefix:  optional path prefix that overrides default match (used to
   #                   highlight "my projects" on any /users/* route)
   def nav_items
     items = [
-      { slug: "home",          label: "home",          path: helpers.home_path, icon: "home" },
-      { slug: "notifications", label: "notifications", path: "#", icon: "bell" },
-      { slug: "vote",          label: "vote",          path: helpers.new_vote_path, icon: "star_outline",
-        locked: !user.has_shipped?,
+      { slug: "home",          label: "home",          path: helpers.home_path,
+        icon: { idle: "rocket", active: "rocket_active" } },
+      { slug: "notifications", label: "notifications", path: "#",
+        icon: { idle: "bell", active: "bell_active" } },
+      { slug: "vote",          label: "vote",          path: helpers.new_vote_path,
+        icon: { idle: "box", active: "box_active" },
+        locked: !user.shipped_projects.exists?,
         locked_message: "The Vote tab unlocks once you ship your first project!" },
-      { slug: "events",        label: "events",        path: "#", icon: "code_outline" },
-      { slug: "shop",          label: "shop",          path: "/shop", icon: "cart_outline" },
-      { slug: "resources",     label: "resources",     path: helpers.guides_path, icon: "resources" },
-      { slug: "projects",      label: "my projects",   path: helpers.user_path(user, tab: "projects"),
+      { slug: "events",        label: "events",        path: "#",
+        icon: { idle: "calendar", active: "calendar_active" } },
+      { slug: "shop",          label: "shop",          path: "/shop",
+        icon: { idle: "cart", active: "cart_active" } },
+      { slug: "resources",     label: "resources",     path: helpers.guides_path,
+        icon: { idle: "book", active: "book_active" } },
+      { slug: "projects",      label: "my projects",   path: helpers.projects_user_path(user),
         icon: :avatar, active_prefix: "/users/" }
     ]
 
@@ -48,6 +57,8 @@ class SidebarComponent < ViewComponent::Base
   # over once the page is interactive and keeps the highlight in sync as the
   # user navigates Turbo-style).
   def active?(item)
+    return item[:slug] == @active_slug_override if @active_slug_override
+
     candidate_path = item[:path]
     return false if candidate_path == "#"
 

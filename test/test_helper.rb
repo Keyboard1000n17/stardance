@@ -1,6 +1,9 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "view_component/test_helpers"
+
+Dir[Rails.root.join("test/support/**/*.rb")].each { |f| require f }
 
 module ActiveSupport
   class TestCase
@@ -10,8 +13,16 @@ module ActiveSupport
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all
 
-    # Add more helper methods to be used by all tests here...
+    include UserFactory
   end
+end
+
+class ViewComponent::TestCase
+  include Rails.application.routes.url_helpers
+  include ViewComponent::TestHelpers
+
+  private :test_error_path if method_defined?(:test_error_path)
+  private :test_error_url if method_defined?(:test_error_url)
 end
 
 module ActionDispatch

@@ -51,6 +51,13 @@ class Post::ShipEvent < ApplicationRecord
 
   has_many :votes, foreign_key: :ship_event_id, dependent: :nullify, inverse_of: :ship_event
 
+  has_one :mission_submission, class_name: "Mission::Submission",
+                               foreign_key: :ship_event_id,
+                               inverse_of: :ship_event,
+                               dependent: :destroy
+
+  after_update :sync_mission_submission_status, if: :saved_change_to_certification_status?
+
   scope :current_voting_scale, -> { where(voting_scale_version: CURRENT_VOTING_SCALE_VERSION) }
   scope :legacy_voting_scale, -> { where(voting_scale_version: LEGACY_VOTING_SCALE_VERSION) }
 
@@ -121,5 +128,22 @@ class Post::ShipEvent < ApplicationRecord
     return unless post&.user
 
     post.user.increment!(:vote_balance, -VOTE_COST_PER_SHIP)
+  end
+
+  # Drives the Mission::Submission state machine off ship cert transitions.
+  # See docs/missions-design.md "Certification interaction" for the spec.
+  def sync_mission_submission_status
+    submission = mission_submission
+    return unless submission
+
+    case certification_status
+    when "approved"
+      submission.certify! if submission.may_certify?
+    when "rejected"
+      if submission.may_fail_certification?
+        submission.update_columns(rejection_message: "Ship was not certified — see ship feedback for details.")
+        submission.fail_certification!
+      end
+    end
   end
 end

@@ -18,7 +18,9 @@ export default class extends Controller {
   static values = { defaultBanner: String };
 
   connect() {
-    this._originalBanner = this.bannerTarget.style.backgroundImage;
+    // bannerTarget is an <img class="profile__banner-image">; remember its
+    // src so cancel can restore it after an in-progress preview.
+    this._originalBanner = this.bannerTarget.src;
   }
 
   enter(event) {
@@ -41,7 +43,7 @@ export default class extends Controller {
     if (this.hasBioViewTarget) this.bioViewTarget.hidden = false;
 
     // Revert banner preview
-    this.bannerTarget.style.backgroundImage = this._originalBanner;
+    this.bannerTarget.src = this._originalBanner;
     if (this.hasBannerInputTarget) this.bannerInputTarget.value = "";
   }
 
@@ -49,7 +51,7 @@ export default class extends Controller {
     const file = this.bannerInputTarget.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    this.bannerTarget.style.backgroundImage = `url('${url}')`;
+    this.bannerTarget.src = url;
   }
 
   _toggleHidden(el, hidden) {

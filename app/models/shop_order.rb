@@ -69,6 +69,7 @@ class ShopOrder < ApplicationRecord
   belongs_to :parent_order, class_name: "ShopOrder", optional: true
   has_many :accessory_orders, class_name: "ShopOrder", foreign_key: :parent_order_id, dependent: :destroy
   has_many :reviews, class_name: "ShopOrderReview", dependent: :destroy
+  has_one :mission_submission, class_name: "Mission::Submission", inverse_of: :shop_order
   belongs_to :warehouse_package, class_name: "ShopWarehousePackage", optional: true
   belongs_to :assigned_to_user, class_name: "User", optional: true
   belongs_to :fulfillment_payout_line, optional: true
@@ -90,6 +91,10 @@ class ShopOrder < ApplicationRecord
   validate :check_stock, on: :create
   validate :check_ship_requirement, on: :create
   validate :check_achievement_requirement, on: :create
+  validate :check_mission_unlock_requirement, on: :create
+  validate :check_mission_prize_requires_redemption, on: :create
+
+  attr_accessor :redeeming_mission_submission
 
   validates :internal_rejection_reason, presence: true, if: :rejected?
   validates :fraud_related_project_id, presence: true, if: :rejected?
@@ -128,6 +133,18 @@ class ShopOrder < ApplicationRecord
 
   def full_name
     "#{user.display_name}'s order for #{quantity} #{shop_item.name.pluralize(quantity)}"
+  end
+
+  def cancel_by_user
+    return { success: false, error: "Your order can not be canceled" } unless may_refund?
+
+    with_lock do
+      return { success: false, error: "Your order can not be canceled" } unless may_refund?
+
+      refund!
+      accessory_orders.each { |accessory_order| accessory_order.refund! if accessory_order.may_refund? }
+    end
+    { success: true, order: self }
   end
 
   def can_view_address?(viewer)
@@ -345,6 +362,7 @@ class ShopOrder < ApplicationRecord
   end
 
   def check_user_balance
+    return if redeeming_mission_submission.present?
     return unless frozen_item_price&.positive? && quantity.present?
 
     total_cost_for_validation = frozen_item_price * quantity
@@ -352,6 +370,17 @@ class ShopOrder < ApplicationRecord
       shortage = total_cost_for_validation - (user.balance || 0)
       errors.add(:base, "Insufficient balance. You need #{shortage} more tickets.")
     end
+  end
+
+  def check_mission_unlock_requirement
+    return unless shop_item&.mission_locked_for?(user)
+    errors.add(:base, "This item is locked behind a mission you haven't completed yet.")
+  end
+
+  def check_mission_prize_requires_redemption
+    return unless shop_item&.mission_prize_only?
+    return if redeeming_mission_submission.present?
+    errors.add(:base, "This item can only be claimed by redeeming an approved mission submission.")
   end
 
   USPS_SUSPENDED_COUNTRIES = %w[

@@ -42,6 +42,68 @@
   --color-bg: hsl(35, 74%, 90%);
   --color-bg-2: hsl(39, 52%, 80%);
 
+  // Stardance brand palette — the eight accent hues used across the reskin.
+  // These land on top of the dark space neutrals below.
+  --color-brand-mint: #81ffff;
+  --color-brand-lilac: #ebb7ff;
+  --color-brand-blue: #95dbff;
+  --color-brand-salmon: #ff8d9d;
+  --color-brand-yellow: #ffe564;
+  --color-brand-peach: #ffd598;
+  --color-brand-cream: #fff8d5;
+  --color-brand-off-white: #fffcf4;
+
+  // Highlights — softer, less saturated accents for badges, callouts, ship
+  // tints. Canonical hexes from docs/branding.md §1.2.
+  --color-brand-highlight: #f4ebb9;
+  --color-brand-highlight-secondary: #fefce7;
+  --color-brand-highlight-soft: rgba(244, 235, 185, 0.4);
+  --color-brand-highlight-faint: rgba(244, 235, 185, 0.12);
+
+  // Extra highlight — a four-corner mesh gradient (yellow → salmon along the
+  // top, lilac → brand-blue along the bottom). Reserved per
+  // docs/branding.md §1.2 for the one or two most-special surfaces on a page
+  // (badges, hero accents, super-rare callouts). Sourced as a PNG asset
+  // because CSS gradients can't reproduce the mesh blend faithfully.
+  //
+  // Usage: `background: var(--gradient-extra-highlight) center / cover no-repeat;`
+  // (shorthand keeps the cover-sizing and centering bundled at the call site).
+  --gradient-extra-highlight: url("gradients/extra-highlight.png");
+
+  // Soft (translucent) variants for accent fills.
+  --color-brand-mint-soft: rgba(129, 255, 255, 0.18);
+  --color-brand-lilac-soft: rgba(235, 183, 255, 0.18);
+  --color-brand-salmon-soft: rgba(255, 141, 157, 0.18);
+  --color-brand-yellow-soft: rgba(255, 229, 100, 0.18);
+
+  // Stardance design-system "set" container backgrounds. Canonical hexes from
+  // docs/branding.md §1.1 — set 1 is the page backdrop, set 2 is for clickable
+  // cards (project cards), set 3 is for profile / top-of-page cards, set 4 is
+  // for highlighted posts.
+  --color-set-1-bg: #08061e;
+  --color-set-2-bg: #343651;
+  --color-set-3-bg: #606684;
+  // Set 4 is the highlighted-container fill. Numerically it's the canonical
+  // highlight cream (#FEFCE7) at ~40% alpha composited over set 1, giving a
+  // warm-gray that pairs with the cream highlight border used on
+  // featured/super-star surfaces (e.g. .project-show__latest-ship).
+  --color-set-4-bg: #66625c;
+
+  // Subtle white overlays for tinting decorative surfaces atop the dark
+  // backdrop (e.g. bio input chrome, kbd hint, hover wash). Branding doc
+  // doesn't formalise these — kept as named tokens so usages don't drift.
+  --color-overlay-light-soft: hsla(0, 0%, 100%, 0.05);
+  --color-overlay-light: hsla(0, 0%, 100%, 0.1);
+
+  // Form-input borders on dark surfaces (white at moderate alpha).
+  --color-border-input: hsla(0, 0%, 100%, 0.4);
+  --color-border-input-focus: hsla(0, 0%, 100%, 0.9);
+
+  // Modal / dialog backdrop. The "never use pure black" rule (branding §1)
+  // means dim layers use set-1 background with alpha, not rgba(0,0,0,...).
+  --color-backdrop: hsla(245, 67%, 7%, 0.55);
+  --color-shadow-deep: hsla(245, 67%, 7%, 0.45);
+
   // Stardance "space" palette — dark navy backdrop, lavender accents.
   --color-space-bg: hsl(245, 55%, 8%);
   --color-space-bg-2: hsl(245, 50%, 12%);
@@ -52,6 +114,8 @@
   --color-space-card: hsla(228, 26%, 58%, 0.45);
   --color-space-surface: hsl(228, 18%, 45%);
   --color-space-surface-soft: hsla(228, 18%, 45%, 0.5);
+  --color-space-surface-strong: hsla(228, 18%, 45%, 0.85);
+  --color-space-surface-faint: hsla(228, 18%, 45%, 0.18);
   --color-space-border: hsl(228, 18%, 45%);
 
   // Red
@@ -101,6 +165,12 @@
 
   // Border radius
   --border-radius: 0.8rem; // 12.8
+
+  // Canonical container radius per docs/branding.md §6 — 8px everywhere
+  // except buttons (which are fully rounded). Named `--profile-radius` for
+  // historical reasons; promote callers to a `--radius-*` family if/when the
+  // token system gets formalised.
+  --profile-radius: 8px;
 
   // Classical and robust spacing system
   --space-xxxs: 0.25rem; // 4px

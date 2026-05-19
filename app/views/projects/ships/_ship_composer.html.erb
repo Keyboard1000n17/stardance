@@ -1,0 +1,56 @@
+<%= form_with(
+      url: project_ships_path(@project),
+      method: :post,
+      id: "ship-form",
+      local: true,
+      class: "ship__composer"
+    ) do |form| %>
+
+  <div class="ship__composer-card">
+    <div class="ship__composer-chips">
+      <span class="ship__composer-chip ship__composer-chip--active"><%= @project.title %></span>
+    </div>
+
+    <div class="ship__composer-main">
+      <%= image_tag current_user.avatar, alt: "", class: "ship__composer-avatar" %>
+
+      <div class="ship__composer-field">
+        <%= form.text_area :ship_update,
+              class: "ship__composer-textarea",
+              rows: 5,
+              required: true,
+              placeholder: "What did you make? What was challenging? What are you proud of?" %>
+      </div>
+    </div>
+
+    <% if @project.banner.attached? %>
+      <div class="ship__composer-preview">
+        <%= image_tag @project.banner, class: "ship__composer-banner" %>
+      </div>
+    <% end %>
+
+    <div class="ship__composer-footer">
+      <div class="ship__composer-tools">
+        <span class="ship__composer-tool" aria-label="Attach media">
+          <%= inline_svg_tag "icons/paper.svg", class: "ship__composer-tool-icon" %>
+        </span>
+        <span class="ship__composer-tool" aria-label="Emoji">
+          <%= inline_svg_tag "icons/star_outline.svg", class: "ship__composer-tool-icon" %>
+        </span>
+      </div>
+
+      <%= render SpecialActionButtonComponent.new(
+            text: "Ship and post!",
+            type: :submit,
+            form: "ship-form",
+            disable_with: "Shipping...",
+            icon: nil,
+            disabled: !@project.shippable?
+          ) %>
+    </div>
+  </div>
+
+  <div class="ship__actions ship__actions--step3">
+    <%= link_to "← Back", new_project_ships_path(@project, step: 2), class: "ship__back-link" %>
+  </div>
+<% end %>

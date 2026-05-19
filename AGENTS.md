@@ -48,3 +48,31 @@ Bias for rails generators (ie. rails g model/migration) when first creating a fi
 We want maintainable code! Please use proper code formatting and naming conventions, also please use css classes instead of raw `style=` attributes, if possible use already existing components or partials.
 
 When coding please do not produce unnecessary code or any dead code, if u make dead code please make sure to remove it and clean it up!
+
+Please use BEM SCSS styling when writing SCSS: https://getbem.com/introduction/
+
+## Stardance themeing
+
+The full visual identity spec — palette, type scale, container sets, button
+states, form patterns — lives in [docs/branding.md](docs/branding.md). Read it
+before doing visual work; it's the source of truth and is mirrored from the
+Figma design system page.
+
+Design tokens (background, brand palette, spacing, fonts, font sizes) are defined as CSS variables in [app/assets/stylesheets/config/_variables.scss](app/assets/stylesheets/config/_variables.scss). Reference them via `var(--token-name)` rather than inlining hex / rem values.
+
+Background: `#08061E` (`--color-space-bg` / set on `<html>` in `landing/_base.scss`).
+
+Brand palette — use the `--color-brand-*` variables in code:
+
+- `#81FFFF` — `--color-brand-mint`
+- `#EBB7FF` — `--color-brand-lilac`
+- `#95DBFF` — `--color-brand-blue`
+- `#FF8D9D` — `--color-brand-salmon`
+- `#FFE564` — `--color-brand-yellow`
+- `#FFD598` — `--color-brand-peach`
+- `#FFF8D5` — `--color-brand-cream`
+- `#FFFCF4` — `--color-brand-off-white`
+
+When trying to choose a color, please try to choose from one of the colors above by default. If not, you can fall back to similar pastel colors. Try to avoid colors that are too saturated / deep. See [docs/branding.md](docs/branding.md) for the four "set" container surfaces, highlight tones, and which accent applies where.
+
+For the font, use Exo 2 for most body text and title text, with emphasis being in Playfair Display italics. The full type scale (Title, Title 2, Heading, Small heading, Body, Label) with sizes and weights is documented in [docs/branding.md](docs/branding.md).

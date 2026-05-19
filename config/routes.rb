@@ -21,9 +21,6 @@
 #                                              votes GET    /votes(.:format)                                                                                  votes#index
 #                                                    POST   /votes(.:format)                                                                                  votes#create
 #                                           new_vote GET    /votes/new(.:format)                                                                              votes#new
-#                                      explore_index GET    /explore(.:format)                                                                                explore#index
-#                                    explore_gallery GET    /explore/gallery(.:format)                                                                        explore#gallery
-#                                  explore_following GET    /explore/following(.:format)                                                                      explore#following
 #                                 rails_health_check GET    /up(.:format)                                                                                     rails/health#show
 #                                         test_error GET    /test_error(.:format)                                                                             debug#error
 #                                  letter_opener_web        /letter_opener                                                                                    LetterOpenerWeb::Engine
@@ -37,19 +34,20 @@
 #                                             logout DELETE /logout(.:format)                                                                                 sessions#destroy
 #                                     dev_login_auto GET    /dev_login(.:format)                                                                              sessions#dev_login
 #                                          dev_login GET    /dev_login/:id(.:format)                                                                          sessions#dev_login
+#                                     oauth_callback GET    /oauth/callback(.:format)                                                                         sessions#create
 #                                               home GET    /home(.:format)                                                                                   home#index
+#                                           commands GET    /commands(.:format)                                                                               commands#index
 #                                        leaderboard GET    /leaderboard(.:format)                                                                            leaderboard#index
-#                                         my_balance GET    /my/balance(.:format)                                                                             my#balance
-#                                        my_settings PATCH  /my/settings(.:format)                                                                            my#update_settings
-#                                    my_cookie_click POST   /my/cookie_click(.:format)                                                                        my#cookie_click
-#                                      dismiss_thing POST   /my/dismiss_thing(.:format)                                                                       my#dismiss_thing
-#                                            my_club DELETE /my/club(.:format)                                                                                my#unlink_club
+#                                         my_balance GET    /my/balance(.:format)                                                                             my/balances#show
+#                                        my_settings PATCH  /my/settings(.:format)                                                                            my/settings#update
+#                                                    PUT    /my/settings(.:format)                                                                            my/settings#update
+#                                      my_dismissals POST   /my/dismissals(.:format)                                                                          my/dismissals#create
 #                                    my_achievements GET    /my/achievements(.:format)                                                                        achievements#index
 #                        reveal_address_seller_order POST   /seller/orders/:id/reveal_address(.:format)                                                       seller/orders#reveal_address
 #                        mark_fulfilled_seller_order POST   /seller/orders/:id/mark_fulfilled(.:format)                                                       seller/orders#mark_fulfilled
 #                                      seller_orders GET    /seller/orders(.:format)                                                                          seller/orders#index
 #                                       seller_order GET    /seller/orders/:id(.:format)                                                                      seller/orders#show
-#                        complete_user_tutorial_step POST   /tutorial_steps/:id/complete(.:format)                                                            user/tutorial_steps#complete
+#                      user_tutorial_step_completion POST   /tutorial_steps/:tutorial_step_id/completion(.:format)                                            user/tutorial_steps/completions#create
 #                                 user_tutorial_step GET    /tutorial_steps/:id(.:format)                                                                     user/tutorial_steps#show
 #                                        helper_root GET    /helper(.:format)                                                                                 helper/application#index
 #                                balance_helper_user GET    /helper/users/:id/balance(.:format)                                                               helper/users#balance
@@ -164,12 +162,34 @@
 #                  trigger_admin_fulfillment_payouts POST   /admin/fulfillment_payouts/trigger(.:format)                                                      admin/fulfillment_payouts#trigger
 #                          admin_fulfillment_payouts GET    /admin/fulfillment_payouts(.:format)                                                              admin/fulfillment_payouts#index
 #                           admin_fulfillment_payout GET    /admin/fulfillment_payouts/:id(.:format)                                                          admin/fulfillment_payouts#show
+#                                admin_mission_steps POST   /admin/missions/:mission_slug/steps(.:format)                                                     admin/mission_steps#create
+#                                 admin_mission_step PATCH  /admin/missions/:mission_slug/steps/:id(.:format)                                                 admin/mission_steps#update
+#                                                    PUT    /admin/missions/:mission_slug/steps/:id(.:format)                                                 admin/mission_steps#update
+#                                                    DELETE /admin/missions/:mission_slug/steps/:id(.:format)                                                 admin/mission_steps#destroy
+#                               admin_mission_prizes POST   /admin/missions/:mission_slug/prizes(.:format)                                                    admin/mission_prizes#create
+#                                admin_mission_prize PATCH  /admin/missions/:mission_slug/prizes/:id(.:format)                                                admin/mission_prizes#update
+#                                                    PUT    /admin/missions/:mission_slug/prizes/:id(.:format)                                                admin/mission_prizes#update
+#                                                    DELETE /admin/missions/:mission_slug/prizes/:id(.:format)                                                admin/mission_prizes#destroy
+#                          admin_mission_memberships POST   /admin/missions/:mission_slug/memberships(.:format)                                               admin/mission_memberships#create
+#                           admin_mission_membership PATCH  /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#update
+#                                                    PUT    /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#update
+#                                                    DELETE /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#destroy
+#                         admin_mission_shop_unlocks POST   /admin/missions/:mission_slug/shop_unlocks(.:format)                                              admin/mission_shop_unlocks#create
+#                          admin_mission_shop_unlock DELETE /admin/missions/:mission_slug/shop_unlocks/:id(.:format)                                          admin/mission_shop_unlocks#destroy
+#                              restore_admin_mission POST   /admin/missions/:slug/restore(.:format)                                                           admin/missions#restore
+#                                     admin_missions GET    /admin/missions(.:format)                                                                         admin/missions#index
+#                                                    POST   /admin/missions(.:format)                                                                         admin/missions#create
+#                                  new_admin_mission GET    /admin/missions/new(.:format)                                                                     admin/missions#new
+#                                 edit_admin_mission GET    /admin/missions/:slug/edit(.:format)                                                              admin/missions#edit
+#                                      admin_mission GET    /admin/missions/:slug(.:format)                                                                   admin/missions#show
+#                                                    PATCH  /admin/missions/:slug(.:format)                                                                   admin/missions#update
+#                                                    PUT    /admin/missions/:slug(.:format)                                                                   admin/missions#update
+#                                                    DELETE /admin/missions/:slug(.:format)                                                                   admin/missions#destroy
 #                                              queue GET    /queue(.:format)                                                                                  queue#index
 #                                project_memberships POST   /projects/:project_id/memberships(.:format)                                                       projects/memberships#create
 #                                         membership DELETE /memberships/:id(.:format)                                                                        projects/memberships#destroy
 #                            versions_project_devlog GET    /projects/:project_id/devlogs/:id/versions(.:format)                                              projects/devlogs#versions
 #                                    project_devlogs POST   /projects/:project_id/devlogs(.:format)                                                           projects/devlogs#create
-#                                 new_project_devlog GET    /projects/:project_id/devlogs/new(.:format)                                                       projects/devlogs#new
 #                                edit_project_devlog GET    /projects/:project_id/devlogs/:id/edit(.:format)                                                  projects/devlogs#edit
 #                                     project_devlog PATCH  /projects/:project_id/devlogs/:id(.:format)                                                       projects/devlogs#update
 #                                                    PUT    /projects/:project_id/devlogs/:id(.:format)                                                       projects/devlogs#update
@@ -178,13 +198,16 @@
 #                                   project_og_image GET    /projects/:project_id/og_image(.:format)                                                          projects/og_images#show {format: :png}
 #                                  new_project_ships GET    /projects/:project_id/ships/new(.:format)                                                         projects/ships#new
 #                                      project_ships POST   /projects/:project_id/ships(.:format)                                                             projects/ships#create
+#                                    project_mission DELETE /projects/:project_id/mission(.:format)                                                           projects/missions#destroy
+#                                                    POST   /projects/:project_id/mission(.:format)                                                           projects/missions#create
+#                                      project_magic DELETE /projects/:project_id/magic(.:format)                                                             projects/magic#destroy
+#                                                    POST   /projects/:project_id/magic(.:format)                                                             projects/magic#create
+#                   project_mission_step_completions POST   /projects/:project_id/mission_step_completions(.:format)                                          projects/mission_step_completions#create
+#                            mission_step_completion DELETE /mission_step_completions/:mission_step_id(.:format)                                              projects/mission_step_completions#destroy
 #                                     readme_project GET    /projects/:id/readme(.:format)                                                                    projects#readme
-#                                  mark_fire_project POST   /projects/:id/mark_fire(.:format)                                                                 projects#mark_fire
-#                                unmark_fire_project POST   /projects/:id/unmark_fire(.:format)                                                               projects#unmark_fire
 #                                     follow_project POST   /projects/:id/follow(.:format)                                                                    projects#follow
 #                                   unfollow_project DELETE /projects/:id/unfollow(.:format)                                                                  projects#unfollow
-#                                           projects GET    /projects(.:format)                                                                               projects#index
-#                                                    POST   /projects(.:format)                                                                               projects#create
+#                                           projects POST   /projects(.:format)                                                                               projects#create
 #                                        new_project GET    /projects/new(.:format)                                                                           projects#new
 #                                       edit_project GET    /projects/:id/edit(.:format)                                                                      projects#edit
 #                                            project GET    /projects/:id(.:format)                                                                           projects#show
@@ -196,8 +219,48 @@
 #                                    devlog_comments POST   /devlogs/:devlog_id/comments(.:format)                                                            comments#create
 #                                     devlog_comment DELETE /devlogs/:devlog_id/comments/:id(.:format)                                                        comments#destroy
 #                                      user_og_image GET    /users/:user_id/og_image(.:format)                                                                users/og_images#show {format: :png}
+#                                        user_follow DELETE /users/:user_id/follow(.:format)                                                                  follows#destroy
+#                                                    POST   /users/:user_id/follow(.:format)                                                                  follows#create
+#                                       devlogs_user GET    /users/:id/devlogs(.:format)                                                                      users#devlogs
+#                                       replies_user GET    /users/:id/replies(.:format)                                                                      users#replies
+#                                      projects_user GET    /users/:id/projects(.:format)                                                                     users#projects
+#                                     followers_user GET    /users/:id/followers(.:format)                                                                    users#followers
+#                                     following_user GET    /users/:id/following(.:format)                                                                    users#following
 #                                               user GET    /users/:id(.:format)                                                                              users#show
+#                                                    PATCH  /users/:id(.:format)                                                                              users#update
+#                                                    PUT    /users/:id(.:format)                                                                              users#update
+#                                       search_users GET    /search/users(.:format)                                                                           search#users
+#                                    search_projects GET    /search/projects(.:format)                                                                        search#projects
 #                                                edu GET    /edu(.:format)                                                                                    landing#edu
+#                                             guides GET    /guides(.:format)                                                                                 guides#index
+#                                              guide GET    /guides/:id(.:format)                                                                             guides#show
+#                                   mission_og_image GET    /missions/:mission_slug/og_image(.:format)                                                        missions/og_images#show {format: :png}
+#                                           missions GET    /missions(.:format)                                                                               missions#index
+#                                            mission GET    /missions/:slug(.:format)                                                                         missions#show
+#                         approve_mission_submission POST   /mission_submissions/:id/approve(.:format)                                                        mission_submissions#approve
+#                          reject_mission_submission POST   /mission_submissions/:id/reject(.:format)                                                         mission_submissions#reject
+#                            undo_mission_submission POST   /mission_submissions/:id/undo(.:format)                                                           mission_submissions#undo
+#                          redeem_mission_submission GET    /mission_submissions/:id/redeem(.:format)                                                         mission_submissions#redeem
+#                                mission_submissions GET    /mission_submissions(.:format)                                                                    mission_submissions#index
+#                                 mission_submission GET    /mission_submissions/:id(.:format)                                                                mission_submissions#show
+#                               manage_mission_steps POST   /manage/missions/:mission_slug/steps(.:format)                                                    manage/mission_steps#create
+#                                manage_mission_step PATCH  /manage/missions/:mission_slug/steps/:id(.:format)                                                manage/mission_steps#update
+#                                                    PUT    /manage/missions/:mission_slug/steps/:id(.:format)                                                manage/mission_steps#update
+#                                                    DELETE /manage/missions/:mission_slug/steps/:id(.:format)                                                manage/mission_steps#destroy
+#                              manage_mission_prizes POST   /manage/missions/:mission_slug/prizes(.:format)                                                   manage/mission_prizes#create
+#                               manage_mission_prize PATCH  /manage/missions/:mission_slug/prizes/:id(.:format)                                               manage/mission_prizes#update
+#                                                    PUT    /manage/missions/:mission_slug/prizes/:id(.:format)                                               manage/mission_prizes#update
+#                                                    DELETE /manage/missions/:mission_slug/prizes/:id(.:format)                                               manage/mission_prizes#destroy
+#                         manage_mission_memberships POST   /manage/missions/:mission_slug/memberships(.:format)                                              manage/mission_memberships#create
+#                          manage_mission_membership PATCH  /manage/missions/:mission_slug/memberships/:id(.:format)                                          manage/mission_memberships#update
+#                                                    PUT    /manage/missions/:mission_slug/memberships/:id(.:format)                                          manage/mission_memberships#update
+#                                                    DELETE /manage/missions/:mission_slug/memberships/:id(.:format)                                          manage/mission_memberships#destroy
+#                        manage_mission_shop_unlocks POST   /manage/missions/:mission_slug/shop_unlocks(.:format)                                             manage/mission_shop_unlocks#create
+#                         manage_mission_shop_unlock DELETE /manage/missions/:mission_slug/shop_unlocks/:id(.:format)                                         manage/mission_shop_unlocks#destroy
+#                                edit_manage_mission GET    /manage/missions/:slug/edit(.:format)                                                             manage/missions#edit
+#                                     manage_mission GET    /manage/missions/:slug(.:format)                                                                  manage/missions#show
+#                                                    PATCH  /manage/missions/:slug(.:format)                                                                  manage/missions#update
+#                                                    PUT    /manage/missions/:slug(.:format)                                                                  manage/missions#update
 #                                                    GET    /:ref(.:format)                                                                                   landing#index {ref: /[a-z0-9][a-z0-9_-]{0,63}/}
 #                                  rails_performance        /rails/performance                                                                                RailsPerformance::Engine
 #                   turbo_recede_historical_location GET    /recede_historical_location(.:format)                                                             turbo/native/navigation#recede
@@ -421,10 +484,6 @@ Rails.application.routes.draw do
     end
   end
 
-  # Explore
-  get "explore", to: "explore#index", as: :explore_index
-  get "explore/gallery", to: "explore#gallery", as: :explore_gallery
-  get "explore/following", to: "explore#following", as: :explore_following
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   # Can be used by load balancers and uptime monitors to verify that the app is live.
   get "up" => "rails/health#show", as: :rails_health_check
@@ -456,7 +515,7 @@ Rails.application.routes.draw do
   get "dev_login/:id", to: "sessions#dev_login", as: :dev_login if Rails.env.development? || Rails.env.test?
 
   # OAuth callback for HCA
-  # get "/oauth/callback", to: "sessions#create"
+  get "/oauth/callback", to: "sessions#create"
 
   # Home
   get "home", to: "home#index"
@@ -468,11 +527,11 @@ Rails.application.routes.draw do
   get "leaderboard", to: "leaderboard#index"
 
   # My
-  get "my/balance", to: "my#balance", as: :my_balance
-  patch "my/settings", to: "my#update_settings", as: :my_settings
-  post "my/stardust_click", to: "my#stardust_click", as: :my_stardust_click
-  post "my/dismiss_thing", to: "my#dismiss_thing", as: :dismiss_thing
-  delete "my/club", to: "my#unlink_club", as: :my_club
+  namespace :my do
+    resource :balance, only: [ :show ]
+    resource :settings, only: [ :update ]
+    resources :dismissals, only: [ :create ]
+  end
   get "my/achievements", to: "achievements#index", as: :my_achievements
 
   namespace :seller do
@@ -486,10 +545,25 @@ Rails.application.routes.draw do
 
   namespace :user, path: "" do
     resources :tutorial_steps, only: [ :show ] do
-      member do
-        post :complete
-      end
+      resource :completion, only: [ :create ], module: :tutorial_steps
     end
+  end
+
+  namespace :onboarding do
+    post :start,                     to: "wizard#start"
+    get  :welcome,                   to: "wizard#welcome"
+    get  :birthday,                  to: "wizard#birthday"
+    post :birthday,                  to: "wizard#submit_birthday"
+    get  :age_gate,                  to: "wizard#age_gate"
+    get  :experience,                to: "wizard#experience"
+    post :experience,                to: "wizard#submit_experience"
+    get  :experience_result,         to: "wizard#experience_result"
+    get  :interests,                 to: "wizard#interests"
+    post :interests,                 to: "wizard#submit_interests"
+    get  :interests_result,          to: "wizard#interests_result"
+    get  :name,                      to: "wizard#name"
+    post :name,                      to: "wizard#submit_name"
+    get  :complete,                  to: "wizard#complete"
   end
 
   namespace :helper, constraints: HelperConstraint do
@@ -654,26 +728,45 @@ Rails.application.routes.draw do
         post :trigger
       end
     end
+
+    resources :missions, param: :slug do
+      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps"
+      resources :prizes,       only: [ :create, :update, :destroy ], controller: "mission_prizes"
+      resources :memberships,  only: [ :create, :update, :destroy ], controller: "mission_memberships"
+      resources :shop_unlocks, only: [ :create, :destroy ],          controller: "mission_shop_unlocks"
+      member do
+        post :restore
+      end
+    end
   end
 
   get "queue", to: "queue#index"
 
-  # Projects — public index lives on the user profile (tab=projects); only
+  # Projects — public index lives on the user profile projects section; only
   # show/new/edit/update/destroy and the nested resources are exposed here.
   resources :projects, shallow: true, except: [ :index ] do
     resources :memberships, only: [ :create, :destroy ], module: :projects
-    resources :devlogs, only: %i[new create edit update destroy], module: :projects, shallow: false do
+    resources :devlogs, only: %i[create edit update destroy], module: :projects, shallow: false do
       member do
         get :versions
+      end
+      collection do
+        get :preview_time
       end
     end
     resources :reports, only: [ :create ], module: :projects
     resource :og_image, only: [ :show ], module: :projects, defaults: { format: :png }
-    resource :ships, only: [ :new, :create ], module: :projects
+    resource :ships, only: [ :new, :create ], module: :projects do
+      resource :review, only: [ :create ], module: :ships
+    end
+    resource :mission, only: [ :create, :destroy ], module: :projects, controller: "missions"
+    resource :magic, only: [ :create, :destroy ], module: :projects, controller: "magic"
+    resources :mission_step_completions,
+              only: [ :create, :destroy ],
+              module: :projects,
+              param: :mission_step_id
     member do
       get :readme
-      post :mark_fire
-      post :unmark_fire
       post :follow
       delete :unfollow
     end
@@ -690,6 +783,9 @@ Rails.application.routes.draw do
     resource :og_image, only: [ :show ], module: :users, defaults: { format: :png }
     resource :follow, only: [ :create, :destroy ]
     member do
+      get :devlogs,  action: :show, defaults: { tab: "devlogs" }
+      get :replies,  action: :show, defaults: { tab: "replies" }
+      get :projects, action: :show, defaults: { tab: "projects" }
       get :followers
       get :following
     end
@@ -703,6 +799,32 @@ Rails.application.routes.draw do
 
   # Guides
   resources :guides, only: [ :index, :show ]
+
+  # Missions (public listing + show page).
+  # Project-side / reviewer-queue / admin-managed missions surfaces ship in later PRs.
+  resources :missions, only: [ :index, :show ], param: :slug do
+    resource :og_image, only: [ :show ], module: :missions, defaults: { format: :png }
+  end
+
+  # Reviewer queue.
+  resources :mission_submissions, only: [ :index, :show ] do
+    member do
+      post :approve
+      post :reject
+      post :undo
+      get  :redeem
+    end
+  end
+
+  # Owner-managed mission CRUD.
+  namespace :manage do
+    resources :missions, param: :slug, only: [ :show, :edit, :update ] do
+      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps"
+      resources :prizes,       only: [ :create, :update, :destroy ], controller: "mission_prizes"
+      resources :memberships,  only: [ :create, :update, :destroy ], controller: "mission_memberships"
+      resources :shop_unlocks, only: [ :create, :destroy ],          controller: "mission_shop_unlocks"
+    end
+  end
 
   get "/:ref", to: "landing#index", constraints: { ref: /[a-z0-9][a-z0-9_-]{0,63}/ }
 end

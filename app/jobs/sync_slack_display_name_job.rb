@@ -4,7 +4,7 @@ class SyncSlackDisplayNameJob < ApplicationJob
   def perform(user)
     return unless user.slack_id.present?
 
-    client = Slack::Web::Client.new(token: ENV.fetch("SLACK_BOT_TOKEN", nil))
+    client = Slack::Web::Client.new(token: Rails.application.credentials.dig(:slack, :bot_token))
 
     begin
       response = client.users_info(user: user.slack_id)

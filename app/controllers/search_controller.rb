@@ -1,13 +1,13 @@
 class SearchController < ApplicationController
-  before_action :require_logged_in
-
   MAX_RESULTS = 8
 
   # GET /search/users.json?q=...
   def users
+    authorize :search
+
     q = params[:q].to_s.strip.delete_prefix("@")
 
-    scope = User.where.not(display_name: [ nil, "" ])
+    scope = User.discoverable.where.not(display_name: [ nil, "" ])
     scope = scope.where("LOWER(display_name) LIKE ?", "#{q.downcase}%") if q.present?
 
     results = scope
@@ -22,6 +22,8 @@ class SearchController < ApplicationController
 
   # GET /search/projects.json?q=...
   def projects
+    authorize :search
+
     q = params[:q].to_s.strip.delete_prefix("$")
 
     scope = Project.not_deleted
@@ -30,9 +32,11 @@ class SearchController < ApplicationController
     results = scope
       .order(created_at: :desc)
       .limit(MAX_RESULTS)
-      .pluck(:id, :title, :user_id)
+      .includes(:memberships)
 
-    render json: results.map { |id, title, user_id| { id: id, title: title, slug: id.to_s, user_id: user_id } }
+    render json: results.map { |project|
+      { id: project.id, title: project.title, slug: project.id.to_s, user_id: project.memberships.find(&:owner?)&.user_id }
+    }
   end
 
   private
@@ -40,10 +44,5 @@ class SearchController < ApplicationController
   def avatar_for(slack_id)
     return nil if slack_id.blank?
     "https://cachet.dunkirk.sh/users/#{slack_id}/r"
-  end
-
-  def require_logged_in
-    return if current_user
-    head :unauthorized
   end
 end

@@ -14,8 +14,9 @@
 #
 # Indexes
 #
-#  index_ledger_entries_on_ledgerable  (ledgerable_type,ledgerable_id)
-#  index_ledger_entries_on_user_id     (user_id)
+#  index_ledger_entries_on_ledgerable         (ledgerable_type,ledgerable_id)
+#  index_ledger_entries_on_user_id            (user_id)
+#  index_ledger_entries_unique_welcome_grant  (user_id,reason) UNIQUE WHERE ((reason)::text = 'Free Stickers Welcome Grant'::text)
 #
 # Foreign Keys
 #
@@ -69,7 +70,7 @@ class LedgerEntry < ApplicationRecord
   end
 
   def notify_balance_change
-    return unless user.slack_balance_notifications?
+    return unless user.preference.stardust_balance_notifications?
 
     source = case ledgerable_type
     when "ShopOrder" then "shop purchase"

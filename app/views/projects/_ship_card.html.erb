@@ -1,0 +1,87 @@
+<%# Cream-tinted ship-event card. Reused for every ShipEvent post on the
+    project page. The most recent ship gets a "Latest ship" label up top; pass
+    `latest: true` to render it. %>
+<%
+  ship             = post.postable
+  author           = post.user
+  ship_text        = ship.respond_to?(:description) ? ship.description.to_s : ""
+  ship_attachments = ship.respond_to?(:attachments) ? ship.attachments.to_a.first(1) : []
+  total_hours      = (project.duration_seconds / 3600.0).round
+%>
+
+<article class="project-show__latest-ship">
+  <% if local_assigns[:latest] %>
+    <header class="project-show__latest-ship-label">
+      <%= inline_svg_tag "icons/sticker.svg", class: "project-show__latest-ship-icon" %>
+      <span>Latest ship</span>
+    </header>
+  <% end %>
+
+  <div class="project-show__latest-ship-body">
+    <% if author %>
+      <div class="project-show__latest-ship-avatar">
+        <%= image_tag author.avatar, alt: author.display_name, class: "project-show__avatar project-show__avatar--lg" %>
+      </div>
+    <% end %>
+
+    <div class="project-show__latest-ship-content">
+      <p class="project-show__latest-ship-heading">
+        <% if author %>
+          <%= link_to "@#{author.display_name}",
+                      user_path(author),
+                      class: "project-show__latest-ship-author",
+                      data: { turbo_frame: "_top", turbo_prefetch: "true" } %>
+        <% end %>
+        <span class="project-show__latest-ship-on">on</span>
+        <%= link_to project.title, project_path(project), class: "project-show__latest-ship-project", data: { turbo_frame: "_top" } %>
+        <span class="project-show__latest-ship-time">· <%= time_ago_in_words(post.created_at) %></span>
+      </p>
+
+      <% if ship_text.present? %>
+        <div class="project-show__latest-ship-text">
+          <%= simple_format(ship_text, {}, sanitize: true) %>
+        </div>
+      <% end %>
+
+      <ul class="project-show__latest-ship-stats" aria-label="Project totals">
+        <li class="profile-project-card__meta-item">
+          <%= inline_svg_tag "icons/devlogs.svg", class: "profile-project-card__meta-icon" %>
+          <span><%= pluralize(project.devlogs_count, "devlog") %></span>
+        </li>
+        <li class="profile-project-card__meta-item profile-project-card__meta-item--time">
+          <%= inline_svg_tag "icons/time.svg", class: "profile-project-card__meta-icon profile-project-card__meta-icon--time" %>
+          <span><%= total_hours %>h</span>
+        </li>
+      </ul>
+
+      <% if ship_attachments.any? %>
+        <div class="project-show__latest-ship-media">
+          <% ship_attachments.each do |att| %>
+            <% if att.content_type.to_s.start_with?("image/") %>
+              <%= image_tag att, alt: "", class: "project-show__latest-ship-image" %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+
+      <% if project.demo_url.present? || project.repo_url.present? %>
+        <div class="project-show__latest-ship-cta">
+          <% if project.demo_url.present? %>
+            <%= link_to "Try project →",
+                        project.demo_url,
+                        target: "_blank",
+                        rel: "noopener",
+                        class: "project-show__latest-ship-btn project-show__latest-ship-btn--primary" %>
+          <% end %>
+          <% if project.repo_url.present? %>
+            <%= link_to "See source code →",
+                        project.repo_url,
+                        target: "_blank",
+                        rel: "noopener",
+                        class: "project-show__latest-ship-btn" %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</article>
