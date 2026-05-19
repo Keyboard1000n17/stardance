@@ -34,10 +34,4 @@ class FollowsControllerTest < ActionDispatch::IntegrationTest
     post user_follow_path(@bob)
     assert_redirected_to root_path
   end
-
-  private
-
-  def create_user(slack_id:, display_name:)
-    User.create!(slack_id: slack_id, display_name: display_name, email: "#{display_name}@example.test")
-  end
 end

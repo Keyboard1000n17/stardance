@@ -7,7 +7,7 @@ class SearchController < ApplicationController
   def users
     q = params[:q].to_s.strip.delete_prefix("@")
 
-    scope = User.where.not(display_name: [ nil, "" ])
+    scope = User.discoverable.where.not(display_name: [ nil, "" ])
     scope = scope.where("LOWER(display_name) LIKE ?", "#{q.downcase}%") if q.present?
 
     results = scope
