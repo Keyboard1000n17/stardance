@@ -79,14 +79,14 @@ class ApplicationController < ActionController::Base
     return unless request.get? && request.format.html?
     return if request.xhr?
 
-    current_url = url_for(params.to_unsafe_h)
+    current_path = request.path
     pages = session[:previous_pages] ||= []
 
-    if (idx = pages.index(current_url))
+    if (idx = pages.index(current_path))
       session[:previous_pages] = pages[0..idx]
-    elsif pages.last != current_url
-      pages << current_url
-      session[:previous_pages] = pages.last(20)
+    elsif pages.last != current_path
+      pages << current_path
+      session[:previous_pages] = pages.last(10)
     end
   end
 
@@ -105,7 +105,16 @@ class ApplicationController < ActionController::Base
   end
 
   def user_not_authorized(exception)
-    if current_user&.guest?
+    if current_user.nil?
+      session[:return_to] = request.fullpath if request.get?
+      respond_to do |format|
+        format.html { redirect_to root_path, alert: "Please sign in to continue." }
+        format.json { render json: { error: "You must be signed in to do that." }, status: :unauthorized }
+      end
+      return
+    end
+
+    if current_user.guest?
       session[:return_to] = request.fullpath if request.get?
       respond_to do |format|
         format.turbo_stream { render "onboarding/upgrade_prompt", status: :forbidden }

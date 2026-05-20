@@ -68,7 +68,9 @@ module Battlemage
     end
 
     # what do we want? sessions! when do we want em? now!
-    config.session_store :cookie_store,
+    # Backed by Rails.cache (Redis in prod, MemoryStore in dev/test) so we don't hit the
+    # 4 KB cookie limit. Only the session ID lives in the cookie; payload lives in the cache.
+    config.session_store :cache_store,
                          key: "_stardance_session_v2",
                          expire_after: 2.months,
                          secure: Rails.env.production?,

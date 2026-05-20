@@ -724,6 +724,20 @@ Rails.application.routes.draw do
 
   get "queue", to: "queue#index"
 
+  # First-project setup flow — onboarding-style wizard for users creating their
+  # first project. Mounted before `resources :projects` so /projects/setup/*
+  # doesn't match the project show route.
+  namespace :projects do
+    get  "setup",               to: "setup#idea",          as: :setup
+    post "setup/idea",          to: "setup#submit_idea",   as: :setup_submit_idea
+    get  "setup/name",          to: "setup#name",          as: :setup_name
+    post "setup/name",          to: "setup#submit_name",   as: :setup_submit_name
+    get  "setup/missions",      to: "setup#missions",      as: :setup_missions
+    post "setup/missions",      to: "setup#submit_mission", as: :setup_submit_mission
+    get  "setup/link_account",  to: "setup#link_account",  as: :setup_link_account
+    get  "setup/welcome",       to: "setup#welcome",       as: :setup_welcome
+  end
+
   # Projects — public index lives on the user profile projects section; only
   # show/new/edit/update/destroy and the nested resources are exposed here.
   resources :projects, shallow: true, except: [ :index ] do

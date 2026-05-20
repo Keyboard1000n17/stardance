@@ -40,6 +40,12 @@ module User::StateFlags
   def hca_linked? = hack_club_identity.present?
   def guest? = !hca_linked?
 
+  # True for guests who already started the first-project setup flow and own
+  # a project that is gated behind finishing HCA link. Used to swap the
+  # "Create your first project" banner copy and to redirect away from the
+  # project show page.
+  def has_pending_setup_project? = guest? && projects.exists?
+
   private
     def append_array_value_once(column, value)
       values = public_send(column) || []

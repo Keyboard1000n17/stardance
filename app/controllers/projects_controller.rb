@@ -1,11 +1,24 @@
 class ProjectsController < ApplicationController
   before_action :set_project_minimal, only: [ :edit, :update, :destroy ]
   before_action :set_project, only: [ :show, :readme ]
+  before_action :redirect_guest_owner_to_link!, only: [ :show, :readme, :edit, :update ]
 
   def show
     authorize @project
 
     @body_class = "app-layout-page"
+    if params[:welcome] == "1"
+      welcomed_ids = Array(session[:project_welcomed_ids])
+      @body_class += " project-welcoming" unless welcomed_ids.include?(@project.id)
+      session[:project_welcomed_ids] = (welcomed_ids + [ @project.id ]).last(20)
+
+      # Strip wizard pages from the back-stack so the project page's back
+      # button skips the (one-time) setup flow.
+      if session[:previous_pages].is_a?(Array)
+        session[:previous_pages] = session[:previous_pages].reject { |p| p.to_s.include?("/projects/setup") }
+      end
+    end
+
     prepare_project_show_context
   end
 
@@ -107,6 +120,15 @@ class ProjectsController < ApplicationController
   private :prepare_project_show_context
 
   def new
+    if current_user&.projects&.none?
+      # /projects/new just bounces to setup for first-timers — pop it from the
+      # back-stack so the idea step's back button skips over it.
+      if session[:previous_pages].is_a?(Array)
+        session[:previous_pages].delete_if { |p| p.to_s.include?("/projects/new") }
+      end
+      redirect_to projects_setup_path and return
+    end
+
     @project = Project.new
     authorize @project
     @missions = Mission.available
@@ -153,7 +175,8 @@ class ProjectsController < ApplicationController
         @project.missions << mission if mission
       end
 
-      redirect_to project_path(@project)
+      first_project = current_user.projects.count == 1
+      redirect_to project_path(@project, first_project ? { welcome: 1 } : {})
     else
       flash[:alert] = "Failed to create project: #{@project.errors.full_messages.join(', ')}"
       @missions = Mission.available
@@ -283,6 +306,13 @@ class ProjectsController < ApplicationController
 
   def set_project_minimal
     @project = Project.find(params[:id])
+  end
+
+  def redirect_guest_owner_to_link!
+    return unless current_user&.guest?
+    return unless @project&.memberships&.exists?(user_id: current_user.id, role: :owner)
+
+    redirect_to projects_setup_link_account_path, alert: "Finish setting up your account to keep working on your project."
   end
 
   def project_params
