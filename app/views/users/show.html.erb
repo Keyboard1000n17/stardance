@@ -251,7 +251,16 @@
       </ul>
     <% else %>
       <% if own_profile %>
-        <%= link_to "Create a new Project!", new_project_path, class: "profile-tab-content__empty profile-tab-content__empty--link" %>
+        <%= link_to new_project_path, class: "empty-project-banner", aria: { label: "Create your first project" } do %>
+          <p class="empty-project-banner__headline">
+            <span class="empty-project-banner__word">Create your </span><span class="empty-project-banner__word empty-project-banner__word--emph">first project</span><span class="empty-project-banner__word"> +</span>
+          </p>
+          <p class="empty-project-banner__subhead">to begin posting</p>
+          <span class="empty-project-banner__reward">
+            <span class="empty-project-banner__reward-label">EARNS 10 STARDUST</span>
+            <%= image_tag "icons/stardust.png", alt: "", class: "empty-project-banner__reward-icon" %>
+          </span>
+        <% end %>
       <% else %>
         <p class="profile-tab-content__empty">No projects yet.</p>
       <% end %>

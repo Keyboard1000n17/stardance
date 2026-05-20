@@ -15,6 +15,85 @@
   color: var(--color-space-text);
 }
 
+.empty-project-banner {
+  position: relative;
+  display: block;
+  padding: var(--space-l) var(--space-m) calc(28px + var(--space-xs) - 6px);
+  border-radius: var(--profile-radius);
+  background: var(--color-brand-highlight);
+  color: var(--color-set-1-bg);
+  text-decoration: none;
+  text-align: center;
+  overflow: hidden;
+
+  &:hover,
+  &:focus-visible {
+    filter: brightness(1.03);
+    outline: none;
+  }
+
+  &__headline {
+    margin: 0;
+    font-family: "Exo 2", sans-serif;
+    font-weight: 700;
+    font-size: var(--font-size-xxxxl);
+    line-height: 1.05;
+  }
+
+  &__word--emph {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 700;
+  }
+
+  &__subhead {
+    margin: var(--space-xxxs) 0 0;
+    font-family: "Exo 2", sans-serif;
+    font-weight: 400;
+    font-size: 1.375rem; // 22px — matches Figma between --font-size-xl and --xxl
+    line-height: 1.1;
+  }
+
+  &__reward {
+    position: absolute;
+    left: var(--space-xs);
+    bottom: var(--space-xs);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xxs);
+    height: 28px;
+    padding: 0 var(--space-xs);
+    border-radius: var(--profile-radius);
+    background: var(--color-set-2-bg);
+    color: var(--color-brand-highlight);
+  }
+
+  &__reward-label {
+    font-family: "Exo 2", sans-serif;
+    font-weight: 700;
+    font-size: var(--font-size-s);
+    line-height: 1;
+    letter-spacing: 0.02em;
+  }
+
+  &__reward-icon {
+    width: 14px;
+    height: 18px;
+    object-fit: contain;
+    display: block;
+  }
+
+  @media (max-width: 640px) {
+    &__headline {
+      font-size: var(--font-size-xxxl);
+    }
+
+    &__subhead {
+      font-size: var(--font-size-l);
+    }
+  }
+}
+
 .feed-composer {
   padding: var(--space-m);
 
