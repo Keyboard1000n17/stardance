@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_19_091148) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -259,20 +259,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.datetime "updated_at", null: false
   end
 
-  create_table "funnel_events", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.string "email"
-    t.string "event_name", null: false
-    t.jsonb "properties", default: {}, null: false
-    t.datetime "updated_at", null: false
-    t.bigint "user_id"
-    t.index ["created_at"], name: "index_funnel_events_on_created_at"
-    t.index ["email"], name: "index_funnel_events_on_email"
-    t.index ["event_name", "created_at"], name: "index_funnel_events_on_event_name_and_created_at"
-    t.index ["event_name"], name: "index_funnel_events_on_event_name"
-    t.index ["user_id"], name: "index_funnel_events_on_user_id"
-  end
-
   create_table "hcb_credentials", force: :cascade do |t|
     t.text "access_token_ciphertext"
     t.string "base_url"
@@ -295,6 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["ledgerable_type", "ledgerable_id"], name: "index_ledger_entries_on_ledgerable"
+    t.index ["user_id", "reason"], name: "index_ledger_entries_unique_welcome_grant", unique: true, where: "((reason)::text = 'Free Stickers Welcome Grant'::text)"
     t.index ["user_id"], name: "index_ledger_entries_on_user_id"
   end
 
@@ -318,6 +305,109 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.bigint "user_id", null: false
     t.index ["sent_by_id"], name: "index_messages_on_sent_by_id"
     t.index ["user_id"], name: "index_messages_on_user_id"
+  end
+
+  create_table "mission_memberships", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "mission_id", null: false
+    t.integer "role", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["mission_id", "user_id", "role"], name: "index_mission_memberships_unique", unique: true
+    t.index ["mission_id"], name: "index_mission_memberships_on_mission_id"
+    t.index ["user_id"], name: "index_mission_memberships_on_user_id"
+  end
+
+  create_table "mission_prizes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "mission_id", null: false
+    t.integer "position", default: 0, null: false
+    t.bigint "shop_item_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_mission_prizes_on_deleted_at"
+    t.index ["mission_id", "shop_item_id"], name: "index_mission_prizes_active_unique", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["mission_id"], name: "index_mission_prizes_on_mission_id"
+    t.index ["shop_item_id"], name: "index_mission_prizes_on_shop_item_id"
+  end
+
+  create_table "mission_shop_unlocks", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "mission_id", null: false
+    t.bigint "shop_item_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["mission_id", "shop_item_id"], name: "index_mission_shop_unlocks_unique", unique: true
+    t.index ["mission_id"], name: "index_mission_shop_unlocks_on_mission_id"
+    t.index ["shop_item_id"], name: "index_mission_shop_unlocks_on_shop_item_id"
+  end
+
+  create_table "mission_step_completions", force: :cascade do |t|
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.bigint "mission_step_id", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["mission_step_id"], name: "index_mission_step_completions_on_mission_step_id"
+    t.index ["project_id", "mission_step_id"], name: "index_mission_step_completions_unique", unique: true
+    t.index ["project_id"], name: "index_mission_step_completions_on_project_id"
+  end
+
+  create_table "mission_steps", force: :cascade do |t|
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "mission_id", null: false
+    t.integer "position", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_mission_steps_on_deleted_at"
+    t.index ["mission_id", "position"], name: "index_mission_steps_on_mission_id_and_position"
+    t.index ["mission_id"], name: "index_mission_steps_on_mission_id"
+  end
+
+  create_table "mission_submissions", force: :cascade do |t|
+    t.bigint "chosen_prize_id"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "mission_id", null: false
+    t.string "payout_path", null: false
+    t.text "rejection_message"
+    t.datetime "reviewed_at"
+    t.bigint "reviewed_by_id"
+    t.bigint "ship_event_id", null: false
+    t.bigint "shop_order_id"
+    t.string "status", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chosen_prize_id"], name: "index_mission_submissions_on_chosen_prize_id"
+    t.index ["deleted_at"], name: "index_mission_submissions_on_deleted_at"
+    t.index ["mission_id", "status"], name: "index_mission_submissions_on_mission_id_and_status"
+    t.index ["mission_id"], name: "index_mission_submissions_on_mission_id"
+    t.index ["reviewed_by_id"], name: "index_mission_submissions_on_reviewed_by_id"
+    t.index ["ship_event_id"], name: "index_mission_submissions_active_per_ship_event", unique: true, where: "(deleted_at IS NULL)"
+    t.index ["ship_event_id"], name: "index_mission_submissions_on_ship_event_id"
+    t.index ["shop_order_id"], name: "index_mission_submissions_on_shop_order_id"
+    t.index ["shop_order_id"], name: "index_mission_submissions_with_shop_order", where: "(shop_order_id IS NOT NULL)"
+    t.index ["status", "created_at"], name: "index_mission_submissions_on_status_and_created_at"
+  end
+
+  create_table "missions", force: :cascade do |t|
+    t.text "achievement_description"
+    t.string "achievement_name"
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.text "description", null: false
+    t.string "difficulty"
+    t.boolean "enabled", default: true, null: false
+    t.datetime "end_at"
+    t.datetime "featured_at"
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.datetime "start_at"
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_missions_on_deleted_at"
+    t.index ["enabled"], name: "index_missions_on_enabled"
+    t.index ["featured_at"], name: "index_missions_on_featured_at"
+    t.index ["slug"], name: "index_missions_on_slug", unique: true
   end
 
   create_table "post_devlogs", force: :cascade do |t|
@@ -421,6 +511,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.index ["project_id", "user_id"], name: "index_project_memberships_on_project_id_and_user_id", unique: true
     t.index ["project_id"], name: "index_project_memberships_on_project_id"
     t.index ["user_id"], name: "index_project_memberships_on_user_id"
+  end
+
+  create_table "project_mission_attachments", force: :cascade do |t|
+    t.datetime "attached_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "deleted_at"
+    t.datetime "detached_at"
+    t.bigint "mission_id", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deleted_at"], name: "index_project_mission_attachments_on_deleted_at"
+    t.index ["mission_id"], name: "index_project_mission_attachments_on_mission_id"
+    t.index ["project_id", "mission_id"], name: "index_project_mission_attachments_active", unique: true, where: "((detached_at IS NULL) AND (deleted_at IS NULL))"
+    t.index ["project_id"], name: "index_project_mission_attachments_on_project_id"
   end
 
   create_table "project_reports", force: :cascade do |t|
@@ -578,6 +682,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.boolean "limited"
     t.text "long_description"
     t.integer "max_qty"
+    t.boolean "mission_prize_only", default: false, null: false
     t.string "name"
     t.integer "old_prices", default: [], array: true
     t.boolean "one_per_person_ever"
@@ -612,6 +717,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.bigint "user_id"
     t.index ["created_by_user_id"], name: "index_shop_items_on_created_by_user_id"
     t.index ["default_assigned_user_id"], name: "index_shop_items_on_default_assigned_user_id"
+    t.index ["mission_prize_only"], name: "index_shop_items_on_mission_prize_only"
     t.index ["user_id"], name: "index_shop_items_on_user_id"
   end
 
@@ -773,6 +879,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
     t.index ["user_id"], name: "index_user_identities_on_user_id"
   end
 
+  create_table "user_preferences", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.boolean "leaderboard_optin", default: false, null: false
+    t.boolean "search_engine_indexing_off", default: false, null: false
+    t.boolean "send_notifications_for_followed_projects", default: true, null: false
+    t.boolean "send_notifications_for_followed_users", default: true, null: false
+    t.boolean "send_notifications_for_new_comments", default: true, null: false
+    t.boolean "send_notifications_for_new_followers", default: true, null: false
+    t.boolean "send_votes_to_slack", default: false, null: false
+    t.boolean "stardust_balance_notifications", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["leaderboard_optin"], name: "index_user_preferences_on_leaderboard_optin"
+    t.index ["user_id"], name: "index_user_preferences_on_user_id", unique: true
+  end
+
   create_table "user_vote_verdicts", force: :cascade do |t|
     t.datetime "assessed_at"
     t.datetime "created_at", null: false
@@ -784,57 +906,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.string "airtable_record_id"
+    t.string "age_attestation"
     t.boolean "banned", default: false, null: false
     t.datetime "banned_at"
     t.text "banned_reason"
     t.text "bio"
-    t.string "club_link"
-    t.string "club_name"
     t.datetime "created_at", null: false
     t.string "display_name"
     t.string "email"
     t.string "enriched_ref"
+    t.string "experience_level"
     t.string "first_name"
-    t.integer "flavortown_message_count_14d"
-    t.integer "flavortown_support_message_count_14d"
     t.string "granted_roles", default: [], null: false, array: true
     t.boolean "has_gotten_free_stickers", default: false
     t.boolean "has_pending_achievements", default: false, null: false
     t.string "hcb_email"
+    t.string "interests", default: [], array: true
     t.text "internal_notes"
     t.string "last_name"
-    t.boolean "leaderboard_optin", default: false, null: false
     t.boolean "manual_ysws_override"
-    t.datetime "metrics_synced_at"
-    t.integer "projects_count"
-    t.integer "projects_shipped_count"
+    t.boolean "mission_review_notifications", default: true, null: false
+    t.datetime "onboarded_at"
     t.string "ref"
     t.string "regions", default: [], array: true
-    t.boolean "search_engine_indexing_off", default: false, null: false
-    t.boolean "send_notifications_for_followed_devlogs", default: true, null: false
-    t.boolean "send_notifications_for_new_comments", default: true, null: false
-    t.boolean "send_notifications_for_new_followers", default: true, null: false
-    t.boolean "send_votes_to_slack", default: false, null: false
     t.string "session_token"
     t.enum "shop_region", enum_type: "shop_region_type"
-    t.boolean "slack_balance_notifications", default: false, null: false
     t.string "slack_id"
-    t.datetime "slack_messages_updated_at"
-    t.boolean "special_effects_enabled", default: true, null: false
-    t.integer "stardust_clicks", default: 0, null: false
     t.datetime "synced_at"
     t.string "things_dismissed", default: [], null: false, array: true
     t.string "tutorial_steps_completed", default: [], array: true
     t.datetime "updated_at", null: false
     t.string "verification_status", default: "needs_submission", null: false
-    t.boolean "vote_anonymously", default: false, null: false
     t.integer "vote_balance", default: 0, null: false
     t.integer "votes_count"
     t.boolean "voting_locked", default: false, null: false
     t.boolean "ysws_eligible", default: false, null: false
-    t.index ["airtable_record_id"], name: "index_users_on_airtable_record_id", unique: true
+    t.index "lower((email)::text)", name: "index_users_on_lower_email_unique", unique: true, where: "((email IS NOT NULL) AND ((email)::text <> ''::text))"
     t.index ["email"], name: "index_users_on_email"
+    t.index ["onboarded_at"], name: "index_users_on_onboarded_at"
     t.index ["session_token"], name: "index_users_on_session_token", unique: true
     t.index ["slack_id"], name: "index_users_on_slack_id", unique: true
   end
@@ -905,12 +1014,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   add_foreign_key "likes", "users"
   add_foreign_key "messages", "users"
   add_foreign_key "messages", "users", column: "sent_by_id"
+  add_foreign_key "mission_memberships", "missions"
+  add_foreign_key "mission_memberships", "users"
+  add_foreign_key "mission_prizes", "missions"
+  add_foreign_key "mission_prizes", "shop_items"
+  add_foreign_key "mission_shop_unlocks", "missions"
+  add_foreign_key "mission_shop_unlocks", "shop_items"
+  add_foreign_key "mission_step_completions", "mission_steps"
+  add_foreign_key "mission_step_completions", "projects"
+  add_foreign_key "mission_steps", "missions"
+  add_foreign_key "mission_submissions", "mission_prizes", column: "chosen_prize_id"
+  add_foreign_key "mission_submissions", "missions"
+  add_foreign_key "mission_submissions", "post_ship_events", column: "ship_event_id"
+  add_foreign_key "mission_submissions", "shop_orders"
+  add_foreign_key "mission_submissions", "users", column: "reviewed_by_id"
   add_foreign_key "posts", "projects"
   add_foreign_key "posts", "users"
   add_foreign_key "project_follows", "projects"
   add_foreign_key "project_follows", "users"
   add_foreign_key "project_memberships", "projects"
   add_foreign_key "project_memberships", "users"
+  add_foreign_key "project_mission_attachments", "missions"
+  add_foreign_key "project_mission_attachments", "projects"
   add_foreign_key "project_reports", "projects"
   add_foreign_key "project_reports", "users", column: "reporter_id"
   add_foreign_key "project_skips", "projects"
@@ -922,7 +1047,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   add_foreign_key "shop_card_grants", "shop_items"
   add_foreign_key "shop_card_grants", "users"
   add_foreign_key "shop_items", "users"
-  add_foreign_key "shop_items", "users", column: "created_by_user_id", on_delete: :nullify, validate: false
+  add_foreign_key "shop_items", "users", column: "created_by_user_id", on_delete: :nullify
   add_foreign_key "shop_items", "users", column: "default_assigned_user_id", on_delete: :nullify
   add_foreign_key "shop_order_reviews", "shop_orders"
   add_foreign_key "shop_order_reviews", "users"
@@ -942,6 +1067,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_11_185822) do
   add_foreign_key "user_hackatime_projects", "projects"
   add_foreign_key "user_hackatime_projects", "users"
   add_foreign_key "user_identities", "users"
+  add_foreign_key "user_preferences", "users"
   add_foreign_key "user_vote_verdicts", "users"
   add_foreign_key "votes", "post_ship_events", column: "ship_event_id"
   add_foreign_key "votes", "projects"
