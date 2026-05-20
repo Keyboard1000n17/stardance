@@ -1674,6 +1674,52 @@
         color: var(--color-space-text-muted);
       }
     }
+
+    // Visual states for approved/rejected status
+    &.approved {
+      background: linear-gradient(
+        135deg,
+        rgba(129, 255, 255, 0.15) 0%,
+        rgba(129, 255, 255, 0.05) 100%
+      );
+      border-color: var(--color-brand-mint);
+      box-shadow: 0 0 20px rgba(129, 255, 255, 0.2);
+
+      @media (prefers-reduced-motion: reduce) {
+        box-shadow: none;
+      }
+
+      .status-btn.btn-approve.active {
+        background: var(--color-brand-mint);
+        color: var(--color-set-1-bg);
+        box-shadow: 0 2px 8px rgba(129, 255, 255, 0.3);
+      }
+    }
+
+    &.rejected {
+      background: linear-gradient(
+        135deg,
+        rgba(255, 141, 157, 0.15) 0%,
+        rgba(255, 141, 157, 0.05) 100%
+      );
+      border-color: var(--color-brand-salmon);
+      box-shadow: 0 0 20px rgba(255, 141, 157, 0.2);
+
+      @media (prefers-reduced-motion: reduce) {
+        box-shadow: none;
+      }
+
+      .status-btn.btn-reject.active {
+        background: var(--color-brand-salmon);
+        color: var(--color-set-1-bg);
+        box-shadow: 0 2px 8px rgba(255, 141, 157, 0.3);
+      }
+    }
+
+    &.pending {
+      background: var(--color-space-surface);
+      border-color: var(--color-space-border);
+    }
   }
 
   // Actions Card (Full Width - Outside Grid)
@@ -1862,11 +1908,21 @@
       .status-done {
         color: var(--color-brand-mint);
         font-weight: 700;
+        padding: var(--space-xxxs) var(--space-s);
+        border-radius: 999px;
+        font-size: var(--font-size-xs);
+        background: rgba(129, 255, 255, 0.2);
+        border: 1px solid var(--color-brand-mint);
       }
 
       .status-pending {
         color: var(--color-brand-yellow);
         font-weight: 700;
+        padding: var(--space-xxxs) var(--space-s);
+        border-radius: 999px;
+        font-size: var(--font-size-xs);
+        background: rgba(255, 229, 100, 0.2);
+        border: 1px solid var(--color-brand-yellow);
       }
 
       &.return-reason {

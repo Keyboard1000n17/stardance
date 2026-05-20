@@ -707,6 +707,8 @@ Rails.application.routes.draw do
 
     get 'review', to: 'reviews#index'
     get 'review/:id', to: 'reviews#show', as: 'review_detail'
+
+    resources :devlog_reviews, only: [:update]
   end
 
   get "queue", to: "queue#index"

@@ -265,7 +265,12 @@
     <% if @review.devlog_reviews.any? %>
       <div class="devlogs-list">
         <% @review.devlog_reviews.each_with_index do |devlog_review, index| %>
-          <div class="devlog-item" <%= 'data-review-sidebar-target="trigger"'.html_safe if index == 0 %>>
+          <div class="devlog-item"
+               data-controller="devlog-review"
+               data-devlog-review-id-value="<%= devlog_review.id %>"
+               data-devlog-review-original-minutes-value="<%= devlog_review.original_minutes || 0 %>"
+               data-devlog-review-status-value="<%= devlog_review.status %>"
+               <%= 'data-review-sidebar-target="trigger"'.html_safe if index == 0 %>>
             <div class="devlog-main">
               <div class="devlog-header-row">
                 <span class="devlog-id">Devlog #<%= devlog_review.post_devlog.id %></span>
@@ -323,16 +328,21 @@
             </div>
 
             <!-- Review Decision Panel -->
-            <div class="devlog-review-panel">
+            <div class="devlog-review-panel"
+                 data-devlog-review-target="panel">
               <div class="panel-title">Review Decision</div>
 
               <div class="panel-section">
                 <div class="panel-label">Status:</div>
                 <div class="status-buttons">
-                  <button class="status-btn btn-approve" disabled>
+                  <button class="status-btn btn-approve"
+                          data-devlog-review-target="approveButton"
+                          data-action="click->devlog-review#approve">
                     ✓ Approve
                   </button>
-                  <button class="status-btn btn-reject" disabled>
+                  <button class="status-btn btn-reject"
+                          data-devlog-review-target="rejectButton"
+                          data-action="click->devlog-review#reject">
                     ✗ Reject
                   </button>
                 </div>
@@ -344,15 +354,27 @@
                   <input type="number"
                          value="<%= devlog_review.approved_minutes || devlog_review.original_minutes || 0 %>"
                          class="minutes-input"
-                         disabled>
+                         data-devlog-review-target="minutesInput"
+                         data-action="input->devlog-review#updateMinutes"
+                         min="0">
                   <span class="minutes-label">minutes</span>
                 </div>
                 <div class="quick-adjust-buttons">
-                  <button class="adjust-btn" disabled>50%</button>
-                  <button class="adjust-btn" disabled>25%</button>
-                  <button class="adjust-btn" disabled>-30min</button>
-                  <button class="adjust-btn" disabled>-1hr</button>
-                  <button class="adjust-btn" disabled>Reset</button>
+                  <button class="adjust-btn"
+                          data-action="click->devlog-review#quickAdjust"
+                          data-adjust-action="50%">50%</button>
+                  <button class="adjust-btn"
+                          data-action="click->devlog-review#quickAdjust"
+                          data-adjust-action="25%">25%</button>
+                  <button class="adjust-btn"
+                          data-action="click->devlog-review#quickAdjust"
+                          data-adjust-action="-30">-30min</button>
+                  <button class="adjust-btn"
+                          data-action="click->devlog-review#quickAdjust"
+                          data-adjust-action="-60">-1hr</button>
+                  <button class="adjust-btn"
+                          data-action="click->devlog-review#quickAdjust"
+                          data-adjust-action="reset">Reset</button>
                 </div>
               </div>
 
@@ -360,7 +382,8 @@
                 <div class="panel-label">Internal Notes:</div>
                 <textarea class="notes-textarea"
                           placeholder="notes..."
-                          disabled><%= devlog_review.justification %></textarea>
+                          data-devlog-review-target="notesTextarea"
+                          data-action="input->devlog-review#updateNotes"><%= devlog_review.justification %></textarea>
               </div>
             </div>
           </div>

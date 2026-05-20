@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_13_191303) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_191951) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -171,6 +171,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_13_191303) do
     t.text "justification"
     t.integer "original_minutes"
     t.bigint "post_devlog_id", null: false
+    t.string "status"
     t.datetime "updated_at", null: false
     t.bigint "ysws_review_id", null: false
     t.index ["post_devlog_id"], name: "index_devlog_reviews_on_post_devlog_id"

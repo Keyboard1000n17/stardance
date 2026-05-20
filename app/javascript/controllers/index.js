@@ -34,6 +34,9 @@ application.register("customs-warning", CustomsWarningController);
 import DecisionTreeController from "./decision_tree_controller";
 application.register("decision-tree", DecisionTreeController);
 
+import DevlogReviewController from "./devlog_review_controller";
+application.register("devlog-review", DevlogReviewController);
+
 import DevlogTimeChartController from "./devlog_time_chart_controller";
 application.register("devlog-time-chart", DevlogTimeChartController);
 
