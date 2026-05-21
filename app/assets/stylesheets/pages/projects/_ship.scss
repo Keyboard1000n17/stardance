@@ -46,13 +46,12 @@
     width: 100%;
     max-width: 1296px;
     margin: 0 auto;
-    padding-top: 16px;
     text-align: center;
   }
 
   &__back {
     position: absolute;
-    top: 136px;
+    top: calc(60px + clamp(72px, 5.5vw, 104px));
     left: clamp(20px, 2.4vw, 46px);
     z-index: 2;
     font-family: var(--font-family-text);
