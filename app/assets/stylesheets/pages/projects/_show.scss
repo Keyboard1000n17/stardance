@@ -891,7 +891,7 @@ turbo-frame#project_hero {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding-left: 86px; // aligns with content body (avatar 57 + 16px gap + 13 inset)
+  padding-left: 40px;
   color: var(--color-space-text);
   // Branding §2.1 Label scale — small caption above the heading.
   font-size: 1rem;
