@@ -24,6 +24,8 @@
 
 <% if @show_project_tour %>
   <%= render "welcome_tour" %>
+<% elsif @show_first_hackatime_tour %>
+  <%= render "first_hackatime_tour" %>
 <% end %>
 
 <div class="app-layout">
@@ -37,7 +39,7 @@
                     multipart: true,
                     class: "project-show project-show--editing",
                     data: {
-                      turbo_frame: "_top",
+                      turbo: false,
                       controller: "project-form",
                       action: "submit->project-form#onSubmit",
                       "project-form-readme-locked-class-value": "project-show__field--locked"
@@ -125,7 +127,7 @@
                                } %>
 
             <div class="project-show__edit-grid">
-              <div class="project-show__field project-show__field--inline">
+              <div class="project-show__field project-show__field--inline project-show__field--hackatime">
                 <span>Hackatime projects</span>
                 <% if !@hackatime_linked %>
                   <%= button_to "/auth/hackatime",
