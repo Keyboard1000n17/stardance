@@ -511,11 +511,7 @@ turbo-frame#project_hero {
   }
 }
 
-// `--outline` is an alias for the base style (transparent fill + outline) so
-// templates can opt into it explicitly. No additional CSS.
-.project-show__pill--outline {
-  // inherits base
-}
+// `--outline` is an alias for the base style so templates can opt into it.
 
 // Primary action (Save / Edit) on a light bg. State ladder steps DARKER
 // from white → highlight-secondary → highlight, so the visual feedback is a
@@ -730,8 +726,18 @@ turbo-frame#project_hero {
     color: var(--color-set-1-bg);
   }
 
-  &--secondary {
-    // inherits base — set-2 fill with set-3-coloured border + white text
+  // `--secondary` inherits the base set-2 fill with set-3 border + white text.
+
+  &--test {
+    border-color: color-mix(in srgb, var(--color-brand-yellow) 55%, transparent);
+    background: color-mix(in srgb, var(--color-brand-yellow) 14%, var(--color-set-2-bg));
+    color: var(--color-brand-yellow);
+  }
+
+  &--test:hover:not(:disabled),
+  &--test:focus-visible:not(:disabled) {
+    border-color: var(--color-brand-yellow);
+    color: var(--color-brand-cream);
   }
 }
 

@@ -744,6 +744,7 @@ Rails.application.routes.draw do
   # Projects — public index lives on the user profile projects section; only
   # show/new/edit/update/destroy and the nested resources are exposed here.
   resources :projects, shallow: true, except: [ :index ] do
+    post :add_test_time, on: :member
     resources :memberships, only: [ :create, :destroy ], module: :projects
     resources :devlogs, only: %i[create edit update destroy], module: :projects, shallow: false do
       member do

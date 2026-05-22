@@ -345,12 +345,12 @@
     <% end %>
 
     <% if is_member %>
-      <% if @hackatime_linked %>
+      <% if @hackatime_linked || @test_time_granted %>
         <%
-          no_hackatime_project = @project.hackatime_keys.blank?
+          no_hackatime_project = @project.hackatime_keys.blank? && !@test_time_granted
           live_seconds = @project.hackatime_keys.sum { |k| @hackatime_times[k].to_i }
           unposted_seconds = [ live_seconds - @project.duration_seconds, 0 ].max
-          enough_time = !no_hackatime_project && unposted_seconds >= 15 * 60
+          enough_time = !no_hackatime_project && (unposted_seconds >= 15 * 60 || @test_time_granted)
           devlog_disabled_message = "Edit this project to add a Hackatime project" if no_hackatime_project
           # Only call it the primary action when devlogging is actually
           # actionable right now — i.e. you have a Hackatime project AND at
@@ -376,6 +376,11 @@
               Post a devlog<span class="project-show__action-icon" aria-hidden="true">+</span>
             </button>
           <% end %>
+          <%= button_to "Add 15min (test)",
+                        add_test_time_project_path(@project),
+                        method: :post,
+                        class: "project-show__action project-show__action--secondary project-show__action--test",
+                        form: { class: "project-show__action-form" } %>
           <% if @project.has_devlog_since_last_ship? %>
             <% if unposted_seconds >= 15 * 60 %>
               <button type="button"
@@ -410,7 +415,7 @@
                   data-disabled-tooltip-position-value="top">Manage teammates</button>
         </nav>
       <% else %>
-        <nav class="project-show__actions project-show__actions--single" aria-label="Project actions">
+        <nav class="project-show__actions" aria-label="Project actions">
           <%= button_to "/auth/hackatime",
                         method: :post,
                         params: { origin: request.fullpath },
@@ -418,6 +423,11 @@
                         form: { class: "project-show__action-form" } do %>
             Link Hackatime to track your project time<%= image_tag "icons/right-arrow.svg", alt: "", class: "project-show__action-icon project-show__action-icon--img" %>
           <% end %>
+          <%= button_to "Add 15min (test)",
+                        add_test_time_project_path(@project),
+                        method: :post,
+                        class: "project-show__action project-show__action--secondary project-show__action--test",
+                        form: { class: "project-show__action-form" } %>
         </nav>
       <% end %>
     <% end %>

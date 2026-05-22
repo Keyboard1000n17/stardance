@@ -1,6 +1,6 @@
 class ProjectsController < ApplicationController
   before_action :set_project_minimal, only: [ :edit, :update, :destroy ]
-  before_action :set_project, only: [ :show, :readme ]
+  before_action :set_project, only: [ :show, :readme, :add_test_time ]
   before_action :redirect_guest_owner_to_link!, only: [ :show, :readme, :edit, :update ]
 
   def show
@@ -30,6 +30,8 @@ class ProjectsController < ApplicationController
     @follower_count = @project.project_follows.size
     @viewer_follow = current_user && @project.project_follows.find_by(user_id: current_user.id)
     @total_hours = (@project.duration_seconds / 3600.0).round
+    @test_time_granted = session[test_time_session_key].present?
+    @hackatime_times = {}
 
     if @is_member && current_user
       @composer_devlog = Post::Devlog.new
@@ -134,6 +136,14 @@ class ProjectsController < ApplicationController
     end
   end
   private :prepare_project_show_context
+
+  def add_test_time
+    authorize @project
+
+    session[test_time_session_key] = true
+    redirect_back fallback_location: project_path(@project),
+                  notice: "15 minutes of test time added - post your devlog now"
+  end
 
   def new
     if current_user&.projects&.none?
@@ -491,5 +501,9 @@ class ProjectsController < ApplicationController
   def load_project_times
     result = current_user.try_sync_hackatime_data!
     @project_times = result&.dig(:projects) || {}
+  end
+
+  def test_time_session_key
+    "test_time_project_#{@project.id}"
   end
 end
