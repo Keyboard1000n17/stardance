@@ -19,8 +19,13 @@ export default class extends Controller {
   ];
 
   connect() {
-    this.#setState("idle");
-    this.#setText(IDLE_PRIMARY, IDLE_SECONDARY);
+    // If the server pre-rendered the component with an existing image (e.g.
+    // a project banner already attached), keep the "loaded" state and the
+    // SSR'd primary/secondary text instead of clobbering them to idle.
+    if (this.#state !== "loaded") {
+      this.#setState("idle");
+      this.#setText(IDLE_PRIMARY, IDLE_SECONDARY);
+    }
   }
 
   disconnect() {
