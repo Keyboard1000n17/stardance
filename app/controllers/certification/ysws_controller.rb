@@ -31,7 +31,7 @@ module Certification
       if @repo_info
         platform = @repo_info[:platform]
         username = @repo_info[:username]
-        @contribution_data = Admin::ReviewPlatformService.fetch_contributions(platform, username)
+        @contribution_data = Certification::YswsService.fetch_contributions(platform, username)
       end
     end
 
