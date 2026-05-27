@@ -419,7 +419,9 @@
 
 // One t-shirt step down from the choice-card component's pair default,
 // applied to every onboarding screen for consistency.
-.onboarding-screen .onboarding-choice-card--pair .onboarding-choice-card__label {
+.onboarding-screen
+  .onboarding-choice-card--pair
+  .onboarding-choice-card__label {
   font-size: var(--font-size-xxxl);
 
   @media (max-width: 768px) {

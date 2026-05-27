@@ -678,8 +678,16 @@ turbo-frame#project_hero {
   // Yellow test variant applied via class: "project-show__action--test" on the
   // "Add 15min (test)" ActionButton. Lives here because it's only used in this row.
   .project-show__action--test {
-    background: color-mix(in srgb, var(--color-brand-yellow) 14%, var(--color-set-2-bg));
-    border-color: color-mix(in srgb, var(--color-brand-yellow) 55%, transparent);
+    background: color-mix(
+      in srgb,
+      var(--color-brand-yellow) 14%,
+      var(--color-set-2-bg)
+    );
+    border-color: color-mix(
+      in srgb,
+      var(--color-brand-yellow) 55%,
+      transparent
+    );
     color: var(--color-brand-yellow);
 
     &:hover:not(:disabled),
