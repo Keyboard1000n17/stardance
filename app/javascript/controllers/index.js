@@ -34,6 +34,12 @@ application.register("customs-warning", CustomsWarningController);
 import DecisionTreeController from "./decision_tree_controller";
 application.register("decision-tree", DecisionTreeController);
 
+import DevlogReviewController from "./certification/ysws/devlog_review_controller";
+application.register("certification--ysws--devlog-review", DevlogReviewController);
+
+import DevlogTimeChartController from "./certification/ysws/devlog_time_chart_controller";
+application.register("certification--ysws--devlog-time-chart", DevlogTimeChartController);
+
 import DisabledTooltipController from "./disabled_tooltip_controller";
 application.register("disabled-tooltip", DisabledTooltipController);
 
@@ -55,6 +61,12 @@ application.register("flash", FlashController);
 import FormSubmitOnceController from "./form_submit_once_controller";
 application.register("form-submit-once", FormSubmitOnceController);
 
+import FraudReportController from "./certification/ysws/fraud_report_controller";
+application.register("certification--ysws--fraud-report", FraudReportController);
+
+import GithubCalendarController from "./certification/ysws/github_calendar_controller";
+application.register("certification--ysws--github-calendar", GithubCalendarController);
+
 import HackatimeLinkController from "./hackatime_link_controller";
 application.register("hackatime-link", HackatimeLinkController);
 
@@ -72,6 +84,9 @@ application.register("locked-tab", LockedTabController);
 
 import MarkdownPreviewController from "./markdown_preview_controller";
 application.register("markdown-preview", MarkdownPreviewController);
+
+import MediaViewerController from "./certification/ysws/media_viewer_controller";
+application.register("certification--ysws--media-viewer", MediaViewerController);
 
 import ModalController from "./modal_controller";
 application.register("modal", ModalController);
@@ -120,6 +135,9 @@ application.register("readme-image", ReadmeImageController);
 
 import RevealOnScrollController from "./reveal_on_scroll_controller";
 application.register("reveal-on-scroll", RevealOnScrollController);
+
+import ReviewSidebarController from "./certification/ysws/review_sidebar_controller";
+application.register("certification--ysws--review-sidebar", ReviewSidebarController);
 
 import RocketArcController from "./rocket_arc_controller";
 application.register("rocket-arc", RocketArcController);

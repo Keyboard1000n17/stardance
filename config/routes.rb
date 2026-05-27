@@ -416,9 +416,11 @@ class AdminConstraint
     return false unless user
 
     policy = AdminPolicy.new(user, :admin)
-    # Allow admins, fraud dept, and fulfillment persons (who have limited access)
+    # Allow admins, fraud dept, fulfillment persons, and certification reviewers
     policy.access_admin_endpoints? ||
-      policy.access_fulfillment_view?
+      policy.access_fulfillment_view? ||
+      policy.access_ship_review? ||
+      policy.access_ysws_review?
   end
 
   def self.admin_user_for(request)
@@ -441,15 +443,6 @@ class HelperConstraint
     u = User.find_by(id: request.session[:user_id])
     u ||= User.find_by(id: ENV["DEV_ADMIN_USER_ID"]) if Rails.env.development?
     u && HelperPolicy.new(u, :helper).access?
-  end
-end
-
-class ReviewerConstraint
-  def self.matches?(request)
-    u = User.find_by(id: request.session[:user_id])
-    u ||= User.find_by(id: ENV["DEV_ADMIN_USER_ID"]) if Rails.env.development?
-    return false unless u
-    u.can_review?
   end
 end
 
@@ -582,17 +575,6 @@ Rails.application.routes.draw do
     resources :support_vibes, only: [ :index ]
   end
 
-  namespace :certification, path: "admin/ship_cert", constraints: ReviewerConstraint do
-    resources :ships, only: [ :index, :show, :update ], path: "" do
-      collection do
-        get :next
-      end
-      member do
-        post :claim
-      end
-    end
-  end
-
   # admin shallow routing
   namespace :admin, constraints: AdminConstraint do
     root to: "application#index"
@@ -710,6 +692,22 @@ Rails.application.routes.draw do
         post :restore
       end
     end
+
+  end
+
+  namespace :certification, path: "admin/certification", constraints: AdminConstraint do
+    resources :ships, path: "ship_cert", only: [ :index, :show, :update ] do
+      collection do
+        get :next
+      end
+      member do
+        post :claim
+      end
+    end
+
+    get "review", to: "ysws#index", as: "ysws_reviews"
+    get "review/:id", to: "ysws#show", as: "ysws_review"
+    post "review/:id/report_fraud", to: "ysws#report_fraud", as: "ysws_report_fraud"
   end
 
   get "queue", to: "queue#index"

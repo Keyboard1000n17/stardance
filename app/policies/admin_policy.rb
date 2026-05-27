@@ -98,4 +98,12 @@ class AdminPolicy < ApplicationPolicy
   def access_sw_vibes?
     user.admin?
   end
+
+  def access_ship_review?
+    user.admin? || user.has_role?(:project_certifier)
+  end
+
+  def access_ysws_review?
+    user.admin? || user.has_role?(:guardian_of_integrity)
+  end
 end

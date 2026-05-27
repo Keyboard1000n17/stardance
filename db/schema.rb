@@ -153,6 +153,44 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_170653) do
     t.index ["creator_id"], name: "index_blazer_queries_on_creator_id"
   end
 
+  create_table "certification_devlog_reviews", force: :cascade do |t|
+    t.integer "approved_minutes"
+    t.datetime "created_at", null: false
+    t.text "justification"
+    t.integer "original_minutes"
+    t.bigint "post_devlog_id", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "ysws_review_id", null: false
+    t.index ["post_devlog_id"], name: "index_certification_devlog_reviews_on_post_devlog_id"
+    t.index ["ysws_review_id"], name: "index_certification_devlog_reviews_on_ysws_review_id"
+  end
+
+  create_table "certification_ysws_reviews", force: :cascade do |t|
+    t.datetime "airtable_synced_at", precision: nil
+    t.integer "approved_minutes"
+    t.datetime "created_at", null: false
+    t.datetime "demo_checked_at", precision: nil
+    t.integer "original_minutes"
+    t.bigint "post_ship_event_id", null: false
+    t.bigint "project_id", null: false
+    t.datetime "repo_checked_at", precision: nil
+    t.datetime "reviewed_at", precision: nil
+    t.bigint "reviewer_id"
+    t.bigint "ship_cert_id"
+    t.datetime "spotchecked_at", precision: nil
+    t.bigint "spotchecked_by_id"
+    t.text "summary_justification"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["post_ship_event_id"], name: "index_certification_ysws_reviews_on_post_ship_event_id"
+    t.index ["project_id"], name: "index_certification_ysws_reviews_on_project_id"
+    t.index ["reviewer_id"], name: "index_certification_ysws_reviews_on_reviewer_id"
+    t.index ["ship_cert_id"], name: "index_certification_ysws_reviews_on_ship_cert_id"
+    t.index ["spotchecked_by_id"], name: "index_certification_ysws_reviews_on_spotchecked_by_id"
+    t.index ["user_id"], name: "index_certification_ysws_reviews_on_user_id"
+  end
+
   create_table "comments", force: :cascade do |t|
     t.text "body", null: false
     t.bigint "commentable_id", null: false
@@ -1012,6 +1050,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_27_170653) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "certification_devlog_reviews", "certification_ysws_reviews", column: "ysws_review_id"
+  add_foreign_key "certification_devlog_reviews", "post_devlogs"
+  add_foreign_key "certification_ysws_reviews", "post_ship_events"
+  add_foreign_key "certification_ysws_reviews", "post_ship_events", column: "ship_cert_id"
+  add_foreign_key "certification_ysws_reviews", "projects"
+  add_foreign_key "certification_ysws_reviews", "users"
+  add_foreign_key "certification_ysws_reviews", "users", column: "reviewer_id"
+  add_foreign_key "certification_ysws_reviews", "users", column: "spotchecked_by_id"
   add_foreign_key "comments", "users"
   add_foreign_key "devlog_versions", "post_devlogs", column: "devlog_id"
   add_foreign_key "devlog_versions", "users"
