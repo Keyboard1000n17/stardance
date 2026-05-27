@@ -1,6 +1,6 @@
 class CreateYswsReviews < ActiveRecord::Migration[8.1]
   def change
-    create_table :ysws_reviews do |t|
+    create_table :certification_ysws_reviews do |t|
       t.references :reviewer, foreign_key: { to_table: :users }, null: false
       t.references :user, foreign_key: true, null: false
       t.references :project, foreign_key: true, null: false

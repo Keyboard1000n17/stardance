@@ -1,4 +1,4 @@
-class YswsReview::CheckDuplicatesJob < ApplicationJob
+class Certification::CheckDuplicatesJob < ApplicationJob
   queue_as :default
 
   def perform

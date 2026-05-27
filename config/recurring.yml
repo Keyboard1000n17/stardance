@@ -131,7 +131,7 @@ production:
     description: "Calculate weekly fulfillment payouts (3 tickets per fulfilled order)"
 
   ysws_check_duplicates:
-    class: YswsReview::CheckDuplicatesJob
+    class: Certification::CheckDuplicatesJob
     schedule: every day
     concurrency: 1
     description: "Check YSWS submissions for duplicates in unified database"
