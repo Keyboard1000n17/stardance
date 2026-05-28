@@ -103,37 +103,39 @@
 #                             admin_projects GET    /admin/projects(.:format)                                                                         admin/projects#index
 #                              admin_project GET    /admin/projects/:id(.:format)                                                                     admin/projects#show
 #                           admin_user_perms GET    /admin/user-perms(.:format)                                                                       admin/users#user_perms
-#                          admin_manage_shop GET    /admin/manage-shop(.:format)                                                                      admin/shop#index
-#                 admin_clear_carousel_cache POST   /admin/shop/clear-carousel-cache(.:format)                                                        admin/shop#clear_carousel_cache
-#          preview_markdown_admin_shop_items POST   /admin/shop_items/preview_markdown(.:format)                                                      admin/shop_items#preview_markdown
-#           request_approval_admin_shop_item POST   /admin/shop_items/:id/request_approval(.:format)                                                  admin/shop_items#request_approval
-#                           admin_shop_items POST   /admin/shop_items(.:format)                                                                       admin/shop_items#create
-#                        new_admin_shop_item GET    /admin/shop_items/new(.:format)                                                                   admin/shop_items#new
-#                       edit_admin_shop_item GET    /admin/shop_items/:id/edit(.:format)                                                              admin/shop_items#edit
-#                            admin_shop_item GET    /admin/shop_items/:id(.:format)                                                                   admin/shop_items#show
-#                                            PATCH  /admin/shop_items/:id(.:format)                                                                   admin/shop_items#update
-#                                            PUT    /admin/shop_items/:id(.:format)                                                                   admin/shop_items#update
-#                                            DELETE /admin/shop_items/:id(.:format)                                                                   admin/shop_items#destroy
-#            reveal_address_admin_shop_order POST   /admin/shop_orders/:id/reveal_address(.:format)                                                   admin/shop_orders#reveal_address
-#              reveal_phone_admin_shop_order POST   /admin/shop_orders/:id/reveal_phone(.:format)                                                     admin/shop_orders#reveal_phone
-#                   approve_admin_shop_order POST   /admin/shop_orders/:id/approve(.:format)                                                          admin/shop_orders#approve
-#              review_order_admin_shop_order POST   /admin/shop_orders/:id/review_order(.:format)                                                     admin/shop_orders#review_order
-#                    reject_admin_shop_order POST   /admin/shop_orders/:id/reject(.:format)                                                           admin/shop_orders#reject
-#             place_on_hold_admin_shop_order POST   /admin/shop_orders/:id/place_on_hold(.:format)                                                    admin/shop_orders#place_on_hold
-#         release_from_hold_admin_shop_order POST   /admin/shop_orders/:id/release_from_hold(.:format)                                                admin/shop_orders#release_from_hold
-#            mark_fulfilled_admin_shop_order POST   /admin/shop_orders/:id/mark_fulfilled(.:format)                                                   admin/shop_orders#mark_fulfilled
-#     update_internal_notes_admin_shop_order POST   /admin/shop_orders/:id/update_internal_notes(.:format)                                            admin/shop_orders#update_internal_notes
-#               assign_user_admin_shop_order POST   /admin/shop_orders/:id/assign_user(.:format)                                                      admin/shop_orders#assign_user
-#          cancel_hcb_grant_admin_shop_order POST   /admin/shop_orders/:id/cancel_hcb_grant(.:format)                                                 admin/shop_orders#cancel_hcb_grant
-#      refresh_verification_admin_shop_order POST   /admin/shop_orders/:id/refresh_verification(.:format)                                             admin/shop_orders#refresh_verification
-#           send_to_theseus_admin_shop_order POST   /admin/shop_orders/:id/send_to_theseus(.:format)                                                  admin/shop_orders#send_to_theseus
-# approve_verification_call_admin_shop_order POST   /admin/shop_orders/:id/approve_verification_call(.:format)                                        admin/shop_orders#approve_verification_call
-#               force_state_admin_shop_order POST   /admin/shop_orders/:id/force_state(.:format)                                                      admin/shop_orders#force_state
-#                          admin_shop_orders GET    /admin/shop_orders(.:format)                                                                      admin/shop_orders#index
-#                           admin_shop_order GET    /admin/shop_orders/:id(.:format)                                                                  admin/shop_orders#show
-#              dismiss_admin_shop_suggestion POST   /admin/shop_suggestions/:id/dismiss(.:format)                                                     admin/shop_suggestions#dismiss
-#     disable_for_user_admin_shop_suggestion POST   /admin/shop_suggestions/:id/disable_for_user(.:format)                                            admin/shop_suggestions#disable_for_user
-#                     admin_shop_suggestions GET    /admin/shop_suggestions(.:format)                                                                 admin/shop_suggestions#index
+#                              admin_support GET    /admin/support(.:format)                                                                          admin/support/dashboards#show
+#                                admin_fraud GET    /admin/fraud(.:format)                                                                            admin/fraud/dashboards#show
+#                                 admin_shop GET    /admin/shop(.:format)                                                                             admin/shop/dashboard#show
+#                 admin_clear_carousel_cache POST   /admin/shop/clear-carousel-cache(.:format)                                                        admin/shop/dashboard#clear_carousel_cache
+#          preview_markdown_admin_shop_items POST   /admin/shop/items/preview_markdown(.:format)                                                      admin/shop/items#preview_markdown
+#           request_approval_admin_shop_item POST   /admin/shop/items/:id/request_approval(.:format)                                                  admin/shop/items#request_approval
+#                           admin_shop_items POST   /admin/shop/items(.:format)                                                                       admin/shop/items#create
+#                        new_admin_shop_item GET    /admin/shop/items/new(.:format)                                                                   admin/shop/items#new
+#                       edit_admin_shop_item GET    /admin/shop/items/:id/edit(.:format)                                                              admin/shop/items#edit
+#                            admin_shop_item GET    /admin/shop/items/:id(.:format)                                                                   admin/shop/items#show
+#                                            PATCH  /admin/shop/items/:id(.:format)                                                                   admin/shop/items#update
+#                                            PUT    /admin/shop/items/:id(.:format)                                                                   admin/shop/items#update
+#                                            DELETE /admin/shop/items/:id(.:format)                                                                   admin/shop/items#destroy
+#            reveal_address_admin_shop_order POST   /admin/shop/orders/:id/reveal_address(.:format)                                                   admin/shop/orders#reveal_address
+#              reveal_phone_admin_shop_order POST   /admin/shop/orders/:id/reveal_phone(.:format)                                                     admin/shop/orders#reveal_phone
+#                   approve_admin_shop_order POST   /admin/shop/orders/:id/approve(.:format)                                                          admin/shop/orders#approve
+#              review_order_admin_shop_order POST   /admin/shop/orders/:id/review_order(.:format)                                                     admin/shop/orders#review_order
+#                    reject_admin_shop_order POST   /admin/shop/orders/:id/reject(.:format)                                                           admin/shop/orders#reject
+#             place_on_hold_admin_shop_order POST   /admin/shop/orders/:id/place_on_hold(.:format)                                                    admin/shop/orders#place_on_hold
+#         release_from_hold_admin_shop_order POST   /admin/shop/orders/:id/release_from_hold(.:format)                                                admin/shop/orders#release_from_hold
+#            mark_fulfilled_admin_shop_order POST   /admin/shop/orders/:id/mark_fulfilled(.:format)                                                   admin/shop/orders#mark_fulfilled
+#     update_internal_notes_admin_shop_order POST   /admin/shop/orders/:id/update_internal_notes(.:format)                                            admin/shop/orders#update_internal_notes
+#               assign_user_admin_shop_order POST   /admin/shop/orders/:id/assign_user(.:format)                                                      admin/shop/orders#assign_user
+#          cancel_hcb_grant_admin_shop_order POST   /admin/shop/orders/:id/cancel_hcb_grant(.:format)                                                 admin/shop/orders#cancel_hcb_grant
+#      refresh_verification_admin_shop_order POST   /admin/shop/orders/:id/refresh_verification(.:format)                                             admin/shop/orders#refresh_verification
+#           send_to_theseus_admin_shop_order POST   /admin/shop/orders/:id/send_to_theseus(.:format)                                                  admin/shop/orders#send_to_theseus
+# approve_verification_call_admin_shop_order POST   /admin/shop/orders/:id/approve_verification_call(.:format)                                        admin/shop/orders#approve_verification_call
+#               force_state_admin_shop_order POST   /admin/shop/orders/:id/force_state(.:format)                                                      admin/shop/orders#force_state
+#                          admin_shop_orders GET    /admin/shop/orders(.:format)                                                                      admin/shop/orders#index
+#                           admin_shop_order GET    /admin/shop/orders/:id(.:format)                                                                  admin/shop/orders#show
+#              dismiss_admin_shop_suggestion POST   /admin/shop/suggestions/:id/dismiss(.:format)                                                     admin/shop/suggestions#dismiss
+#     disable_for_user_admin_shop_suggestion POST   /admin/shop/suggestions/:id/disable_for_user(.:format)                                            admin/shop/suggestions#disable_for_user
+#                     admin_shop_suggestions GET    /admin/shop/suggestions(.:format)                                                                 admin/shop/suggestions#index
 #                             admin_messages GET    /admin/messages(.:format)                                                                         admin/messages#index
 #                                            POST   /admin/messages(.:format)                                                                         admin/messages#create
 #                        admin_support_vibes GET    /admin/support_vibes(.:format)                                                                    admin/support_vibes#index
@@ -622,39 +624,42 @@ Rails.application.routes.draw do
     end
     get "user-perms", to: "users#user_perms"
     resource :support, only: [ :show ], controller: "support/dashboards"
-    get "manage-shop", to: "shop#index"
-    post "shop/clear-carousel-cache", to: "shop#clear_carousel_cache", as: :clear_carousel_cache
-    resources :shop_items, only: [ :new, :create, :show, :edit, :update, :destroy ] do
-      collection do
-        post :preview_markdown
+    resource :fraud, only: [ :show ], controller: "fraud/dashboards"
+    get "shop", to: "shop/dashboard#show", as: :shop
+    post "shop/clear-carousel-cache", to: "shop/dashboard#clear_carousel_cache", as: :clear_carousel_cache
+    namespace :shop do
+      resources :items, only: [ :new, :create, :show, :edit, :update, :destroy ] do
+        collection do
+          post :preview_markdown
+        end
+        member do
+          post :request_approval
+        end
       end
-      member do
-        post :request_approval
+      resources :orders, only: [ :index, :show ] do
+        member do
+          post :reveal_address
+          post :reveal_phone
+          post :approve
+          post :review_order
+          post :reject
+          post :place_on_hold
+          post :release_from_hold
+          post :mark_fulfilled
+          post :update_internal_notes
+          post :assign_user
+          post :cancel_hcb_grant
+          post :refresh_verification
+          post :send_to_theseus
+          post :approve_verification_call
+          post :force_state
+        end
       end
-    end
-    resources :shop_orders, only: [ :index, :show ] do
-      member do
-        post :reveal_address
-        post :reveal_phone
-        post :approve
-        post :review_order
-        post :reject
-        post :place_on_hold
-        post :release_from_hold
-        post :mark_fulfilled
-        post :update_internal_notes
-        post :assign_user
-        post :cancel_hcb_grant
-        post :refresh_verification
-        post :send_to_theseus
-        post :approve_verification_call
-        post :force_state
-      end
-    end
-    resources :shop_suggestions, only: [ :index ] do
-      member do
-        post :dismiss
-        post :disable_for_user
+      resources :suggestions, only: [ :index ] do
+        member do
+          post :dismiss
+          post :disable_for_user
+        end
       end
     end
     resources :messages, only: [ :index, :create ]

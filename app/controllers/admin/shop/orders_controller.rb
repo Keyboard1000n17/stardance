@@ -1,4 +1,4 @@
-class Admin::ShopOrdersController < Admin::ApplicationController
+class Admin::Shop::OrdersController < Admin::ApplicationController
   before_action :set_paper_trail_whodunnit
   def index
     # Determine view mode
@@ -8,14 +8,14 @@ class Admin::ShopOrdersController < Admin::ApplicationController
     # Fulfillment team can only access fulfillment view - auto-redirect if needed
     # But fraud_dept members with fulfillment_person role should have full access
     if current_user.shop_manager? && !current_user.admin?
-      authorize :admin, :view_shop_orders_no_pii?
+      authorize [ :admin, :shop, :order ], :index?
     elsif current_user.fulfillment_person? && !current_user.admin? && !current_user.fraud_dept?
       if @view != "fulfillment"
         redirect_to admin_shop_orders_path(view: "fulfillment") and return
       end
-      authorize :admin, :access_fulfillment_view?
+      authorize [ :admin, :shop, :order ], :index?
     else
-      authorize :admin, :access_shop_orders?
+      authorize [ :admin, :shop, :order ], :index?
     end
 
     # Load fulfillment users for assignment dropdown (admins and fulfillment peeps, fulfillment view)
@@ -93,11 +93,11 @@ class Admin::ShopOrdersController < Admin::ApplicationController
 
   def show
     if current_user.shop_manager? && !current_user.admin?
-      authorize :admin, :view_shop_orders_no_pii?
+      authorize [ :admin, :shop, :order ], :show?
     elsif current_user.fulfillment_person? && !current_user.admin? && !current_user.fraud_dept?
-      authorize :admin, :access_fulfillment_view?
+      authorize [ :admin, :shop, :order ], :show?
     else
-      authorize :admin, :access_shop_orders?
+      authorize [ :admin, :shop, :order ], :show?
     end
     @order = ShopOrder.find(params[:id])
 
@@ -155,9 +155,9 @@ class Admin::ShopOrdersController < Admin::ApplicationController
 
   def reveal_address
     if current_user.fulfillment_person? && !current_user.admin? && !current_user.fraud_dept?
-      authorize :admin, :access_fulfillment_view?
+      authorize [ :admin, :shop, :order ], :reveal_address?
     else
-      authorize :admin, :access_shop_orders?
+      authorize [ :admin, :shop, :order ], :reveal_address?
     end
     @order = ShopOrder.find(params[:id])
 
@@ -184,9 +184,9 @@ class Admin::ShopOrdersController < Admin::ApplicationController
 
   def reveal_phone
     if current_user.fulfillment_person? && !current_user.admin? && !current_user.fraud_dept?
-      authorize :admin, :access_fulfillment_view?
+      authorize [ :admin, :shop, :order ], :reveal_phone?
     else
-      authorize :admin, :access_shop_orders?
+      authorize [ :admin, :shop, :order ], :reveal_phone?
     end
     @order = ShopOrder.find(params[:id])
 
@@ -212,7 +212,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def approve
-    authorize :admin, :access_shop_orders?
+    authorize [ :admin, :shop, :order ], :approve?
     @order = ShopOrder.find(params[:id])
 
     if @order.user_id == current_user.id
@@ -264,7 +264,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def review_order
-    authorize :admin, :access_shop_orders?
+    authorize [ :admin, :shop, :order ], :review_order?
     @order = ShopOrder.find(params[:id])
 
     if !current_user.admin? && @order.user_id == current_user.id
@@ -314,7 +314,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def reject
-    authorize :admin, :reject_shop_order?
+    authorize [ :admin, :shop, :order ], :reject?
     @order = ShopOrder.find(params[:id])
 
     if @order.requires_additional_review?
@@ -374,7 +374,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def place_on_hold
-    authorize :admin, :access_shop_orders?
+    authorize [ :admin, :shop, :order ], :update?
     @order = ShopOrder.find(params[:id])
     old_state = @order.aasm_state
 
@@ -395,7 +395,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def release_from_hold
-    authorize :admin, :access_shop_orders?
+    authorize [ :admin, :shop, :order ], :update?
     @order = ShopOrder.find(params[:id])
     old_state = @order.aasm_state
 
@@ -417,9 +417,9 @@ class Admin::ShopOrdersController < Admin::ApplicationController
 
   def mark_fulfilled
     if current_user.fulfillment_person? && !current_user.admin? && !current_user.fraud_dept?
-      authorize :admin, :access_fulfillment_view?
+      authorize [ :admin, :shop, :order ], :update?
     else
-      authorize :admin, :access_shop_orders?
+      authorize [ :admin, :shop, :order ], :update?
     end
     @order = ShopOrder.find(params[:id])
 
@@ -447,9 +447,9 @@ class Admin::ShopOrdersController < Admin::ApplicationController
 
   def update_internal_notes
     if current_user.fulfillment_person? && !current_user.admin? && !current_user.fraud_dept?
-      authorize :admin, :access_fulfillment_view?
+      authorize [ :admin, :shop, :order ], :update?
     else
-      authorize :admin, :access_shop_orders?
+      authorize [ :admin, :shop, :order ], :update?
     end
     @order = ShopOrder.find(params[:id])
     old_notes = @order.internal_notes
@@ -471,7 +471,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def assign_user
-    authorize :admin, :assign_shop_order?
+    authorize [ :admin, :shop, :order ], :assign_user?
     @order = ShopOrder.find(params[:id])
     old_assigned = @order.assigned_to_user_id
 
@@ -496,7 +496,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def approve_verification_call
-    authorize :admin, :manage_shop?
+    authorize [ :admin, :shop, :order ], :manage?
     @order = ShopOrder.find(params[:id])
     old_state = @order.aasm_state
 
@@ -521,7 +521,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def cancel_hcb_grant
-    authorize :admin, :manage_users?
+    authorize [ :admin, :shop, :order ], :approve?
     @order = ShopOrder.find(params[:id])
 
     unless @order.shop_card_grant.present?
@@ -594,7 +594,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   public
 
   def send_to_theseus
-    authorize :admin, :access_shop_orders?
+    authorize [ :admin, :shop, :order ], :update?
     @order = ShopOrder.find(params[:id])
 
     order_ids = (Array(params[:order_ids]).map(&:to_i) | [ @order.id ]).uniq
@@ -621,7 +621,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def refresh_verification
-    authorize :admin, :access_shop_orders?
+    authorize [ :admin, :shop, :order ], :update?
     @order = ShopOrder.find(params[:id])
 
     unless @order.awaiting_verification?
@@ -674,7 +674,7 @@ class Admin::ShopOrdersController < Admin::ApplicationController
   end
 
   def force_state
-    authorize :admin, :manage_shop?
+    authorize [ :admin, :shop, :order ], :manage?
     @order = ShopOrder.find(params[:id])
 
     old_state = @order.aasm_state

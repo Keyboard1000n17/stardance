@@ -13,7 +13,7 @@
   <div>
     <h3>Filters & Search</h3>
 
-    <%= form_with url: admin_manage_shop_path, method: :get, local: true do |f| %>
+    <%= form_with url: admin_shop_path, method: :get, local: true do |f| %>
       <div>
         <div>
           <%= f.label :search, "Search" %>
@@ -38,7 +38,7 @@
 
       <div>
         <%= f.submit "Apply Filters" %>
-        <%= link_to "Clear All", admin_manage_shop_path %>
+        <%= link_to "Clear All", admin_shop_path %>
       </div>
     <% end %>
   </div>
@@ -128,13 +128,13 @@
 
        <div>
          <% if @pagy.page > 1 %>
-           <%= link_to "← Previous", admin_manage_shop_path(search: params[:search], type: params[:type], enabled: params[:enabled], carousel: params[:carousel], page: @pagy.page - 1) %>
+           <%= link_to "← Previous", admin_shop_path(search: params[:search], type: params[:type], enabled: params[:enabled], carousel: params[:carousel], page: @pagy.page - 1) %>
          <% end %>
 
          <span>Page <%= @pagy.page %> of <%= @pagy.pages %></span>
 
          <% if @pagy.page < @pagy.pages %>
-           <%= link_to "Next →", admin_manage_shop_path(search: params[:search], type: params[:type], enabled: params[:enabled], carousel: params[:carousel], page: @pagy.page + 1) %>
+           <%= link_to "Next →", admin_shop_path(search: params[:search], type: params[:type], enabled: params[:enabled], carousel: params[:carousel], page: @pagy.page + 1) %>
          <% end %>
        </div>
     <% else %>

@@ -1,5 +1,4 @@
-module Admin
-  class ShopItemsController < Admin::ApplicationController
+class Admin::Shop::ItemsController < Admin::ApplicationController
     before_action :set_shop_item, only: [ :show, :edit, :update, :destroy, :request_approval ]
     before_action :set_shop_item_types, only: [ :new, :edit ]
     before_action :set_fulfillment_users, only: [ :new, :edit, :create, :update ]
@@ -10,7 +9,7 @@ module Admin
     end
 
     def new
-      authorize :admin, shop_manager? ? :manage_draft_shop_items? : :manage_shop?
+      authorize [ :admin, :shop, :item ], :new?
       @shop_item = if params[:type].present? && available_shop_item_types.include?(params[:type])
         available_shop_item_types.find { |t| t == params[:type] }.constantize.new
       else
@@ -25,7 +24,7 @@ module Admin
     end
 
     def create
-      authorize :admin, shop_manager? ? :manage_draft_shop_items? : :manage_shop?
+      authorize [ :admin, :shop, :item ], :create?
       @shop_item = ShopItem.new(shop_manager? ? draft_shop_item_params : shop_item_params)
 
       if shop_manager?
@@ -74,20 +73,20 @@ module Admin
     end
 
     def destroy
-      authorize :admin, :manage_shop?
+      authorize [ :admin, :shop, :item ], :destroy?
       @shop_item.destroy
-      redirect_to admin_manage_shop_path, notice: "Shop item deleted successfully."
+      redirect_to admin_shop_path, notice: "Shop item deleted successfully."
     end
 
     def preview_markdown
-      authorize :admin, shop_manager? ? :manage_draft_shop_items? : :manage_shop?
+      authorize [ :admin, :shop, :item ], :show?
       markdown = params[:markdown].to_s
       html = markdown.present? ? MarkdownRenderer.render(markdown) : ""
       render plain: html
     end
 
     def request_approval
-      authorize :admin, :manage_draft_shop_items?
+      authorize [ :admin, :shop, :item ], :update?
       unless @shop_item.draft? && @shop_item.created_by_user_id == current_user.id
         redirect_to admin_shop_item_path(@shop_item), alert: "You can only request approval for your own drafts." and return
       end
@@ -117,13 +116,13 @@ module Admin
 
     def authorize_shop_item_access!(must_be_draft: false)
       if shop_manager?
-        authorize :admin, :manage_draft_shop_items?
+        authorize [ :admin, :shop, :item ], :update?
         if must_be_draft && (!@shop_item.draft? || @shop_item.created_by_user_id != current_user.id)
-          redirect_to admin_manage_shop_path, alert: "You can only edit your own draft items."
+          redirect_to admin_shop_path, alert: "You can only edit your own draft items."
           return false  # signal to caller
         end
       else
-        authorize :admin, :manage_shop?
+        authorize [ :admin, :shop, :item ], must_be_draft ? :update? : :show?
       end
       true
     end
@@ -240,5 +239,4 @@ module Admin
         unlocking_mission_ids: []
       )
     end
-  end
 end
