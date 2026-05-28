@@ -5,7 +5,7 @@
     <header class="admin-mission-edit__header">
       <p class="admin-mission-edit__breadcrumb">
         <%= link_to "Mission", mission_path(@mission.slug) %>
-        <% if policy(@mission).manage_owners? %>
+        <% if ::MissionPolicy.new(current_user, @mission).manage_owners? %>
           <span aria-hidden="true">·</span>
           <%= link_to "Admin", admin_mission_path(@mission.slug) %>
         <% end %>
@@ -126,7 +126,7 @@
     <%= render "admin/missions/shop_unlocks_frame",
           mission: @mission, unlocks: @unlocks %>
 
-    <% if policy(@mission).manage_owners? %>
+    <% if ::MissionPolicy.new(current_user, @mission).manage_owners? %>
       <%# Admin-only sections — slug rename, owner add/remove, danger zone.
           Non-admin mission owners can't see any of this; they manage the
           mission content above and stop there. %>
