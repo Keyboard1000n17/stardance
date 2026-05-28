@@ -139,7 +139,6 @@
 #                       dismiss_admin_report POST   /admin/reports/:id/dismiss(.:format)                                                              admin/reports#dismiss
 #                              admin_reports GET    /admin/reports(.:format)                                                                          admin/reports#index
 #                               admin_report GET    /admin/reports/:id(.:format)                                                                      admin/reports#show
-#                    admin_ship_event_scores GET    /admin/ship_event_scores(.:format)                                                                admin/ship_event_scores#index
 #           approve_admin_fulfillment_payout POST   /admin/fulfillment_payouts/:id/approve(.:format)                                                  admin/fulfillment_payouts#approve
 #            reject_admin_fulfillment_payout POST   /admin/fulfillment_payouts/:id/reject(.:format)                                                   admin/fulfillment_payouts#reject
 #          trigger_admin_fulfillment_payouts POST   /admin/fulfillment_payouts/trigger(.:format)                                                      admin/fulfillment_payouts#trigger
@@ -407,40 +406,6 @@
 #      rails_performance_custom GET  /custom(.:format)       rails_performance/rails_performance#custom
 #   rails_performance_resources GET  /resources(.:format)    rails_performance/rails_performance#resources
 
-class AdminConstraint
-  def self.matches?(request)
-    # otherwise admins who impersonated non admins can't stop
-    if request.path == "/admin/users/stop_impersonating" && request.session[:impersonator_user_id].present?
-      user = User.find_by(id: request.session[:impersonator_user_id])
-    else
-      user = admin_user_for(request)
-    end
-
-    return false unless user
-
-    policy = AdminPolicy.new(user, :admin)
-    # Allow admins, fraud dept, fulfillment persons, and certification reviewers
-    policy.access_admin_endpoints? ||
-      policy.access_fulfillment_view? ||
-      policy.access_ship_review? ||
-      policy.access_ysws_review?
-  end
-
-  def self.admin_user_for(request)
-    user = User.find_by(id: request.session[:user_id])
-    return user if user
-
-    if Rails.env.development? && ENV["DEV_ADMIN_USER_ID"].present?
-      User.find_by(id: ENV["DEV_ADMIN_USER_ID"])
-    end
-  end
-
-  def self.allow?(request, permission)
-    user = admin_user_for(request)
-    user && AdminPolicy.new(user, :admin).public_send(permission)
-  end
-end
-
 Rails.application.routes.draw do
   # Sitemap
   get "sitemap.xml", to: "sitemaps#index", as: :sitemap, defaults: { format: :xml }
@@ -554,7 +519,6 @@ Rails.application.routes.draw do
     post :name,                      to: "wizard#submit_name"
   end
 
-  # admin shallow routing
   namespace :admin, constraints: AdminConstraint do
     root to: "application#index"
 
@@ -570,7 +534,7 @@ Rails.application.routes.draw do
       AdminConstraint.allow?(request, :access_jobs?)
     }
 
-    resources :users, only: [ :index, :show, :update ], shallow: true do
+    resources :users, only: [ :index, :show, :update ] do
        member do
          post :promote_role
          post :demote_role
@@ -592,7 +556,7 @@ Rails.application.routes.draw do
          post :stop_impersonating
        end
      end
-    resources :projects, only: [ :index, :show ], shallow: true do
+    resources :projects, only: [ :index, :show ] do
       member do
         post :restore
         post :delete
@@ -604,7 +568,7 @@ Rails.application.routes.draw do
     get "user-perms", to: "users#user_perms"
     resource :support, only: [ :show ], controller: "support/dashboards"
     resource :fraud, only: [ :show ], controller: "fraud/dashboards"
-    get "shop", to: "shop/dashboard#show", as: :shop
+    resource :shop, only: [ :show ], controller: "shop/dashboard"
     post "shop/clear-carousel-cache", to: "shop/dashboard#clear_carousel_cache", as: :clear_carousel_cache
     namespace :shop do
       resources :items, only: [ :new, :create, :show, :edit, :update, :destroy ] do
@@ -655,7 +619,6 @@ Rails.application.routes.draw do
         post :dismiss
       end
     end
-    get "ship_event_scores", to: "ship_event_scores#index"
     resources :fulfillment_payouts, only: [ :index, :show ] do
       member do
         post :approve
