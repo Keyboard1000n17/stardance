@@ -73,6 +73,9 @@ application.register("locked-tab", LockedTabController);
 import MarkdownPreviewController from "./markdown_preview_controller";
 application.register("markdown-preview", MarkdownPreviewController);
 
+import GuidePreviewController from "./guide_preview_controller";
+application.register("guide-preview", GuidePreviewController);
+
 import ModalController from "./modal_controller";
 application.register("modal", ModalController);
 
@@ -81,6 +84,12 @@ application.register(
   "onboarding-experience-slider",
   OnboardingExperienceSliderController,
 );
+
+import MissionGuideProgressController from "./mission_guide_progress_controller";
+application.register("mission-guide-progress", MissionGuideProgressController);
+
+import MissionGuideLanguageController from "./mission_guide_language_controller";
+application.register("mission-guide-language", MissionGuideLanguageController);
 
 import OnboardingInterestsController from "./onboarding_interests_controller";
 application.register("onboarding-interests", OnboardingInterestsController);
@@ -120,6 +129,12 @@ application.register("readme-image", ReadmeImageController);
 
 import RevealOnScrollController from "./reveal_on_scroll_controller";
 application.register("reveal-on-scroll", RevealOnScrollController);
+
+import ScrollRestoreController from "./scroll_restore_controller";
+application.register("scroll-restore", ScrollRestoreController);
+
+import SortableController from "./sortable_controller";
+application.register("sortable", SortableController);
 
 import RocketArcController from "./rocket_arc_controller";
 application.register("rocket-arc", RocketArcController);

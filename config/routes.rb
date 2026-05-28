@@ -153,20 +153,8 @@
 #          trigger_admin_fulfillment_payouts POST   /admin/fulfillment_payouts/trigger(.:format)                                                      admin/fulfillment_payouts#trigger
 #                  admin_fulfillment_payouts GET    /admin/fulfillment_payouts(.:format)                                                              admin/fulfillment_payouts#index
 #                   admin_fulfillment_payout GET    /admin/fulfillment_payouts/:id(.:format)                                                          admin/fulfillment_payouts#show
-#                        admin_mission_steps POST   /admin/missions/:mission_slug/steps(.:format)                                                     admin/mission_steps#create
-#                         admin_mission_step PATCH  /admin/missions/:mission_slug/steps/:id(.:format)                                                 admin/mission_steps#update
-#                                            PUT    /admin/missions/:mission_slug/steps/:id(.:format)                                                 admin/mission_steps#update
-#                                            DELETE /admin/missions/:mission_slug/steps/:id(.:format)                                                 admin/mission_steps#destroy
-#                       admin_mission_prizes POST   /admin/missions/:mission_slug/prizes(.:format)                                                    admin/mission_prizes#create
-#                        admin_mission_prize PATCH  /admin/missions/:mission_slug/prizes/:id(.:format)                                                admin/mission_prizes#update
-#                                            PUT    /admin/missions/:mission_slug/prizes/:id(.:format)                                                admin/mission_prizes#update
-#                                            DELETE /admin/missions/:mission_slug/prizes/:id(.:format)                                                admin/mission_prizes#destroy
 #                  admin_mission_memberships POST   /admin/missions/:mission_slug/memberships(.:format)                                               admin/mission_memberships#create
-#                   admin_mission_membership PATCH  /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#update
-#                                            PUT    /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#update
-#                                            DELETE /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#destroy
-#                 admin_mission_shop_unlocks POST   /admin/missions/:mission_slug/shop_unlocks(.:format)                                              admin/mission_shop_unlocks#create
-#                  admin_mission_shop_unlock DELETE /admin/missions/:mission_slug/shop_unlocks/:id(.:format)                                          admin/mission_shop_unlocks#destroy
+#                   admin_mission_membership DELETE /admin/missions/:mission_slug/memberships/:id(.:format)                                           admin/mission_memberships#destroy
 #                      restore_admin_mission POST   /admin/missions/:slug/restore(.:format)                                                           admin/missions#restore
 #                             admin_missions GET    /admin/missions(.:format)                                                                         admin/missions#index
 #                                            POST   /admin/missions(.:format)                                                                         admin/missions#create
@@ -207,8 +195,6 @@
 #                                            POST   /projects/:project_id/mission(.:format)                                                           projects/missions#create
 #                              project_magic DELETE /projects/:project_id/magic(.:format)                                                             projects/magic#destroy
 #                                            POST   /projects/:project_id/magic(.:format)                                                             projects/magic#create
-#           project_mission_step_completions POST   /projects/:project_id/mission_step_completions(.:format)                                          projects/mission_step_completions#create
-#                    mission_step_completion DELETE /mission_step_completions/:mission_step_id(.:format)                                              projects/mission_step_completions#destroy
 #                             readme_project GET    /projects/:id/readme(.:format)                                                                    projects#readme
 #                             follow_project POST   /projects/:id/follow(.:format)                                                                    projects#follow
 #                           unfollow_project DELETE /projects/:id/unfollow(.:format)                                                                  projects#unfollow
@@ -682,10 +668,10 @@ Rails.application.routes.draw do
     end
 
     resources :missions, param: :slug do
-      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps"
-      resources :prizes,       only: [ :create, :update, :destroy ], controller: "mission_prizes"
-      resources :memberships,  only: [ :create, :update, :destroy ], controller: "mission_memberships"
-      resources :shop_unlocks, only: [ :create, :destroy ],          controller: "mission_shop_unlocks"
+      # Step/prize/shop-unlock CRUD lives on the manage namespace. Admins
+      # access those via MissionPolicy#manage?. Owner assignment stays
+      # admin-only — managers can only edit reviewers via manage.
+      resources :memberships, only: [ :create, :destroy ], controller: "mission_memberships"
       member do
         post :restore
       end
@@ -738,10 +724,9 @@ Rails.application.routes.draw do
     end
     resource :mission, only: [ :create, :destroy ], module: :projects, controller: "missions"
     resource :magic, only: [ :create, :destroy ], module: :projects, controller: "magic"
-    resources :mission_step_completions,
-              only: [ :create, :destroy ],
-              module: :projects,
-              param: :mission_step_id
+    resources :mission_section_completions,
+              only: [ :create ],
+              module: :projects
     member do
       get :readme
       post :follow
@@ -781,6 +766,9 @@ Rails.application.routes.draw do
   # Project-side / reviewer-queue / admin-managed missions surfaces ship in later PRs.
   resources :missions, only: [ :index, :show ], param: :slug do
     resource :og_image, only: [ :show ], module: :missions, defaults: { format: :png }
+    member do
+      get :guide
+    end
   end
 
   # Reviewer queue.
@@ -796,7 +784,15 @@ Rails.application.routes.draw do
   # Owner-managed mission CRUD.
   namespace :manage do
     resources :missions, param: :slug, only: [ :show, :edit, :update ] do
-      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps"
+      member do
+        post :preview_guide
+        post :paste_guide
+      end
+      resources :steps,        only: [ :create, :update, :destroy ], controller: "mission_steps" do
+        collection do
+          post :reorder
+        end
+      end
       resources :prizes,       only: [ :create, :update, :destroy ], controller: "mission_prizes"
       resources :memberships,  only: [ :create, :update, :destroy ], controller: "mission_memberships"
       resources :shop_unlocks, only: [ :create, :destroy ],          controller: "mission_shop_unlocks"

@@ -1,7 +1,7 @@
 class Projects::ShipsController < ApplicationController
   before_action :set_project
   before_action :setup_chrome,    only: [ :new, :info, :review_step, :compose, :create ]
-  before_action :require_shippable, only: [ :review_step, :compose ]
+  before_action :require_shippable, only: [ :review_step, :compose, :create ]
 
   # Step 0 — "what is a ship" refresher (video only). Entry point.
   def new
@@ -32,10 +32,22 @@ class Projects::ShipsController < ApplicationController
   end
 
   def create
-    # authorize @project, :ship?
-    wizard = session.delete(:ship_wizard) || {}
+    authorize @project, :ship?
+    # Read wizard state non-destructively until validation passes — a redirect
+    # back to review_step (e.g. missing ack) would otherwise leave the user
+    # with an empty wizard and force them to re-enter steps 2 & 3.
+    wizard = session[:ship_wizard] || {}
     review_instructions = (wizard["review_instructions"].presence || params[:review_instructions]).to_s.strip.presence
     mission_payout_path = wizard["mission_payout_path"].presence || params[:mission_payout_path]
+    submission_guide_ack = wizard.fetch("mission_submission_guide_acknowledged", false) ||
+                           params[:mission_submission_guide_acknowledged].to_s == "1"
+
+    if mission_submission_guide_ack_required? && !submission_guide_ack
+      redirect_to review_project_ships_path(@project),
+                  alert: "Read and acknowledge the mission submission guide before shipping." and return
+    end
+
+    session.delete(:ship_wizard)
 
     unless @project.readme_is_raw_github_url?
       flash.now[:warning] = "Your README link doesn't appear to be a raw GitHub URL. We require raw README files (from raw.githubusercontent.com) for proper display and consistency. Please update your README URL."
@@ -48,7 +60,7 @@ class Projects::ShipsController < ApplicationController
         review_instructions: review_instructions
       )
       @post = @project.posts.create!(user: current_user, postable: ship_event)
-      maybe_create_mission_submission(ship_event, mission_payout_path)
+      maybe_create_mission_submission(ship_event, mission_payout_path, submission_guide_ack)
     end
 
     if initial_ship?
@@ -86,19 +98,25 @@ class Projects::ShipsController < ApplicationController
       @project.posts.where(postable_type: "Post::ShipEvent").one?
     end
 
-    def maybe_create_mission_submission(ship_event, payout_path_param)
-      return unless Flipper.enabled?(:missions, current_user)
+    def mission_submission_guide_ack_required?
+      @project.current_mission&.submission_guide.present?
+    end
+
+    def maybe_create_mission_submission(ship_event, payout_path_param, submission_guide_acknowledged = false)
       attachment = @project.current_mission_attachment
       return unless attachment
 
       mission = attachment.mission
       payout_path = resolve_payout_path(mission, payout_path_param)
+      ack_time = (submission_guide_acknowledged && mission.submission_guide.present?) ? Time.current : nil
 
+      # `status` is managed by AASM and defaults to :awaiting_certification on
+      # create — passing it explicitly trips no_direct_assignment.
       Mission::Submission.create!(
         ship_event: ship_event,
         mission: mission,
         payout_path: payout_path,
-        status: "awaiting_certification"
+        submission_guide_acknowledged_at: ack_time
       )
     end
 
