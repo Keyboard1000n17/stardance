@@ -58,15 +58,12 @@ module Admin
     end
 
     def edit
-      # /admin/missions/:slug/edit is shared with non-admin mission owners
-      # via MissionPolicy#manage? — use the plain (non-namespaced) policy so
-      # owners pass; the rest of the actions stay admin-only via Admin::MissionPolicy.
-      authorize @mission, :manage?, policy_class: MissionPolicy
+      authorize_mission_management
       load_edit_locals
     end
 
     def update
-      authorize @mission, :manage?, policy_class: MissionPolicy
+      authorize_mission_management
       if @mission.update(mission_params)
         redirect_to edit_admin_mission_path(@mission.slug), notice: "Mission updated."
       else
@@ -97,6 +94,16 @@ module Admin
       @mission = Mission.with_deleted.find_by!(slug: params[:slug])
     end
 
+    # /admin/missions/:slug/edit is shared with non-admin mission owners via
+    # MissionPolicy#manage?. Use the top-level ::MissionPolicy explicitly —
+    # bare `MissionPolicy` would resolve to Admin::MissionPolicy under the
+    # Admin namespace, whose `manage?` is private and admin-only.
+    # skip_authorization satisfies the controller's `verify_authorized`.
+    def authorize_mission_management
+      raise Pundit::NotAuthorizedError unless ::MissionPolicy.new(current_user, @mission).manage?
+      skip_authorization
+    end
+
     def load_edit_locals
       @current_language    = @mission.resolve_storage_language(params[:language].presence)
       @available_languages = @mission.available_languages
@@ -109,8 +116,10 @@ module Admin
       @unlocks     = @mission.shop_unlocks.includes(:shop_item)
 
       # Admin-only sections (slug / owner CRUD / danger zone) render on the
-      # same edit page. Preload the owner list when the viewer can see them.
-      if policy(@mission).manage_owners?
+      # same edit page. Use ::MissionPolicy explicitly — `policy(@mission)`
+      # under the Admin namespace returns an Admin::MissionPolicy, which
+      # doesn't define `manage_owners?`.
+      if ::MissionPolicy.new(current_user, @mission).manage_owners?
         @owners = @mission.memberships
                           .where(role: Mission::Membership.roles[:owner])
                           .includes(:user)
@@ -148,7 +157,7 @@ module Admin
         :estimated_completion_minutes,
         :default_project_title, :default_project_description
       ]
-      permitted << :slug if policy(@mission).manage_owners?
+      permitted << :slug if ::MissionPolicy.new(current_user, @mission).manage_owners?
       params.require(:mission).permit(*permitted)
     end
   end
