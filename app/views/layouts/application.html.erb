@@ -53,9 +53,6 @@
       <script defer data-domain="stardance.hackclub.com" src="https://plausible.hackclub.com/js/script.js"></script>
     <% end %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
-    <% if Rails.env.development? %>
-      <script src="http://localhost:7340/overlay.js" defer></script>
-    <% end %>
     <%= Sentry.get_trace_propagation_meta.html_safe %> <%# erb_lint:disable ErbSafety %>
   </head>
 
