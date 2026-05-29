@@ -26,6 +26,8 @@ class VotesController < ApplicationController
       if @assignment
         @ship_event = @assignment.ship_event
         @project = @ship_event.project
+        return @assignment = nil unless @project
+
         @vote = Vote.new(ship_event: @ship_event, project: @project)
         load_timeline_posts
       end
