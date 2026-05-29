@@ -396,22 +396,61 @@
   }
 
   &__cell-project {
-    min-width: 200px;
+    min-width: 240px;
   }
 
-  // Stack the lines in these cells via block children rather than making the
-  // <td> itself display:flex. A flex <td> drops out of the table layout, so its
-  // column border stops lining up with the rest of the grid.
-  &__cell-project > *,
-  &__cell-claim > *,
-  &__cell-created > * {
-    display: block;
+  &__project-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: var(--space-xs);
   }
 
-  &__cell-project > * + *,
-  &__cell-claim > * + *,
-  &__cell-created > * + * {
-    margin-top: 2px;
+  // Submitter, relative age, and the claim flag all share one meta line under
+  // the project title — keeps the table to three columns with no dead space.
+  &__project-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-xxs);
+    margin-top: 4px;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+
+  &__dot {
+    color: var(--muted);
+  }
+
+  &__claim-flag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xxs);
+    padding: 1px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+
+    &--open {
+      background: rgba(74, 222, 128, 0.18);
+      color: #4ade80;
+    }
+
+    &--locked {
+      background: rgba(248, 113, 113, 0.18);
+      color: #f87171;
+    }
+  }
+
+  &__claim-flag-icon {
+    flex-shrink: 0;
+    width: 0.85em;
+    height: 0.85em;
+    fill: currentColor;
+  }
+
+  &__claim-by {
+    font-weight: 600;
   }
 
   &__cell-action {
@@ -491,33 +530,12 @@
     font-size: 0.8rem;
   }
 
-  &__claimed {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xxs);
-    color: var(--color-brand-orange, #ffb07a);
-    font-weight: 600;
-  }
-
-  &__claimed-icon {
-    flex-shrink: 0;
-    width: 0.85em;
-    height: 0.85em;
-    fill: currentColor;
-  }
-
   &__countdown {
-    font-size: 0.8rem;
-    color: var(--muted);
     font-variant-numeric: tabular-nums;
 
     &.is-expired {
       color: var(--negative);
     }
-  }
-
-  &__reviewer {
-    color: var(--color-space-text);
   }
 
   // --- Mobile cards ------------------------------------------------------
@@ -551,12 +569,8 @@
     margin-bottom: var(--space-xs);
   }
 
-  &__card-meta {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-s);
-    margin-top: var(--space-xxs);
+  &__card-claim {
+    margin-top: var(--space-xs);
   }
 
   // --- Empty state -------------------------------------------------------

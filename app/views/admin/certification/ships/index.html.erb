@@ -164,47 +164,30 @@
             <tr>
               <th>Project</th>
               <th>Status</th>
-              <th>Claim / Reviewer</th>
-              <th>Submitter</th>
-              <th>Created</th>
               <th></th>
             </tr>
           </thead>
           <tbody>
             <% @ships.each do |ship| %>
               <% owner = ship.project.memberships.find(&:owner?)&.user %>
-              <% claimed = ship.pending? && ship.reviewer.present? && ship.claim_expires_at.present? && ship.claim_expires_at > Time.current %>
               <tr>
                 <td class="ship-queue__cell-project">
-                  <%= link_to ship.project.title, admin_certification_ship_path(ship), class: "ship-queue__project-title" %>
-                  <span class="ship-queue__project-id">#<%= ship.id %></span>
+                  <div class="ship-queue__project-head">
+                    <%= link_to ship.project.title, admin_certification_ship_path(ship), class: "ship-queue__project-title" %>
+                    <span class="ship-queue__project-id">#<%= ship.id %></span>
+                  </div>
+                  <div class="ship-queue__project-meta">
+                    <span>by <%= owner&.display_name || "—" %></span>
+                    <span class="ship-queue__dot" aria-hidden="true">·</span>
+                    <span><%= time_ago_in_words(ship.created_at) %> old</span>
+                    <% if ship.pending? %>
+                      <span class="ship-queue__dot" aria-hidden="true">·</span>
+                      <%= render "claim_flag", ship: ship %>
+                    <% end %>
+                  </div>
                 </td>
                 <td>
                   <span class="status-pill status-pill--<%= ship.status %>"><%= ship.status.capitalize %></span>
-                </td>
-                <td class="ship-queue__cell-claim">
-                  <% if ship.pending? %>
-                    <% if claimed %>
-                      <span class="ship-queue__claimed"><%= inline_svg_tag "icons/lock.svg", class: "ship-queue__claimed-icon", aria: { hidden: true } %><%= ship.reviewer.display_name %></span>
-                      <span class="ship-queue__countdown"
-                            data-certification--queue-target="countdown"
-                            data-expires-at="<%= ship.claim_expires_at.iso8601 %>"></span>
-                    <% else %>
-                      <span class="ship-queue__muted">unclaimed</span>
-                    <% end %>
-                  <% elsif ship.reviewer %>
-                    <span class="ship-queue__reviewer"><%= ship.reviewer.display_name %></span>
-                    <% if ship.decided_at %>
-                      <span class="ship-queue__muted"><%= time_ago_in_words(ship.decided_at) %> ago</span>
-                    <% end %>
-                  <% else %>
-                    <span class="ship-queue__muted">—</span>
-                  <% end %>
-                </td>
-                <td><%= owner&.display_name || "—" %></td>
-                <td class="ship-queue__cell-created">
-                  <span><%= ship.created_at.strftime("%b %-d, %Y") %></span>
-                  <span class="ship-queue__muted"><%= time_ago_in_words(ship.created_at) %> ago</span>
                 </td>
                 <td class="ship-queue__cell-action">
                   <%= link_to "Open", admin_certification_ship_path(ship),
@@ -219,26 +202,21 @@
       <div class="ship-queue__cards">
         <% @ships.each do |ship| %>
           <% owner = ship.project.memberships.find(&:owner?)&.user %>
-          <% claimed = ship.pending? && ship.reviewer.present? && ship.claim_expires_at.present? && ship.claim_expires_at > Time.current %>
           <%= link_to admin_certification_ship_path(ship), class: "ship-queue__card" do %>
             <div class="ship-queue__card-top">
               <span class="ship-queue__project-title"><%= ship.project.title %></span>
               <span class="status-pill status-pill--<%= ship.status %>"><%= ship.status.capitalize %></span>
             </div>
-            <div class="ship-queue__card-meta">
-              <span class="ship-queue__project-id">#<%= ship.id %></span>
-              <span class="ship-queue__muted"><%= time_ago_in_words(ship.created_at) %> ago</span>
+            <div class="ship-queue__project-meta">
+              <span>#<%= ship.id %></span>
+              <span class="ship-queue__dot" aria-hidden="true">·</span>
+              <span>by <%= owner&.display_name || "—" %></span>
+              <span class="ship-queue__dot" aria-hidden="true">·</span>
+              <span><%= time_ago_in_words(ship.created_at) %> old</span>
             </div>
-            <div class="ship-queue__card-meta">
-              <span class="ship-queue__muted">by <%= owner&.display_name || "—" %></span>
-              <% if claimed %>
-                <span class="ship-queue__claimed"><%= inline_svg_tag "icons/lock.svg", class: "ship-queue__claimed-icon", aria: { hidden: true } %><%= ship.reviewer.display_name %></span>
-              <% elsif ship.pending? %>
-                <span class="ship-queue__muted">unclaimed</span>
-              <% elsif ship.reviewer %>
-                <span class="ship-queue__reviewer"><%= ship.reviewer.display_name %></span>
-              <% end %>
-            </div>
+            <% if ship.pending? %>
+              <div class="ship-queue__card-claim"><%= render "claim_flag", ship: ship %></div>
+            <% end %>
           <% end %>
         <% end %>
       </div>
