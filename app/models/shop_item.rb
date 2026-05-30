@@ -332,7 +332,11 @@ class ShopItem < ApplicationRecord
       .uniq
   end
 
-  def new_item? = created_at.present? && created_at > 7.days.ago
+  def new_item?
+    return false if is_a?(ShopItem::FreeStickers) || is_a?(ShopItem::TutorialNothing)
+
+    created_at.present? && created_at > 7.days.ago
+  end
 
   def expired?
     enabled_until.present? && enabled_until <= Time.current

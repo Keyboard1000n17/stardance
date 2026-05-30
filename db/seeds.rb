@@ -110,7 +110,7 @@ end
 
 # Seed default shop items
 stickers = ShopItem::FreeStickers.find_or_create_by!(name: "Stickers!!") do |item|
-  item.description = "we'll actually send you these!"
+  item.description = "Option A — pick this to get a real sticker pack shipped to you."
   item.ticket_cost = 0
   item.enabled = true
   item.one_per_person_ever = true
@@ -123,7 +123,7 @@ stickers = ShopItem::FreeStickers.find_or_create_by!(name: "Stickers!!") do |ite
 end
 
 tutorial_nothing = ShopItem::TutorialNothing.find_or_create_by!(name: "Nothing") do |item|
-  item.description = "Skip the freebie — just learn how the shop works."
+  item.description = "Option B — pick this to skip the freebie and just see how the shop works."
   item.ticket_cost = 0
   item.enabled = true
   item.one_per_person_ever = true

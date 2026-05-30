@@ -38,7 +38,7 @@ class SidebarComponent < ViewComponent::Base
         icon: { idle: "calendar", active: "calendar_active" } },
       { slug: "shop",          label: "shop",          path: "/shop",
         icon: { idle: "cart", active: "cart_active" },
-        notify: user.shop_tutorial_needed? },
+        notify: user.shop_tutorial_notify? },
       { slug: "resources",     label: "resources",     path: helpers.guides_path,
         icon: { idle: "book", active: "book_active" } },
       { slug: "projects",      label: "my projects",   path: helpers.profile_projects_path(user.display_name),
