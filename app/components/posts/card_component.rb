@@ -64,6 +64,11 @@ module Posts
       attachments.respond_to?(:count) ? attachments.count : 0
     end
 
+    def comment_url
+      return "#" unless devlog? && project.present?
+      helpers.project_devlog_path(project, postable)
+    end
+
     def comments_count_id
       "comments_count_#{postable.class.name.underscore.tr('/', '_')}_#{postable.id}"
     end
@@ -80,6 +85,34 @@ module Posts
         author.present? &&
         current_user.id == author.id &&
         !current_user.identity_verified?
+    end
+
+    # --- Menu helpers ---
+
+    def can_edit?
+      current_user.present? && author.present? && current_user.id == author.id
+    end
+
+    def can_delete?
+      current_user.present? && author.present? && current_user.id == author.id
+    end
+
+    def post_url
+      return "#" unless project.present?
+
+      helpers.project_path(project, anchor: helpers.dom_id(post))
+    end
+
+    def edit_url
+      return nil unless devlog? && project.present?
+
+      helpers.edit_project_devlog_path(project, postable)
+    end
+
+    def delete_url
+      return nil unless devlog? && project.present?
+
+      helpers.project_devlog_path(project, postable)
     end
   end
 end

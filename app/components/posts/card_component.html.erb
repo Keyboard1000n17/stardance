@@ -66,9 +66,10 @@
 
   <footer class="feed-post-card__actions">
     <% if show_comments && devlog? %>
-      <%= link_to project.present? ? project_path(project, anchor: dom_id(post)) : "#",
+      <%= link_to comment_url,
             class: "feed-post-card__action",
-            aria: { label: "#{postable.comments_count} comments" } do %>
+            aria: { label: "#{postable.comments_count} comments" },
+            data: { turbo: true } do %>
         <%= inline_svg_tag "icons/comment.svg", class: "feed-post-card__action-icon" %>
         <span id="<%= comments_count_id %>"><%= postable.comments_count %></span>
       <% end %>
@@ -86,9 +87,27 @@
     <% end %>
 
     <% if show_actions %>
-      <button type="button" class="feed-post-card__more" aria-label="More actions">
-        <span aria-hidden="true">•••</span>
-      </button>
+      <div class="feed-post-card__more-wrap" data-controller="post-menu" data-post-menu-url-value="<%= post_url %>">
+        <button type="button" class="feed-post-card__more" aria-label="More actions" data-action="post-menu#toggle">
+          <span aria-hidden="true">•••</span>
+        </button>
+
+        <div class="feed-post-card__menu" data-post-menu-target="menu" hidden>
+          <% if can_edit? && edit_url.present? %>
+            <%= link_to "Edit", edit_url, class: "feed-post-card__menu-item" %>
+          <% end %>
+
+          <% if can_delete? && delete_url.present? %>
+            <%= link_to "Delete", delete_url,
+                  data: { turbo_method: :delete, turbo_confirm: "Are you sure you want to delete this devlog?" },
+                  class: "feed-post-card__menu-item feed-post-card__menu-item--danger" %>
+          <% end %>
+
+          <button type="button" class="feed-post-card__menu-item" data-action="post-menu#share">
+            Copy link to clipboard
+          </button>
+        </div>
+      </div>
     <% end %>
   </footer>
 </article>
