@@ -468,6 +468,59 @@
                     form: { class: "project-show__test-time-form" } %>
     <% end %>
 
+    <% if is_member && params[:just_shipped].present? %>
+      <%
+        ship_tour_steps = [
+          {
+            selector: "[data-onboarding-target='rate']",
+            text: "Yay congrats on your first ship! To get your payout, you need to vote at least #{Post::ShipEvent::VOTES_REQUIRED_FOR_PAYOUT} times on other people's projects.",
+            padding: 12,
+            radius: 12
+          }
+        ]
+      %>
+      <div class="welcome-tour"
+           data-controller="welcome-tour"
+           data-welcome-tour-steps-value="<%= ship_tour_steps.to_json %>"
+           role="dialog"
+           aria-modal="true"
+           aria-label="Post-ship tour">
+        <div class="welcome-tour__overlay" aria-hidden="true"></div>
+        <div class="welcome-tour__spotlight"
+             data-welcome-tour-target="spotlight"
+             aria-hidden="true"></div>
+
+        <div class="welcome-tour__tooltip" data-welcome-tour-target="tooltip">
+          <%= inline_svg_tag "icons/tour-arrow.svg",
+                             class: "welcome-tour__arrow",
+                             aria: { hidden: true },
+                             focusable: false %>
+
+          <p class="welcome-tour__text" data-welcome-tour-target="text"></p>
+          <p class="welcome-tour__subtitle" data-welcome-tour-target="subtitle" hidden></p>
+
+          <div class="welcome-tour__actions">
+            <button type="button"
+                    class="welcome-tour__back"
+                    data-welcome-tour-target="back"
+                    data-action="click->welcome-tour#back"
+                    hidden>
+              Back
+            </button>
+            <button type="button"
+                    class="welcome-tour__next"
+                    data-welcome-tour-target="next"
+                    data-action="click->welcome-tour#next">
+            </button>
+          </div>
+
+          <span class="welcome-tour__counter"
+                data-welcome-tour-target="counter"
+                aria-hidden="true"></span>
+        </div>
+      </div>
+    <% end %>
+
     <% if @show_project_onboarding %>
       <section class="project-show__onboarding" aria-labelledby="project-show-onboarding-title">
         <header class="project-show__onboarding-header">
