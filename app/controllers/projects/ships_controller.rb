@@ -47,10 +47,10 @@ class Projects::ShipsController < ApplicationController
     end
 
     if !reship
-      redirect_to project_path(@project), notice: "Congratulations! Your project has been submitted for review!"
+      redirect_to project_path(@project, just_shipped: 1), notice: "Congratulations! Your project has been submitted for review! While you wait, rate other projects at the voting booth."
     elsif probe_result.ok?
       @post.postable.update!(certification_status: "approved")
-      redirect_to project_path(@project), notice: "Ship submitted! Your project is now out for voting."
+      redirect_to project_path(@project, just_shipped: 1), notice: "Ship submitted! Your project is now out for voting. Rate other projects to help yours get noticed too."
     else
       @project.ship_reviews.pending.first&.update!(
         status: :returned,
