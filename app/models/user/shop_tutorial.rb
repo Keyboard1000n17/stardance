@@ -16,7 +16,7 @@ module User::ShopTutorial
   # creation — only once the user has linked Hackatime and is ready to
   # progress toward shipping.
   def shop_tutorial_notify?
-    shop_tutorial_needed? && hackatime_identity.present?
+    shop_tutorial_needed? && hackatime_identity.present? && identity_verified?
   end
 
   # Tutorial can only be *finished* once the user has IDV — address collection

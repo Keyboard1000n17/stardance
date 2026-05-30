@@ -875,7 +875,9 @@ $slider-star: url("onboarding/star-radio-active.svg");
 
     // Hide scrollbar but keep functionality
     scrollbar-width: none;
-    &::-webkit-scrollbar { display: none; }
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 
   &__featured-card {
@@ -956,7 +958,9 @@ $slider-star: url("onboarding/star-radio-active.svg");
     flex-direction: column;
     margin-left: -2rem;
 
-    &:first-child { margin-left: 0; }
+    &:first-child {
+      margin-left: 0;
+    }
 
     @media (max-width: 768px) {
       margin-left: -1.25rem;
@@ -981,11 +985,32 @@ $slider-star: url("onboarding/star-radio-active.svg");
   }
 
   &__prize {
-    &--0 { transform: rotate(-3deg); z-index: 1; .onboarding-interests-result__prize-img { height: 230px; @media (max-width: 768px) { height: 140px; } } }
-    &--1 { transform: rotate(2deg); z-index: 2; }
-    &--2 { transform: rotate(-1deg); z-index: 3; }
-    &--3 { transform: rotate(3deg); z-index: 2; }
-    &--4 { transform: rotate(-2deg); z-index: 1; }
+    &--0 {
+      transform: rotate(-3deg);
+      z-index: 1;
+      .onboarding-interests-result__prize-img {
+        height: 230px;
+        @media (max-width: 768px) {
+          height: 140px;
+        }
+      }
+    }
+    &--1 {
+      transform: rotate(2deg);
+      z-index: 2;
+    }
+    &--2 {
+      transform: rotate(-1deg);
+      z-index: 3;
+    }
+    &--3 {
+      transform: rotate(3deg);
+      z-index: 2;
+    }
+    &--4 {
+      transform: rotate(-2deg);
+      z-index: 1;
+    }
   }
 
   &__next {

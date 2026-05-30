@@ -69,6 +69,8 @@ class Shop::BaseController < ApplicationController
   def derive_shop_mode
     return :preview if current_user.nil? || current_user.guest?
     return :preview unless current_user.projects.exists?
+    return :preview unless current_user.hackatime_identity.present?
+    return :preview unless current_user.identity_verified?
     return :tutorial if current_user.shop_tutorial_needed?
 
     :normal

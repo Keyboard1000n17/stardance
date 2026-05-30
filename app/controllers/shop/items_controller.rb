@@ -83,6 +83,8 @@ class Shop::ItemsController < Shop::BaseController
     if @shop_mode == :tutorial
       @tutorial_items = load_tutorial_items
       current_user&.mark_shop_tutorial_started!
+    elsif @shop_mode == :preview
+      @preview_tutorial_items = load_tutorial_items
     end
 
     @categories = Shop::Categorization.all

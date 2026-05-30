@@ -253,20 +253,30 @@ class ApplicationController < ActionController::Base
     return unless params[:portal_status].present? && current_user
 
     identity = current_user.identities.find_by(provider: "hack_club")
-    return unless identity&.access_token.present?
+    unless identity&.access_token.present?
+      redirect_to "/auth/hack_club?origin=#{ERB::Util.url_encode(request.fullpath)}" and return
+    end
 
     identity_payload = HCAService.identity(identity.access_token)
-    return if identity_payload.blank?
+    if identity_payload.blank?
+      flash.now[:alert] = "Couldn't reach the verification server. Try again in a moment."
+      return
+    end
 
     current_user.apply_hca_verification_payload!(identity_payload)
     current_user.reload
 
+    return_path = request.path
+    clean_params = request.query_parameters.except("portal_status")
+    return_url = clean_params.any? ? "#{return_path}?#{clean_params.to_query}" : return_path
+
     if current_user.identity_verified?
-      redirect_to profile_path(current_user.display_name), notice: "You're verified — your work is now public!" and return
+      redirect_to return_url, notice: "You're verified — your work is now public!" and return
     else
-      redirect_to profile_path(current_user.display_name, idv_check: 1) and return
+      redirect_to "#{return_url}#{return_url.include?('?') ? '&' : '?'}idv_check=1" and return
     end
   rescue StandardError => e
     Rails.logger.warn("Portal return identity refresh failed: #{e.class}: #{e.message}")
+    flash.now[:alert] = "Something went wrong checking your verification. Try again."
   end
 end
