@@ -130,29 +130,48 @@
                   <%= button_to post_repost_path(repost_target),
                         class: "feed-post-card__repost-option",
                         form: { class: "feed-post-card__repost-form feed-post-card__repost-form--plain" } do %>
-                    <%= inline_svg_tag "icons/repost.svg", class: "feed-post-card__repost-option-icon" %>
-                    <span class="feed-post-card__repost-option-copy">
-                      <strong class="feed-post-card__repost-option-title">Repost</strong>
-                      <span class="feed-post-card__repost-option-text">Share this devlog to your feed.</span>
-                    </span>
+                    Repost
                   <% end %>
-                </div>
 
-                <%= form_with scope: :post_repost,
-                      url: post_repost_path(repost_target),
-                      class: "feed-post-card__repost-form",
-                      local: true do |form| %>
-                  <%= form.label :body, "Quote", class: "feed-post-card__repost-label" %>
-                  <%= form.text_area :body,
-                        class: "feed-post-card__repost-textarea",
-                        rows: 3,
-                        required: true,
-                        maxlength: Post::Devlog::BODY_MAX_LENGTH,
-                        placeholder: "Add a thought before reposting." %>
-                  <%= form.submit "Quote", class: "feed-post-card__repost-submit" %>
-                <% end %>
+                  <button type="button"
+                          class="feed-post-card__repost-option"
+                          onclick="this.closest('details')?.removeAttribute('open'); document.getElementById(<%= quote_dialog_id.to_json %>)?.showModal()">
+                    Quote
+                  </button>
+                </div>
               </div>
             </details>
+
+            <dialog id="<%= quote_dialog_id %>"
+                    class="feed-post-card__quote-dialog"
+                    data-controller="modal"
+                    aria-label="Quote repost">
+              <%= form_with scope: :post_repost,
+                    url: post_repost_path(repost_target),
+                    class: "feed-post-card__quote-composer",
+                    local: true do |form| %>
+                <div class="feed-post-card__quote-composer-main">
+                  <%= image_tag current_user.avatar, alt: "", class: "feed-post-card__quote-composer-avatar" %>
+                  <div class="feed-post-card__quote-composer-field">
+                    <%= form.label :body, "Add a thought", class: "feed-post-card__quote-composer-label" %>
+                    <%= form.text_area :body,
+                          class: "feed-post-card__quote-composer-textarea",
+                          rows: 4,
+                          required: true,
+                          maxlength: Post::Devlog::BODY_MAX_LENGTH,
+                          placeholder: "Add a thought before reposting." %>
+                  </div>
+                </div>
+                <div class="feed-post-card__quote-composer-actions">
+                  <button type="button"
+                          class="feed-post-card__quote-composer-cancel"
+                          onclick="document.getElementById(<%= quote_dialog_id.to_json %>)?.close()">
+                    Cancel
+                  </button>
+                  <%= form.submit "Quote", class: "feed-post-card__quote-composer-submit" %>
+                </div>
+              <% end %>
+            </dialog>
           <% else %>
             <span class="feed-post-card__action feed-post-card__action--disabled" aria-label="Sign in to repost">
               <%= inline_svg_tag "icons/repost.svg", class: "feed-post-card__action-icon" %>

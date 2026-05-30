@@ -136,6 +136,10 @@ module Posts
       end
     end
 
+    def quote_dialog_id
+      helpers.dom_id(repost_target, :quote_repost)
+    end
+
     # When the current user is the post's author and they haven't yet verified
     # their identity, surface a small badge in the card header to remind them
     # that this content is hidden from everyone except admins.

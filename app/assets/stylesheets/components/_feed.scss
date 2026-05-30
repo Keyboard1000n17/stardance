@@ -747,20 +747,20 @@
     z-index: 5;
     top: calc(100% + var(--space-xs));
     left: 50%;
-    width: min(360px, 84vw);
-    padding: var(--space-s);
-    border: 2px solid var(--color-set-3-bg);
-    border-radius: var(--border-radius);
+    width: max-content;
+    min-width: 128px;
+    padding: var(--space-xxs);
+    border: 1px solid var(--color-set-3-bg);
+    border-radius: calc(var(--border-radius) * 0.75);
     background: var(--color-set-1-bg);
-    box-shadow: 0 18px 42px var(--color-shadow-deep);
+    box-shadow: 0 10px 28px var(--color-shadow-deep);
     transform: translateX(-50%);
   }
 
   &__repost-options {
     display: flex;
     flex-direction: column;
-    gap: var(--space-xs);
-    margin-bottom: var(--space-s);
+    gap: 0;
   }
 
   &__repost-form {
@@ -775,54 +775,67 @@
 
   &__repost-option {
     width: 100%;
-    min-height: 52px;
-    padding: var(--space-s);
+    min-height: 40px;
+    padding: var(--space-xs) var(--space-s);
     display: flex;
     align-items: center;
-    gap: var(--space-s);
-    border: 1px solid var(--color-set-3-bg);
-    border-radius: calc(var(--border-radius) * 0.65);
+    border: 0;
+    border-radius: calc(var(--border-radius) * 0.55);
     color: var(--color-space-text);
-    background: var(--color-overlay-light-soft);
+    background: transparent;
     font: inherit;
+    font-weight: 700;
     text-align: left;
     cursor: pointer;
 
     &:hover,
     &:focus-visible {
-      border-color: var(--color-brand-mint);
-      background: var(--color-brand-mint-soft);
+      background: var(--color-overlay-light-soft);
       outline: none;
     }
   }
 
-  &__repost-option-icon {
-    width: 20px;
-    height: 20px;
-    color: var(--color-brand-mint);
-    fill: currentColor;
-    flex: 0 0 auto;
+  &__quote-dialog {
+    width: min(520px, calc(100vw - (var(--space-m) * 2)));
+    padding: 0;
+    border: 2px solid var(--color-set-3-bg);
+    border-radius: var(--border-radius);
+    color: var(--color-space-text);
+    background: var(--color-set-1-bg);
+    box-shadow: 0 18px 42px var(--color-shadow-deep);
+
+    &::backdrop {
+      background: rgba(8, 6, 30, 0.72);
+    }
   }
 
-  &__repost-option-copy {
+  &__quote-composer {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: var(--space-s);
+    padding: var(--space-m);
+  }
+
+  &__quote-composer-main {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-s);
+  }
+
+  &__quote-composer-avatar {
+    width: var(--feed-avatar-size);
+    height: var(--feed-avatar-size);
+    border-radius: 50%;
+    flex: 0 0 auto;
+    object-fit: cover;
+  }
+
+  &__quote-composer-field {
+    flex: 1;
     min-width: 0;
   }
 
-  &__repost-option-title {
-    font-size: var(--font-size-m);
-    line-height: 1.1;
-  }
-
-  &__repost-option-text {
-    color: var(--color-space-text-muted);
-    font-size: var(--font-size-s);
-    line-height: 1.25;
-  }
-
-  &__repost-label {
+  &__quote-composer-label {
     margin: 0;
     color: var(--color-space-text-muted);
     font-size: var(--font-size-s);
@@ -830,15 +843,15 @@
     text-transform: uppercase;
   }
 
-  &__repost-textarea {
+  &__quote-composer-textarea {
     width: 100%;
-    min-height: 96px;
-    padding: var(--space-s);
-    border: 1px solid var(--color-border-input);
-    border-radius: calc(var(--border-radius) * 0.65);
+    min-height: 136px;
+    padding: var(--space-xs) 0 0;
+    border: 0;
     color: var(--color-space-text);
-    background: var(--color-overlay-light-soft);
+    background: transparent;
     font: inherit;
+    font-size: var(--font-size-m);
     resize: vertical;
 
     &::placeholder {
@@ -846,21 +859,37 @@
     }
 
     &:focus {
-      border-color: var(--color-border-input-focus);
       outline: none;
     }
   }
 
-  &__repost-submit {
-    align-self: flex-end;
-    min-height: 34px;
+  &__quote-composer-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: var(--space-xs);
+    padding-left: calc(var(--feed-avatar-size) + var(--space-s));
+  }
+
+  &__quote-composer-cancel,
+  &__quote-composer-submit {
+    min-height: 36px;
     padding: 0 var(--space-m);
     border: 0;
     border-radius: 999px;
-    color: var(--color-set-1-bg);
-    background: var(--color-brand-highlight);
+    font: inherit;
     font-weight: 700;
     cursor: pointer;
+  }
+
+  &__quote-composer-cancel {
+    color: var(--color-space-text-muted);
+    background: transparent;
+  }
+
+  &__quote-composer-submit {
+    color: var(--color-set-1-bg);
+    background: var(--color-brand-highlight);
   }
 
   &__repost-preview {
