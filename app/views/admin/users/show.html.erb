@@ -91,7 +91,7 @@
     </div>
   </div>
 </div>
-
+<% if policy(@user).audit_log? %>
 <div>
   <div>
     <h2>Actions</h2>
@@ -286,6 +286,8 @@
 
     </div>
   </div>
+<% if policy(@user).audit_log? %>
+
   <div>
     <h2>Flipper Features</h2>
     <div>
@@ -321,7 +323,6 @@
     </div>
   </div>
 </div>
-
 <div>
   <h2>📝 Internal Notes</h2>
   <p>⚠️ Shared between fraud, fulfillment, and admins. Changes are audit logged.</p>
@@ -339,9 +340,10 @@
     <button type="submit">Save Notes</button>
   </form>
 </div>
-
+<% end %>
 <%= render Admin::PastOrdersComponent.new(user: @user, title: "Shop Orders") %>
 
 <%= render "admin/shared/ledger_log", entries: @user.ledger_entries, title: "Ledger History" %>
-
+<% if policy(@user).audit_log? %>
 <%= render "admin/shared/audit_log", record: @user, limit: 15 %>
+<% end %>
