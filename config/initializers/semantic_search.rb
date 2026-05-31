@@ -2,7 +2,7 @@
 
 Rails.application.config.x.semantic_search = ActiveSupport::OrderedOptions.new
 Rails.application.config.x.semantic_search.redis = {
-  url: ENV["SEARCH_REDIS_URL"].presence || ENV["REDIS_CACHE_URL"].presence,
+  url: ENV["SEARCH_REDIS_URL"].presence,
   reconnect_attempts: 2,
   read_timeout: 1.0,
   error_handler: ->(method:, returning:, exception:) {
