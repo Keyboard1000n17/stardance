@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_31_162601) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_31_184504) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -643,6 +643,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_31_162601) do
     t.datetime "synced_at"
     t.string "title", null: false
     t.boolean "tutorial", default: false, null: false
+    t.text "update_description"
     t.datetime "updated_at", null: false
     t.index ["deleted_at"], name: "index_projects_on_deleted_at"
     t.index ["marked_fire_by_id"], name: "index_projects_on_marked_fire_by_id"
