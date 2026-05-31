@@ -28,6 +28,10 @@ class Onboarding::WizardController < ApplicationController
     existing = User.find_by(email: normalized)
 
     if existing&.hca_linked?
+      if existing.age_attestation_ineligible?
+        redirect_to onboarding_age_gate_path and return
+      end
+
       if existing.onboarded_at.nil?
         session[:user_id] = existing.id
         redirect_to onboarding_resume_path(existing) and return
@@ -75,12 +79,20 @@ class Onboarding::WizardController < ApplicationController
   def welcome; end
 
   def birthday
-    if current_user.age_attestation.present?
+    if current_user.age_attestation_ineligible?
+      reset_session
+      redirect_to onboarding_age_gate_path
+    elsif current_user.age_attestation.present?
       redirect_to params[:back] ? onboarding_welcome_path : onboarding_resume_path(current_user)
     end
   end
 
   def submit_birthday
+    if current_user.age_attestation_ineligible?
+      reset_session
+      redirect_to onboarding_age_gate_path and return
+    end
+
     if current_user.age_attestation.present?
       redirect_to onboarding_resume_path(current_user) and return
     end
