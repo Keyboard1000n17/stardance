@@ -168,7 +168,7 @@ module SemanticSearch
         "DIALECT", "2"
       )
 
-      hydrate(raw, viewer: viewer, limit: limit, query: normalized)
+      hydrate(raw, viewer: viewer, limit: limit, query: query)
     rescue Redis::BaseError, Faraday::Error, JSON::ParserError => e
       handle_redis_error(:search, empty_results, e) if e.is_a?(Redis::BaseError)
       Rails.logger.warn("SemanticSearch query failed: #{e.class}: #{e.message}")
