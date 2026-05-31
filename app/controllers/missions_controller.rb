@@ -1,7 +1,7 @@
 class MissionsController < ApplicationController
   before_action :set_body_class
   before_action :set_mission, only: [ :show, :guide ]
-  before_action -> { @active_nav_slug = "events" }
+  before_action -> { @active_nav_slug = "missions" }
 
   def index
     authorize Mission
@@ -19,6 +19,8 @@ class MissionsController < ApplicationController
                              .includes(:icon_attachment)
                              .order(end_at: :desc)
                              .limit(8)
+
+    @draft_missions = draft_missions_for_current_user
   end
 
   def show
@@ -54,6 +56,19 @@ class MissionsController < ApplicationController
 
   def set_body_class
     @body_class = "app-layout-page"
+  end
+
+  def draft_missions_for_current_user
+    return Mission.none unless current_user
+
+    scope = Mission.where(enabled: false).includes(:icon_attachment)
+
+    if current_user.admin?
+      scope.order(updated_at: :desc)
+    else
+      owned_ids = Mission::Membership.where(user_id: current_user.id, role: :owner).select(:mission_id)
+      scope.where(id: owned_ids).order(updated_at: :desc)
+    end
   end
 
   def set_mission
