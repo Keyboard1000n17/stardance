@@ -70,6 +70,10 @@ class Admin::UserPolicy < ApplicationPolicy
     user&.admin? || user&.fraud_dept?
   end
 
+  def view_email?
+    user&.admin? || user&.fraud_dept? 
+  end
+
   def audit_log?
     user&.admin? || user&.fraud_dept?
   end

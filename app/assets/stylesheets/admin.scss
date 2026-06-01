@@ -25,40 +25,6 @@ body {
   }
 }
 
-/* Tables */
-.table-data {
-  width: 100%;
-  border: 1px solid var(--color-brown-500);
-  border-radius: 0.5em;
-  overflow: hidden;
-
-  thead {
-    background: var(--color-tan-400);
-  }
-
-  th {
-    &:first-child {
-      border-radius: 0.5em 0 0 0;
-    }
-
-    &:last-child {
-      border-radius: 0 0.5em 0 0;
-    }
-  }
-
-  tbody tr:nth-child(odd) {
-    background: color-mix(in hsl, var(--color-tan-400), var(--color-tan-300));
-  }
-
-  tbody tr {
-    background: var(--color-tan-300);
-  }
-
-  th,
-  td {
-    padding: 0.25rem 0.75rem;
-  }
-}
 
 /* Pagination */
 .pagination {
@@ -203,13 +169,6 @@ a.super-mega-dashboard-btn {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 1rem;
-}
-
-.admin-workspace {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin: var(--space-m) 0;
 }
 
 .admin-workspace__link {

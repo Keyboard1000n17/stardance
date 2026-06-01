@@ -1,0 +1,64 @@
+// Reusable Space-themed table — §1 sets, §2 typography, §3 containers from branding.md.
+// Usage: wrap any <table> in .space-table__wrap, add .space-table to the <table>.
+
+.space-table {
+  &__wrap {
+    width: 100%;
+    border-radius: 8px;
+    border: 2px solid var(--color-set-3-bg);
+    overflow: hidden;
+  }
+
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--color-space-text);
+  font-size: var(--font-body);
+
+  thead {
+    background: var(--color-set-3-bg);
+
+    th {
+      padding: var(--space-s) var(--space-m);
+      text-align: left;
+      font-size: 16px; // Label scale (branding §2.1)
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--color-space-text);
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      background: var(--color-set-1-bg);
+      border-top: 1px solid var(--color-set-2-bg);
+      transition: background 150ms ease;
+
+      &:nth-child(even) {
+        background: var(--color-set-2-bg);
+      }
+
+      &:hover {
+        background: var(--color-space-surface-faint);
+      }
+    }
+
+    td {
+      padding: var(--space-s) var(--space-m);
+      vertical-align: middle;
+
+      &.space-table__muted {
+        color: var(--color-space-text-muted);
+        font-size: 16px;
+      }
+    }
+  }
+
+  &__avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+}

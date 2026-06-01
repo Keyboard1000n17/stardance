@@ -23,6 +23,7 @@
 @use "components/dropdown";
 @use "components/shop-item-card";
 @use "components/admin-banner";
+@use "components/space_table";
 @use "components/top_banner";
 @use "components/tooltip";
 @use "components/like_button";
@@ -73,5 +74,6 @@
 @use "pages/mission_submissions/index" as mission_submissions_index;
 @use "pages/mission_submissions/show" as mission_submissions_show;
 @use "pages/admin/missions_edit" as admin_missions_edit;
+@use "pages/admin/support";
 @use "pages/certification/ships/index" as certification_ships_index;
 @use "pages/certification/ships/show" as certification_ships_show;

@@ -1,6 +1,6 @@
 <% if orders.any? %>
-  <div>
-    <table>
+  <div class="space-table__wrap">
+    <table class="space-table">
       <thead>
         <tr>
           <th>ID</th>
@@ -71,7 +71,7 @@
               <td>
                 <% if order.assigned_to_user.present? %>
                   <div>
-                    <%= image_tag order.assigned_to_user.avatar, alt: order.assigned_to_user.display_name, style: "width: 24px; height: 24px; border-radius: 50%; object-fit: cover;" %>
+                    <%= image_tag order.assigned_to_user.avatar, alt: order.assigned_to_user.display_name, class: "space-table__avatar" %>
                     <span><%= order.assigned_to_user.display_name %></span>
                   </div>
                 <% end %>
@@ -135,7 +135,5 @@
     </table>
   </div>
 <% else %>
-  <div>
-    <p>No orders found matching the filters.</p>
-  </div>
+  <p class="admin-users__empty">No orders found matching the filters.</p>
 <% end %>
