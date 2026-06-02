@@ -1,0 +1,154 @@
+<%= render "raffle/shared/dev_panel" if Rails.env.development? %>
+
+<% if signed_in? %>
+  <% content_for :title, "Dashboard" %>
+  <section class="raffle-dash">
+    <h1 class="raffle-masthead">
+      <span class="raffle-masthead__product">AMD Radeon RX 9060 XT</span>
+      <span class="raffle-masthead__kind">GPU Raffle</span>
+    </h1>
+    <!-- Hero: tickets + week progress -->
+    <% if @week %>
+      <div class="raffle-hero-panel">
+        <%= image_tag "raffle/globe.png", class: "raffle-hero-panel__globe", alt: "", aria_hidden: "true", loading: "lazy" %>
+        <%= render "raffle/shared/week_track", current: @week_number %>
+      </div>
+    <% else %>
+      <p class="raffle-empty">The raffle hasn't opened yet, check back soon.</p>
+    <% end %>
+
+    <!-- This week's odds, as a sentence -->
+    <% if @week %>
+      <div class="raffle-odds">
+        <% if @ticket_count.to_i.zero? %>
+          <p class="raffle-odds__line">
+            You're <em>not in the draw</em> yet, one verified participant puts you in for
+            <strong class="raffle-odds__hl">+20</strong>.
+          </p>
+        <% else %>
+          <p class="raffle-odds__line">
+            About a <strong class="raffle-odds__hl">1&nbsp;in&nbsp;<%= [ (@week_pool.to_f / @ticket_count).round, 1 ].max %></strong>
+            shot at <em>this week's GPU.</em>
+          </p>
+          <div class="raffle-odds__meter" role="img" aria-label="Your share of this week's tickets">
+            <span class="raffle-odds__fill" style="--raffle-odds-fill: <%= [ (@ticket_count.to_f / @week_pool * 100).round, 2 ].max %>%"></span>
+          </div>
+        <% end %>
+        <p class="raffle-odds__ctx">
+          <% if @rank %><strong>#<%= @rank %></strong> of <% end %><%= pluralize(@week_participants, "entrant") %>
+          · <strong><%= number_with_delimiter(@week_pool) %></strong> tickets in the pool
+        </p>
+      </div>
+    <% end %>
+
+    <!-- Share: the main action -->
+    <div class="raffle-card raffle-card--share">
+      <h2 class="raffle-card__title">Your referral link</h2>
+      <p class="raffle-card__hint">
+        Share it anywhere. Each verified participant earns you
+        <strong class="raffle-pop">+20 tickets</strong>.
+      </p>
+      <div class="raffle-links">
+        <%= render "raffle/dashboard/link_row", label: "Your link", channel: "web",
+                   url: current_participant.referral_url(:web) %>
+      </div>
+    </div>
+
+    <!-- Browse any week — re-scopes the leaderboard + your referrals below -->
+    <%= render "raffle/shared/week_picker" %>
+
+    <%= render "raffle/dashboard/leaderboard",
+               leaderboard: @leaderboard, week: @board_week,
+               pagy: @pagy, offset: @rank_offset,
+               query: @query, selected_week_number: @board_week&.number,
+               current_participant: current_participant, rank: @board_rank, you_tickets: @board_you_tickets %>
+
+    <!-- Referral activity (for the selected week) -->
+    <div class="raffle-cols">
+      <div class="raffle-card">
+        <h2 class="raffle-card__title">
+          Verified <span class="raffle-count raffle-count--verified"><%= @verified_this_week_count %></span>
+        </h2>
+        <% if @verified_this_week.any? %>
+          <ul class="raffle-refs">
+            <%= render partial: "raffle/dashboard/referral_row", collection: @verified_this_week, as: :ref %>
+          </ul>
+        <% else %>
+          <p class="raffle-empty">No verified participants for this week. Resets for every new raffle.</p>
+        <% end %>
+      </div>
+
+      <div class="raffle-card">
+        <h2 class="raffle-card__title">
+          Pending <span class="raffle-count raffle-count--pending"><%= @pending_count %></span>
+        </h2>
+        <p class="raffle-card__hint">These are people who have not ID verified yet, but are linked to your referral code. Until they ID verify, they will stay pending every week!</p>
+        <% if @pending.any? %>
+          <ul class="raffle-refs">
+            <%= render partial: "raffle/dashboard/referral_row", collection: @pending, as: :ref %>
+          </ul>
+        <% else %>
+          <p class="raffle-empty">No pending referrals.</p>
+        <% end %>
+      </div>
+    </div>
+
+    <%= render "raffle/shared/faq" %>
+  </section>
+
+<% else %>
+  <% content_for :title, "Win a GPU!" %>
+  <section class="raffle-landing">
+    <div class="raffle-landing__hero">
+      <h1 class="raffle-masthead">
+        <span class="raffle-masthead__product">AMD Radeon RX 9060 XT</span>
+        <span class="raffle-masthead__kind">GPU Raffle</span>
+      </h1>
+      <p class="raffle-landing__tagline">One GPU given away <em>every single week.</em></p>
+      <%= render "raffle/shared/week_track", current: @week_number %>
+      <p class="raffle-landing__lead">
+        Sign in with GitHub, share your link, and earn
+        <strong class="raffle-pop">+20 tickets</strong>
+        for every verified participant who joins Stardance.
+      </p>
+      <%= button_to "/auth/github", method: :post,
+                    class: "raffle-btn raffle-btn--github raffle-landing__cta",
+                    form: { data: { turbo: false } } do %>
+        <%= inline_svg_tag "icons/github.svg", class: "raffle-btn__icon", aria_hidden: "true" %>
+        Sign in with GitHub
+      <% end %>
+      <% if Rails.env.development? %>
+        <%= button_to "dev login", dev_login_path, method: :get,
+                      form_class: "raffle-landing__dev-login", class: "raffle-landing__dev-login-btn" %>
+      <% end %>
+      <p class="raffle-landing__meta">Ages 13 and above permitted</p>
+    </div>
+
+    <h2 class="raffle-landing__how-title">How it works</h2>
+    <ol class="raffle-steps">
+      <li class="raffle-step">
+        <span class="raffle-step__num">1</span>
+        <h3 class="raffle-step__title">Sign in</h3>
+        <p class="raffle-step__text">One tap with GitHub, no extra account needed.</p>
+      </li>
+      <li class="raffle-step">
+        <span class="raffle-step__num">2</span>
+        <h3 class="raffle-step__title">Share your link</h3>
+        <p class="raffle-step__text">Send it to participants anywhere you hang out.</p>
+      </li>
+      <li class="raffle-step">
+        <span class="raffle-step__num">3</span>
+        <h3 class="raffle-step__title">Earn tickets</h3>
+        <p class="raffle-step__text">Each verified participant is +20 tickets toward the draw.</p>
+      </li>
+    </ol>
+
+    <%= render "raffle/dashboard/leaderboard",
+               leaderboard: @leaderboard, week: @board_week,
+               pagy: @pagy, offset: @rank_offset,
+               query: @query, selected_week_number: @board_week&.number,
+               current_participant: nil, rank: nil %>
+
+    <%= render "raffle/shared/faq" %>
+  </section>
+<% end %>

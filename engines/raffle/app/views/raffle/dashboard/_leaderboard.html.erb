@@ -1,0 +1,63 @@
+<% offset ||= 0 %>
+<% pagy ||= nil %>
+<% you_tickets ||= nil %>
+<% query ||= nil %>
+<% selected_week_number ||= nil %>
+<% on_page = current_participant && leaderboard.any? { |(p, _)| p.id == current_participant.id } %>
+<div class="raffle-card raffle-card--board">
+  <div class="raffle-card__head">
+    <h2 class="raffle-card__title">
+      <%= inline_svg_tag "icons/trophy.svg", class: "raffle-card__title-icon raffle-card__title-icon--trophy", aria_hidden: "true" %>
+      Leaderboard
+    </h2>
+    <form class="raffle-board__search" method="get" action="<%= request.path %>" role="search">
+      <% if selected_week_number.present? %>
+        <input type="hidden" name="lb_week" value="<%= selected_week_number %>">
+      <% end %>
+      <%= inline_svg_tag "icons/search.svg", class: "raffle-board__search-icon", aria_hidden: "true" %>
+      <input type="search" name="q" value="<%= query %>"
+             class="raffle-board__search-input" placeholder="Search participants"
+             aria-label="Search the leaderboard" autocomplete="off">
+    </form>
+  </div>
+
+  <% if leaderboard.any? %>
+    <ol class="raffle-board">
+      <% leaderboard.each_with_index do |(participant, tickets), i| %>
+        <% rank_n = offset + i + 1 %>
+        <% you = current_participant && participant.id == current_participant.id %>
+        <li class="raffle-board__row<%= " is-you" if you %>">
+          <span class="raffle-board__rank raffle-board__rank--<%= rank_n %>"><%= rank_n %></span>
+          <%= image_tag participant_avatar_url(participant), class: "raffle-board__avatar", alt: "" %>
+          <span class="raffle-board__name">
+            <%= participant.github_login %><% if you %> <span class="raffle-board__youtag">you</span><% end %>
+          </span>
+          <span class="raffle-board__tickets"><%= tickets %> <span class="raffle-board__tickets-unit">tickets</span></span>
+        </li>
+      <% end %>
+    </ol>
+
+    <% if pagy && pagy.pages > 1 %>
+      <div class="raffle-board__pagerow">
+        <div class="raffle-pager"><%== pagy.series_nav %></div>
+      </div>
+    <% end %>
+  <% elsif query.present? %>
+    <p class="raffle-empty">No participants match “<%= query %>”.</p>
+  <% else %>
+    <p class="raffle-empty">No tickets yet this week, be the first on the board.</p>
+  <% end %>
+
+  <% if current_participant && rank && !on_page %>
+    <ol class="raffle-board raffle-board--you">
+      <li class="raffle-board__row is-you">
+        <span class="raffle-board__rank">#<%= rank %></span>
+        <%= image_tag participant_avatar_url(current_participant), class: "raffle-board__avatar", alt: "" %>
+        <span class="raffle-board__name">
+          <%= current_participant.github_login %> <span class="raffle-board__youtag">you</span>
+        </span>
+        <span class="raffle-board__tickets"><%= you_tickets %> <span class="raffle-board__tickets-unit">tickets</span></span>
+      </li>
+    </ol>
+  <% end %>
+</div>
