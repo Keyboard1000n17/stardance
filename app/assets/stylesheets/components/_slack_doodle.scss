@@ -33,11 +33,22 @@
   }
 
   @keyframes slack-doodle-nudge {
-    0%, 65% { transform: translateY(0); }
-    72%     { transform: translateY(-8px); }
-    79%     { transform: translateY(0); }
-    86%     { transform: translateY(-4px); }
-    93%     { transform: translateY(0); }
+    0%,
+    65% {
+      transform: translateY(0);
+    }
+    72% {
+      transform: translateY(-8px);
+    }
+    79% {
+      transform: translateY(0);
+    }
+    86% {
+      transform: translateY(-4px);
+    }
+    93% {
+      transform: translateY(0);
+    }
   }
 
   &__card {
@@ -99,7 +110,6 @@
       background: var(--color-space-surface);
     }
   }
-
 
   @media (max-width: 768px) {
     width: 160px;
