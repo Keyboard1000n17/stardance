@@ -32,13 +32,6 @@ class Onboarding::WizardController < ApplicationController
         redirect_to onboarding_age_gate_path and return
       end
 
-      if existing.onboarded_at.nil?
-        sign_in_user(existing)
-        redirect_to onboarding_resume_path(existing) and return
-      end
-
-      # OmniAuth 2.x with omniauth-rails_csrf_protection blocks GET, so we
-      # render an auto-submitting POST form instead of redirecting.
       @login_hint = normalized
       return render :redirecting_to_hca
     end
