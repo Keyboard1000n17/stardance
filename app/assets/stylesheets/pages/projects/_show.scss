@@ -599,6 +599,17 @@ turbo-frame#project_hero {
 
 .project-show__followers {
   font-size: 1rem;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 // Author avatars stack horizontally with a slight overlap, like a multi-user
