@@ -32,9 +32,9 @@
               <%= order.shop_item.name %><br>
               <small><%= order.shop_item.type&.demodulize %></small>
               <% if order.parent_order_id.present? %>
-                <br><small>🔗 Accessory for #<%= order.parent_order_id %></small>
+                <br><small>🔗 Modifier for #<%= order.parent_order_id %></small>
               <% elsif order.accessory_orders.any? %>
-                <br><small>🎁 +<%= order.accessory_orders.count %> accessories</small>
+                <br><small>🎁 +<%= order.accessory_orders.count %> modifiers</small>
               <% end %>
             </td>
             <td>

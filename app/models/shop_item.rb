@@ -189,6 +189,23 @@ class ShopItem < ApplicationRecord
     "ShopItem::SpecialFulfillmentItem"
   ].freeze
 
+  # Item STI types an admin can create/filter by. Centralised here so the item
+  # form and the orders filter share one list instead of maintaining their own.
+  SELECTABLE_TYPES = [
+    "ShopItem::Accessory",
+    "ShopItem::HCBGrant",
+    "ShopItem::HCBPreauthGrant",
+    "ShopItem::HQMailItem",
+    "ShopItem::LetterMail",
+    "ShopItem::ThirdPartyPhysical",
+    "ShopItem::ThirdPartyDigital",
+    "ShopItem::WarehouseItem",
+    "ShopItem::SpecialFulfillmentItem",
+    "ShopItem::HackClubberItem",
+    "ShopItem::FreeStickers",
+    "ShopItem::SillyItemType"
+  ].freeze
+
   scope :shown_in_carousel, -> { where(show_in_carousel: true) }
   scope :manually_fulfilled, -> { where(type: MANUAL_FULFILLMENT_TYPES) }
   scope :enabled, -> { where(enabled: true, draft: [ nil, false ]).where("shop_items.enabled_until IS NULL OR shop_items.enabled_until > ?", Time.current) }

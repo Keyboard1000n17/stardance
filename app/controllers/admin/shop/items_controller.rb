@@ -143,20 +143,7 @@ class Admin::Shop::ItemsController < Admin::ApplicationController
     end
 
     def available_shop_item_types
-      [
-        "ShopItem::Accessory",
-        "ShopItem::HCBGrant",
-        "ShopItem::HCBPreauthGrant",
-        "ShopItem::HQMailItem",
-        "ShopItem::LetterMail",
-        "ShopItem::ThirdPartyPhysical",
-        "ShopItem::ThirdPartyDigital",
-        "ShopItem::WarehouseItem",
-        "ShopItem::SpecialFulfillmentItem",
-        "ShopItem::HackClubberItem",
-        "ShopItem::FreeStickers",
-        "ShopItem::SillyItemType"
-      ]
+      ShopItem::SELECTABLE_TYPES
     end
 
     def shop_item_params

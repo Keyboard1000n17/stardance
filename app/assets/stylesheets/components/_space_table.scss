@@ -6,7 +6,9 @@
     width: 100%;
     border-radius: 8px;
     border: 2px solid var(--color-set-3-bg);
-    overflow: hidden;
+    // Scroll horizontally when the table is wider than its container instead
+    // of clipping the rightmost columns. border-radius still clips the corners.
+    overflow-x: auto;
   }
 
   width: 100%;

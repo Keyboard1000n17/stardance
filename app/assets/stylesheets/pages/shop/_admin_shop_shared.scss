@@ -87,6 +87,24 @@ $set-fg-secondary: #83828d;
   }
 }
 
+// Outlined "chip" link — a pill-bordered link in the muted secondary
+// colour that brightens to the primary text colour on hover. Used for the
+// view/group/leaderboard toggles across admin shop pages.
+@mixin outlined-pill-link {
+  color: $set-fg-secondary;
+  font-size: var(--font-size-s);
+  text-decoration: none;
+  border: 2px solid $set-fg-secondary;
+  border-radius: 9999px;
+  padding: 0.25em 0.75em;
+  transition: color 0.1s, border-color 0.1s;
+
+  &:hover {
+    color: var(--color-space-text);
+    border-color: var(--color-space-text);
+  }
+}
+
 // Pill buttons (branding §4)
 @mixin pill-buttons {
   .btn-primary,
