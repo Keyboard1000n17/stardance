@@ -34,10 +34,6 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def show
     authorize @ship
-    if @ship.pending? && @ship.reviewer_id == current_user.id &&
-       @ship.claim_expires_at.present? && @ship.claim_expires_at < Time.current + 5.minutes
-      @ship.update!(claim_expires_at: Time.current + ::Certification::Reviewable::CLAIM_TTL)
-    end
     @reviewed_today = ::Certification::Ship.reviewed_today(current_user)
   end
 
