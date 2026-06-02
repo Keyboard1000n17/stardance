@@ -155,9 +155,3 @@ hq_source = ShopSource.find_by!(slug: "hq")
   item.shop_categories << merch_category unless item.shop_categories.include?(merch_category)
   item.shop_sources    << hq_source      unless item.shop_sources.include?(hq_source)
 end
-
-# Raffle — open week 1 if no week exists yet (the 16-week program is otherwise
-# advanced manually from the admin dashboard).
-if Raffle::Week.none?
-  Raffle::Week.create!(number: 1, status: "active", opened_at: Time.current)
-end
