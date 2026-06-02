@@ -14,9 +14,9 @@ export default class extends Controller {
     this.lastQuery = null;
     this.abortController = null;
     this.timer = null;
+    this._initialValue = this.inputTarget.value;
     this._setSubmitDisabled(true);
     this._updateCounter();
-    this.check();
   }
 
   disconnect() {
@@ -27,6 +27,12 @@ export default class extends Controller {
   onInput() {
     if (this.timer) clearTimeout(this.timer);
     this._updateCounter();
+
+    if (this.inputTarget.value === this._initialValue) {
+      this._setState("available", "");
+      return;
+    }
+
     this._setState("checking", "Checking\u2026");
     this.timer = setTimeout(() => this.check(), this.debounceValue);
   }
