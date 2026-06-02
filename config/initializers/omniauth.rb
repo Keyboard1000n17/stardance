@@ -52,4 +52,14 @@ Rails.application.config.middleware.use OmniAuth::Builder do
           token_url:     "/oauth/token"
         }
       }
+
+    # GitHub — used only by the raffle engine (raffle. subdomain) for its own,
+    # platform-independent login. Creds via ENV (with credentials fallback);
+    # absent creds are fine in dev where the raffle dev-login bypass is used.
+    provider :github,
+      ENV["RAFFLE_GITHUB_CLIENT_ID"] || Rails.application.credentials.dig(:github_raffle, :client_id),
+      ENV["RAFFLE_GITHUB_CLIENT_SECRET"] || Rails.application.credentials.dig(:github_raffle, :client_secret),
+      {
+        scope: "read:user user:email"
+      }
 end
