@@ -3,11 +3,22 @@ require "active_support/core_ext/integer/time"
 Rails.application.configure do
   config.after_initialize do
     Bullet.enable        = true
-    Bullet.alert         = true
+    Bullet.alert         = false
     Bullet.bullet_logger = true
     Bullet.console       = true
     Bullet.rails_logger  = true
     Bullet.add_footer    = true
+
+    # ActiveStorage::Attachment#record is the polymorphic owner (e.g. ShopItem
+    # itself). When we render attachment URLs, Rails reaches back from
+    # attachment → record, and Bullet flags it as an N+1 even though the
+    # records are already in memory. Adding :record to the preload chain is
+    # circular, so safelist the false positive instead.
+    Bullet.add_safelist(
+      type: :n_plus_one_query,
+      class_name: "ActiveStorage::Attachment",
+      association: :record
+    )
   end
 
   # Settings specified here will take precedence over those in config/application.rb.

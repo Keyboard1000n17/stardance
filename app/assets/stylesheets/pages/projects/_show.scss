@@ -46,6 +46,13 @@ turbo-frame#project_hero {
   background: var(--color-space-surface-soft);
 }
 
+// Red "still to complete" highlight for the banner — drawn inside the rounded
+// corners so it isn't clipped by `overflow: hidden`.
+.project-show__banner--incomplete {
+  outline: 4px solid var(--color-brand-salmon);
+  outline-offset: -4px;
+}
+
 .project-show__banner-image {
   display: block;
   width: 100%;
@@ -78,6 +85,27 @@ turbo-frame#project_hero {
 .project-show__back-icon {
   width: 30px;
   height: 30px;
+}
+
+.project-show__banner--empty .project-show__banner-image {
+  opacity: 0;
+}
+
+.project-show__banner-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: 2px dashed var(--color-space-border);
+  border-radius: var(--profile-radius);
+}
+
+.project-show__banner-placeholder-text {
+  color: var(--color-space-text-muted);
+  font-size: var(--font-size-l);
+  font-weight: 600;
 }
 
 .project-show__banner-upload {
@@ -282,6 +310,16 @@ turbo-frame#project_hero {
 .project-show__textarea {
   min-height: 86px;
   resize: vertical;
+}
+
+// Red "still to complete" highlight applied (via the project-form controller)
+// to sections the user hasn't filled in yet. The salmon ring stays visible
+// even while the field is focused.
+.project-show__control--incomplete,
+.project-show__description-input--incomplete {
+  border-color: var(--color-brand-salmon);
+  box-shadow: 0 0 0 2px
+    color-mix(in srgb, var(--color-brand-salmon) 45%, transparent);
 }
 
 .project-show__control--select {
@@ -561,6 +599,17 @@ turbo-frame#project_hero {
 
 .project-show__followers {
   font-size: 1rem;
+  background: none;
+  border: none;
+  color: inherit;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    text-decoration: underline;
+  }
 }
 
 // Author avatars stack horizontally with a slight overlap, like a multi-user
@@ -647,132 +696,59 @@ turbo-frame#project_hero {
 }
 
 // Action row sits between the header and the latest-ship card.
+// Buttons are ActionButtonComponent (size :large), with two row-scoped tweaks:
+// each fills its share of the row, and the trailing icon is sized up to match
+// the illustrative rocket/arrow PNGs this row was originally tuned for.
 .project-show__actions {
   display: flex;
   gap: 14px;
   align-items: stretch;
   position: sticky;
-  top: 0;
+  top: var(--space-m);
   z-index: 5;
+
+  .action-btn {
+    flex: 1;
+    text-align: center;
+  }
+
+  // Some buttons in this row use button_to (Hackatime + test) because Turbo
+  // Drive is off app-wide and data-turbo-method links don't get intercepted.
+  // button_to wraps the button in a form — make the form invisible to flex.
+  .project-show__action-form {
+    display: contents;
+  }
+
+  .action-btn__icon {
+    width: 1.6em;
+    height: 1.6em;
+    margin-top: -0.15em;
+  }
 }
 
-// Large action button (branding §4.2) — sits on the page background (set 1),
-// so this uses the dark-bg variant. Secondary base = set-2 fill with a
-// muted set-3-coloured border + white text; primary fills with the cream
-// highlight.
-// `button_to` wraps the button in a form. Make that form invisible to the
-// flex parent so the button itself remains the flex item (gets flex: 1 below).
-.project-show__action-form {
-  display: contents;
+// "Add 15min (test)" button. Pulled out of the actions row and pinned to the
+// bottom-right corner of the viewport so it stays out of the main flow.
+.project-show__test-time-form {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 50;
 }
 
-.project-show__action {
-  flex: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 32px;
-  border-radius: 999px;
-  border: 2px solid var(--color-set-3-bg);
-  background: var(--color-set-2-bg);
-  color: var(--color-space-text);
-  text-decoration: none;
-  font-family: inherit;
-  font-size: 1.1875rem; // 19px
-  font-weight: 700;
-  cursor: pointer;
-  transition:
-    background 150ms ease,
-    border-color 150ms ease,
-    color 150ms ease;
+.project-show__test-time {
+  background: color-mix(
+    in srgb,
+    var(--color-brand-yellow) 14%,
+    var(--color-set-2-bg)
+  );
+  border-color: color-mix(in srgb, var(--color-brand-yellow) 55%, transparent);
+  color: var(--color-brand-yellow);
 
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  // Secondary hover — border + text shift to brand-highlight-secondary
-  // (keeps the dark fill so the change is purely a chrome lift).
-  &--secondary:hover:not(:disabled),
-  &--secondary:focus-visible:not(:disabled) {
-    border-color: var(--color-brand-highlight-secondary);
-    color: var(--color-brand-highlight-secondary);
-  }
-
-  // Secondary pressed — push further to the deeper highlight cream.
-  &:active:not(:disabled),
-  &--secondary:active:not(:disabled) {
-    color: var(--color-brand-highlight);
-    border-color: var(--color-brand-highlight);
-  }
-
-  // Primary action — cream highlight fill, dark text. Hover lightens to the
-  // secondary highlight, pressed goes pure white.
-  &--primary {
-    background: var(--color-brand-highlight);
-    border-color: var(--color-brand-highlight);
-    color: var(--color-set-1-bg);
-  }
-
-  &--primary:hover:not(:disabled),
-  &--primary:focus-visible:not(:disabled) {
-    background: var(--color-brand-highlight-secondary);
-    border-color: var(--color-brand-highlight-secondary);
-  }
-
-  &--primary:active:not(:disabled) {
-    background: var(--color-space-text);
-    border-color: var(--color-space-text);
-    color: var(--color-set-1-bg);
-  }
-
-  // `--secondary` inherits the base set-2 fill with set-3 border + white text.
-
-  &--test {
-    border-color: color-mix(
-      in srgb,
-      var(--color-brand-yellow) 55%,
-      transparent
-    );
-    background: color-mix(
-      in srgb,
-      var(--color-brand-yellow) 14%,
-      var(--color-set-2-bg)
-    );
-    color: var(--color-brand-yellow);
-  }
-
-  &--test:hover:not(:disabled),
-  &--test:focus-visible:not(:disabled) {
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
     border-color: var(--color-brand-yellow);
     color: var(--color-brand-cream);
   }
-}
-
-// End-icon slot for large action buttons. Per branding §4.2 the trailing icon
-// translates right on hover; the button body itself doesn't move.
-.project-show__action-icon {
-  display: inline-block;
-  margin-left: 8px;
-  transition: transform 150ms ease;
-
-  .project-show__action:hover:not(:disabled) &,
-  .project-show__action:focus-visible:not(:disabled) & {
-    transform: translateX(4px);
-  }
-}
-
-// Image-icon variant — sized to sit alongside the 19px button text. The
-// asset is the same illustrative PNG used in the sidebar for the "home"
-// nav item, so the rocket on "Create new ship" matches the home icon
-// visually.
-.project-show__action-icon--img {
-  width: 1.6em;
-  height: 1.6em;
-  vertical-align: middle;
-  // Pull the icon up slightly so its visual centre lines up with the
-  // capital-letter baseline rather than the descender line.
-  margin-top: -0.15em;
 }
 
 // Local onboarding vars previously lived here. Same brand-token mapping as
@@ -781,7 +757,6 @@ turbo-frame#project_hero {
   display: flex;
   flex-direction: column;
   gap: 28px;
-  padding-top: 16px;
   color: var(--color-space-text);
 }
 
@@ -894,28 +869,19 @@ turbo-frame#project_hero {
 // Latest ship card — set 4 (the canonical "highlighted container" surface
 // per branding §1.1) with a cream highlight border for added visual lift.
 .project-show__latest-ship {
-  position: relative;
   background: var(--color-set-4-bg);
-  border-radius: var(--profile-radius);
-  box-shadow: 0 0 0 2px var(--color-brand-highlight);
-  padding: 12px 32px 24px 24px;
+  border-color: var(--color-brand-highlight);
+  box-shadow: none;
 }
 
 .project-show__latest-ship-label {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding-left: 40px;
   color: var(--color-space-text);
-  // Branding §2.1 Label scale — small caption above the heading.
-  font-size: 1rem;
   opacity: 0.75;
-  margin-bottom: 4px;
 }
 
 .project-show__latest-ship-icon {
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   color: currentColor;
 }
 
@@ -937,83 +903,27 @@ turbo-frame#project_hero {
   }
 }
 
-.project-show__latest-ship-body {
-  display: flex;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.project-show__latest-ship-avatar {
-  flex-shrink: 0;
-}
-
-.project-show__avatar--lg {
-  width: 57px;
-  height: 57px;
-  border: none;
-}
-
-.project-show__latest-ship-content {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.project-show__latest-ship-heading {
-  margin: 0;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 4px;
-  font-size: 1.1875rem; // 19px
-  color: var(--color-space-text);
-  line-height: 1;
-}
-
-.project-show__latest-ship-author {
-  font-weight: 700;
-  color: inherit;
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-}
-
-.project-show__latest-ship-on {
-  font-weight: 400;
-}
-
-.project-show__latest-ship-project {
-  color: inherit;
+.project-show__latest-ship-mission-link {
+  color: var(--color-brand-yellow);
   text-decoration: underline;
   text-underline-offset: 2px;
 
   &:hover {
-    opacity: 0.85;
+    color: var(--color-brand-cream);
   }
 }
 
-.project-show__latest-ship-time {
-  opacity: 0.5;
-}
-
 .project-show__latest-ship-text {
-  margin: 0;
-  font-size: 1.1875rem; // 19px
-  line-height: 1.3;
-  color: var(--color-space-text);
+  p {
+    margin: 0;
+  }
 }
 
 .project-show__latest-ship-stats {
   list-style: none;
-  margin: 0;
-  padding: 0;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--space-l);
   opacity: 0.75;
 }
 
@@ -1070,26 +980,33 @@ turbo-frame#project_hero {
     color: var(--color-brand-highlight);
     border-color: var(--color-brand-highlight);
   }
+}
 
-  // Primary — light-bg state ladder: white → highlight-secondary → highlight.
-  &--primary {
-    background: var(--color-space-text);
-    border-color: var(--color-space-text);
-    color: var(--color-set-1-bg);
-  }
+// Primary — light-bg state ladder: white → highlight-secondary → highlight.
+.project-show__latest-ship-btn.project-show__latest-ship-btn--primary {
+  background: var(--color-space-text);
+  border-color: var(--color-space-text);
+  color: var(--color-set-1-bg);
+}
 
-  &--primary:hover:not(:disabled):not([aria-disabled="true"]),
-  &--primary:focus-visible:not(:disabled):not([aria-disabled="true"]) {
-    background: var(--color-brand-highlight-secondary);
-    border-color: var(--color-brand-highlight-secondary);
-    outline: none;
-  }
+.project-show__latest-ship-btn.project-show__latest-ship-btn--primary:hover:not(
+    :disabled
+  ):not([aria-disabled="true"]),
+.project-show__latest-ship-btn.project-show__latest-ship-btn--primary:focus-visible:not(
+    :disabled
+  ):not([aria-disabled="true"]) {
+  background: var(--color-brand-highlight-secondary);
+  border-color: var(--color-brand-highlight-secondary);
+  color: var(--color-set-1-bg);
+  outline: none;
+}
 
-  &--primary:active:not(:disabled):not([aria-disabled="true"]) {
-    background: var(--color-brand-highlight);
-    border-color: var(--color-brand-highlight);
-    color: var(--color-set-1-bg);
-  }
+.project-show__latest-ship-btn.project-show__latest-ship-btn--primary:active:not(
+    :disabled
+  ):not([aria-disabled="true"]) {
+  background: var(--color-brand-highlight);
+  border-color: var(--color-brand-highlight);
+  color: var(--color-set-1-bg);
 }
 
 // Devlog feed
@@ -1147,18 +1064,37 @@ turbo-frame#project_hero {
 
 // Payout votes panel — same set-1 surface as the notice.
 .project-show__payout-votes {
-  padding: 24px;
-  border-radius: var(--profile-radius);
-  background: var(--color-set-1-bg);
-  box-shadow: 0 0 0 2px var(--color-space-border);
+  // Match the mission module's tile (.mission-panel).
+  padding: var(--space-m);
+  border-radius: 14px;
+  border: 1px solid var(--color-space-border, rgba(255, 255, 255, 0.12));
+  background: var(--color-space-card, rgba(255, 255, 255, 0.04));
   color: var(--color-space-text);
 }
 
+.project-show__payout-votes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-m);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-s);
+}
+
+.project-show__payout-votes-cta {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
 .project-show__payout-votes-title {
-  margin: 0 0 var(--space-xs);
+  margin: 0;
   // Branding §2.1 Body size, bold.
   font-size: 1.1875rem;
   font-weight: 700;
+}
+
+.project-show__payout-votes-info {
+  cursor: help;
 }
 
 .project-show__payout-votes-row {
@@ -1286,6 +1222,7 @@ turbo-frame#project_hero {
 
   .feed-composer__chips,
   .feed-composer__grid,
+  .feed-composer__attach-wrap,
   .feed-composer__info-wrap,
   .feed-composer__toolbar {
     flex-shrink: 0;
@@ -1416,6 +1353,204 @@ turbo-frame#project_hero {
   }
 }
 
+// Ship flow modals (refresher video + ship post) launched from the
+// "Ship your project!" button, replacing the old multi-page wizard.
+.ship-modal {
+  border: none;
+  padding: 0;
+  background: transparent;
+  max-width: min(560px, 94vw);
+  width: 100%;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  translate: -50% -50%;
+  margin: 0;
+  max-height: 90vh;
+  overflow-y: auto;
+  color: var(--color-space-text);
+
+  &::backdrop {
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(2px);
+  }
+}
+
+// The ship-post step previews a full ship card, so give it more room.
+.ship-modal--post {
+  max-width: min(720px, 94vw);
+}
+
+.ship-modal__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+  padding: var(--space-l) var(--space-l) calc(var(--space-l) + 4px);
+  background: #847f78;
+  border: 1px solid var(--color-brand-highlight);
+  border-radius: var(--border-radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+.ship-modal__title {
+  margin: 0;
+  font-family: "Playfair Display", serif;
+  font-style: italic;
+  font-size: var(--font-size-xxl);
+  font-weight: 700;
+}
+
+.ship-modal__subtitle {
+  margin: 0;
+  font-size: var(--font-size-base);
+  color: var(--color-space-text-muted);
+}
+
+.ship-modal__video {
+  border-radius: var(--border-radius);
+  overflow: hidden;
+}
+
+.ship-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-m);
+}
+
+.ship-modal__mission-card {
+  padding: var(--space-m) var(--space-l);
+  background: var(--color-set-1-bg);
+  border: 1px solid var(--color-space-border);
+  border-radius: var(--border-radius);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  color: var(--color-space-text);
+}
+
+.ship-modal__mission-ack {
+  display: flex;
+  gap: var(--space-xs);
+  align-items: flex-start;
+  font-size: var(--font-body);
+  cursor: pointer;
+}
+
+.ship-modal__mission-heading {
+  margin: 0;
+  font-size: var(--font-body);
+}
+
+// The mission's submission guidelines, shown above the acknowledgment.
+.ship-modal__mission-guide {
+  max-height: 240px;
+  overflow-y: auto;
+  margin-top: var(--space-s);
+  padding-right: var(--space-xs);
+  font-size: var(--font-size-s);
+  line-height: 1.5;
+  color: var(--color-space-text-muted);
+}
+
+// Editable body inside the ship-card preview — matches the card's other text.
+.ship-modal__textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 8px 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: var(--profile-radius);
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--color-space-text);
+  font: inherit;
+  font-size: 1.1875rem;
+  line-height: 1.3;
+  resize: vertical;
+  outline: none;
+
+  &::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+  }
+
+  &:focus {
+    border-color: var(--color-brand-highlight);
+  }
+}
+
+.ship-modal__actions {
+  display: flex;
+  gap: var(--space-s);
+  justify-content: flex-end;
+}
+
+.ship-modal__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 18px;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--color-space-text);
+  font-family: inherit;
+  font-size: var(--font-size-base);
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease;
+
+  &--secondary:hover,
+  &--secondary:focus-visible {
+    border-color: var(--color-brand-highlight-secondary);
+    color: var(--color-brand-highlight-secondary);
+    outline: none;
+  }
+
+  &--primary {
+    background: var(--color-brand-highlight);
+    border-color: var(--color-brand-highlight);
+    color: var(--color-set-1-bg);
+  }
+
+  &--primary:hover,
+  &--primary:focus-visible {
+    filter: brightness(1.05);
+    outline: none;
+  }
+}
+
+// Feed-composer overrides scoped to ship modal — the modal reuses the
+// composer's markup (data-composer-target) but needs tighter spacing.
+.ship-modal .feed-composer__attach {
+  margin: 0;
+  border-color: rgba(255, 255, 255, 0.15);
+  background: transparent;
+}
+
+.ship-modal .feed-composer__grid {
+  padding-left: 0;
+}
+
+.ship-modal__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ship-modal__preview-body {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.ship-modal__preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
 .project-show__hackatime-picker {
   position: relative;
   display: flex;
@@ -1455,6 +1590,7 @@ turbo-frame#project_hero {
 }
 
 .project-show__hackatime-connect {
+  font-family: inherit;
   font-size: 14px;
   font-weight: 600;
   color: var(--color-yellow-200);

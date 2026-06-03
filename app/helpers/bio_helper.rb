@@ -61,7 +61,7 @@ module BioHelper
     if sigil == "@"
       user = users[id]
       return ERB::Util.html_escape("<@#{id}>") unless user
-      link_to("@#{user.display_name}", user_path(user), class: "bio-mention bio-mention--user", data: link_data)
+      link_to("@#{user.display_name}", profile_path(user.display_name), class: "bio-mention bio-mention--user", data: link_data)
     else
       project = projects[id]
       return ERB::Util.html_escape("<$#{id}>") unless project

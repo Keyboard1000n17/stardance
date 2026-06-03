@@ -1,4 +1,9 @@
 class ProjectsController < ApplicationController
+  # Mission + payout-votes render as discover-rail modules on the project page.
+  # The expanded mission module also previews the next guide step.
+  discover_rail_widgets :project_mission_expanded, :ship_intro, :payout_votes,
+                        context: -> { { project: @project, votes_for_payout: @votes_for_payout } }
+
   before_action :set_project_minimal, only: [ :edit, :update, :destroy ]
   before_action :set_project, only: [ :show, :readme, :add_test_time ]
   before_action :redirect_guest_owner_to_link!, only: [ :show, :readme, :edit, :update ]
@@ -20,6 +25,8 @@ class ProjectsController < ApplicationController
     end
 
     prepare_project_show_context
+
+    render :show_hackpad if @project_onboarding_mission&.slug == "hackpad"
   end
 
   def prepare_project_show_context
@@ -65,15 +72,20 @@ class ProjectsController < ApplicationController
     end
 
 
-    load_posts = -> {
-      @project.posts
-               .includes(postable: [ :attachments_attachments ])
-               .order(created_at: :desc)
-               .select { |post| post.postable.present? }
+    load_posts = ->(include_deleted_devlogs: false) {
+      scope = @project.posts
+                       .visible_to(current_user)
+                       .includes(postable: [ :attachments_attachments ])
+                       .order(created_at: :desc)
+      unless include_deleted_devlogs
+        scope = scope.joins("LEFT JOIN post_devlogs ON posts.postable_type = 'Post::Devlog' AND posts.postable_id = post_devlogs.id")
+                     .where("posts.postable_type != 'Post::Devlog' OR post_devlogs.deleted_at IS NULL")
+      end
+      scope.select { |post| post.postable.present? }
     }
 
     @posts = if policy(@project).view_deleted_devlogs?
-      Post::Devlog.unscoped { load_posts.call }
+      load_posts.call(include_deleted_devlogs: true)
     else
       load_posts.call
     end
@@ -109,7 +121,10 @@ class ProjectsController < ApplicationController
       @liked_devlog_ids = Set.new
     end
 
-    ahoy.track "Viewed project", project_id: @project.id
+    track_event "Viewed project", project_id: @project.id
+    if current_user.present? && !@is_member
+      @project.send_gorse_feedback_later(user: current_user, item: @project, feedback_type: :read, comment: "project_show")
+    end
 
     @latest_ship_post = @posts.find { |post| post.postable_type == "Post::ShipEvent" }
     latest_ship_event = @latest_ship_post&.postable
@@ -140,7 +155,16 @@ class ProjectsController < ApplicationController
   def add_test_time
     authorize @project
 
-    hackatime_project = current_user.hackatime_projects.find_or_initialize_by(name: test_time_hackatime_project_name)
+    unless Flipper.enabled?(:test_time, current_user)
+      redirect_back fallback_location: project_path(@project), alert: "Test time is not available"
+      return
+    end
+
+    # NB: query the table directly rather than current_user.hackatime_projects —
+    # that reader is overridden (User::HackatimeSync) to only surface real synced
+    # projects, so it would never find the test-time row and a second click would
+    # try to insert a duplicate, tripping the (user_id, name) uniqueness check.
+    hackatime_project = User::HackatimeProject.find_or_initialize_by(user: current_user, name: test_time_hackatime_project_name)
     hackatime_project.project = @project
     hackatime_project.save!
 
@@ -165,9 +189,20 @@ class ProjectsController < ApplicationController
     @project = Project.new
     authorize @project
     @missions = Mission.available
+                       .where.not(id: missions_user_already_has_a_project_on)
                        .includes(:icon_attachment, :banner_attachment)
                        .order(featured_at: :desc)
                        .limit(8)
+  end
+
+  def missions_user_already_has_a_project_on
+    return [] unless current_user
+    current_user.projects
+                .where(deleted_at: nil)
+                .joins(:mission_attachments)
+                .where(project_mission_attachments: { detached_at: nil, deleted_at: nil })
+                .pluck("project_mission_attachments.mission_id")
+                .uniq
   end
 
   def create
@@ -191,21 +226,21 @@ class ProjectsController < ApplicationController
     end
 
     if success
+      track_event "project_created", { project_id: @project.id, source: "new_form" }
       flash[:notice] = "Project created successfully"
-      current_user.complete_tutorial_step! :create_project
 
       project_hours = @project.total_hackatime_hours
-      # if project_hours > 0
-      #   tutorial_message OnboardingCopy::PROJECT_CREATED_WITH_HOURS.call(
-      #     helpers.distance_of_time_in_words(project_hours.hours)
-      #   )
-      # else
-      #   tutorial_message OnboardingCopy::PROJECT_CREATED_NO_HOURS
-      # end
 
-      if (slug = params[:mission_slug].presence)
-        mission = Mission.find_by(slug: slug)
-        @project.missions << mission if mission
+      if (slug = params[:mission_slug].presence) && (mission = Mission.find_by(slug: slug))
+        @project.missions << mission
+        attrs = {}
+        if @project.title.blank? || @project.title == "Untitled"
+          attrs[:title] = mission.default_project_title.presence || mission.name
+        end
+        if @project.description.blank? && mission.default_project_description.present?
+          attrs[:description] = mission.default_project_description
+        end
+        @project.update!(attrs) if attrs.any?
       end
 
       first_project = current_user.projects.count == 1
@@ -222,7 +257,7 @@ class ProjectsController < ApplicationController
 
   def edit
     authorize @project
-    load_project_times
+    redirect_to project_path(@project, editing: true)
   end
 
   def update
@@ -290,9 +325,8 @@ class ProjectsController < ApplicationController
       end
 
       @project.soft_delete!(force: force)
-      current_user.revoke_tutorial_step! :create_project if current_user.projects.empty?
       flash[:notice] = "Project deleted successfully"
-      redirect_to projects_user_path(current_user)
+      redirect_to profile_projects_path(current_user.display_name)
     rescue ActiveRecord::RecordInvalid => e
       flash[:alert] = e.record.errors.full_messages.to_sentence
       redirect_to project_path(@project)
@@ -313,7 +347,7 @@ class ProjectsController < ApplicationController
             blocks_path: "notifications/new_follower",
             locals: {
               project_title: @project.title,
-              project_url: project_url(@project, host: "flavortown.hackclub.com", protocol: "https"),
+              project_url: project_url(@project, host: "stardance.hackclub.com", protocol: "https"),
               follower_id: current_user.slack_id
             }
           )
@@ -335,6 +369,13 @@ class ProjectsController < ApplicationController
     else
       redirect_to project_path(@project), alert: "Could not unfollow."
     end
+  end
+
+  def followers
+    @project = Project.find(params[:id])
+    authorize @project, :show?
+    @followers = @project.followers.order(:display_name)
+    render "users/followers", layout: false
   end
 
   def readme
@@ -376,7 +417,7 @@ class ProjectsController < ApplicationController
   end
 
   def project_params
-    params.require(:project).permit(:title, :description, :demo_url, :repo_url, :readme_url, :banner, :ai_declaration, hackatime_project_ids: [])
+    params.require(:project).permit(:title, :description, :demo_url, :repo_url, :readme_url, :banner, :ai_declaration, :update_description, hackatime_project_ids: [])
   end
 
   def hackatime_project_ids
@@ -412,8 +453,6 @@ class ProjectsController < ApplicationController
 
   def validate_url_not_dead(attribute, name)
     require "uri"
-    require "faraday"
-    require "faraday/follow_redirects"
 
     return unless @project.send(attribute).present?
 
@@ -423,20 +462,19 @@ class ProjectsController < ApplicationController
       return
     end
 
-    conn = Faraday.new(
-      url: uri.to_s,
-      headers: { "User-Agent" => "Stardance project validator (https://flavortown.hackclub.com/)" }
-    ) do |faraday|
-      faraday.response :follow_redirects, max_redirects: 3
-      faraday.adapter Faraday.default_adapter
-    end
-    response = conn.get() do |req|
-      req.options.timeout = 5
-      req.options.open_timeout = 5
-    end
+    # Pinned probe: resolves+verifies the host and connects to that exact IP, so
+    # the address we vetted is the one we hit even across redirects. This is the
+    # SSRF-safe path the model's url_reachable? already uses — keep both on it.
+    response = SafeUrl.safe_get(
+      uri.to_s,
+      headers: { "User-Agent" => "Stardance project validator (https://stardance.hackclub.com/)" },
+      open_timeout: 5,
+      read_timeout: 5
+    )
+    status = response.code.to_i
 
-    unless (200..299).cover?(response.status)
-      @project.errors.add(attribute, "Your #{name} needs to return a 200 status. I got #{response.status}, is your code/website set to public!?!?")
+    unless (200..299).cover?(status)
+      @project.errors.add(attribute, "Your #{name} needs to return a 200 status. I got #{status}, is your code/website set to public!?!?")
     end
 
 
@@ -482,16 +520,27 @@ class ProjectsController < ApplicationController
 
   rescue URI::InvalidURIError
     @project.errors.add(attribute, "#{name} is not a valid URL")
-  rescue Faraday::ConnectionFailed => e
-    @project.errors.add(attribute, "Please make sure the URL is valid and reachable: #{e.message}")
+  rescue SafeUrl::Error => e
+    # Host failed SSRF verification (non-public IP, unresolvable, bad scheme).
+    # Keep the real reason in the logs; give the user a cheeky generic message
+    # so we don't confirm whether an internal host exists.
+    Rails.logger.warn("URL validation rejected #{attribute}: #{e.message}")
+    @project.errors.add(attribute, "nice try ding dong — #{name} has to be a real, public URL")
+  rescue SocketError, Errno::ECONNREFUSED, Errno::EHOSTUNREACH, Net::OpenTimeout, Net::ReadTimeout, OpenSSL::SSL::SSLError => e
+    Rails.logger.warn("URL validation failed for #{attribute}: #{e.class}: #{e.message}")
+    @project.errors.add(attribute, "#{name} could not be reached. Please make sure the URL is valid and publicly accessible.")
   rescue StandardError => e
-    @project.errors.add(attribute, "#{name} could not be verified (idk why, pls let a admin know if this is happening a lot and your sure that the URL is valid): #{e.message}")
+    Rails.logger.warn("URL validation error for #{attribute}: #{e.class}: #{e.message}")
+    @project.errors.add(attribute, "#{name} could not be verified. Please try again or contact support if the issue persists.")
   end
-
   def link_hackatime_projects
     # Unlink hackatime projects that were removed
     @project.hackatime_projects.where.not(id: hackatime_project_ids).find_each do |hp|
-      hp.update(project: nil)
+      unless hp.update(project: nil)
+        hp.errors.full_messages.each do |message|
+          @project.errors.add(:base, "Hackatime project #{hp.name}: #{message}")
+        end
+      end
     end
 
     return if hackatime_project_ids.empty?
@@ -503,11 +552,6 @@ class ProjectsController < ApplicationController
         end
       end
     end
-  end
-
-  def load_project_times
-    result = current_user.try_sync_hackatime_data!
-    @project_times = result&.dig(:projects) || {}
   end
 
   def test_time_session_key

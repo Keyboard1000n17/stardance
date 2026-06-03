@@ -100,27 +100,30 @@
 
   &__card {
     align-items: stretch;
-    background: rgba(8, 6, 31, 0.75);
-    border: 2px solid rgba(255, 255, 255, 0.5);
-    border-radius: 0.5rem;
+    background: var(--color-set-2-bg);
+    border: 1px solid var(--color-space-border);
+    border-radius: var(--profile-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     color: white;
     cursor: pointer;
     display: flex;
-    font-family: "Exo 2", sans-serif;
+    font-family: var(--font-family-text);
     gap: 1rem;
     padding: 1rem 1.1rem;
     text-align: left;
     transition:
-      border-color 150ms ease,
-      background 150ms ease,
-      transform 150ms ease;
+      border-color 180ms ease,
+      box-shadow 180ms ease,
+      transform 180ms ease;
     width: 100%;
 
     &:hover,
     &:focus-visible {
-      background: rgba(8, 6, 31, 0.95);
-      border-color: var(--color-brand-mint);
-      transform: translateY(-2px);
+      border-color: var(--color-brand-lilac);
+      box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 0 1px var(--color-brand-lilac-soft);
+      transform: translateY(-3px);
     }
   }
 
@@ -157,16 +160,23 @@
   }
 
   &__card-description {
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255, 255, 255, 0.7);
     font-size: 0.9rem;
     line-height: 1.35;
   }
 
-  &__card-difficulty {
+  &__card-meta {
     align-self: flex-start;
-    background: rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: var(--space-xxs);
+  }
+
+  &__card-difficulty {
+    background: var(--color-brand-lilac-soft);
     border-radius: 999px;
-    color: var(--color-brand-cream);
+    color: var(--color-brand-lilac);
     font-size: 0.7rem;
     font-weight: 700;
     letter-spacing: 0.05em;
@@ -174,10 +184,55 @@
     text-transform: uppercase;
   }
 
+  &__card-steps {
+    background: var(--color-space-surface-faint);
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.55rem;
+  }
+
+  &__card-duration {
+    background: var(--color-brand-mint-soft);
+    border-radius: 999px;
+    color: var(--color-brand-mint);
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.15rem 0.55rem;
+  }
+
+  &__card-prize {
+    background: var(--color-brand-yellow-soft);
+    border-radius: 999px;
+    color: var(--color-brand-yellow);
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-top: var(--space-xxs);
+    padding: 0.15rem 0.55rem;
+    align-self: flex-start;
+  }
+
   &__empty {
-    color: rgba(255, 255, 255, 0.8);
-    font-size: 1rem;
-    margin: 2rem 0;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+    margin: 3rem 0;
+    text-align: center;
+  }
+
+  &__empty-icon {
+    color: var(--color-brand-lilac);
+    font-size: 2.5rem;
+  }
+
+  &__empty-text {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.05rem;
+    line-height: 1.5;
+    margin: 0;
+    max-width: 360px;
   }
 
   &__later-form {
@@ -190,7 +245,7 @@
     border: none;
     color: white;
     cursor: pointer;
-    font-family: "Exo 2", sans-serif;
+    font-family: var(--font-family-text);
     font-size: 1rem;
     font-weight: 700;
     padding: 0.5rem 0.75rem;
@@ -205,11 +260,57 @@
 
 // Link-account gate — the "finish setting up your account" screen.
 .project-setup-link {
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem auto 0;
+    max-width: 640px;
+
+    .onboarding-screen__subhead {
+      margin: 0;
+    }
+  }
+
   &__form {
     margin: 0;
   }
 
   &__cta {
     margin-top: 2rem;
+  }
+
+  &__footer {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 2rem;
+    text-align: center;
+  }
+
+  &__footer-line {
+    color: var(--color-space-text);
+    font-size: var(--font-size-m);
+    margin: 0;
+    opacity: 0.85;
+  }
+
+  &__footer-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    justify-content: center;
+    margin: 0;
+  }
+
+  &__footer-link {
+    color: var(--color-space-text);
+    font-size: var(--font-size-m);
+    text-decoration: underline;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--color-brand-highlight);
+    }
   }
 }

@@ -1,0 +1,56 @@
+<div>
+  <h2>Statistics</h2>
+  <p>Click a status to filter orders:</p>
+  <div>
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'pending')),
+        style: "text-decoration: none;" do %>
+      Pending: <%= counts[:pending] %>
+    <% end %>
+
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'awaiting_verification')),
+        style: "text-decoration: none;" do %>
+      Awaiting Verification: <%= counts[:awaiting_verification] %>
+    <% end %>
+
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'awaiting_verification_call')),
+        style: "text-decoration: none;" do %>
+      Verification Call: <%= counts[:awaiting_verification_call] %>
+    <% end %>
+
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'awaiting_periodical_fulfillment')),
+        style: "text-decoration: none;" do %>
+      Awaiting Fulfillment: <%= counts[:awaiting_fulfillment] %>
+    <% end %>
+
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'on_hold')),
+        style: "text-decoration: none;" do %>
+      On Hold: <%= counts[:on_hold] %>
+    <% end %>
+
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'fulfilled')),
+        style: "text-decoration: none;" do %>
+      Fulfilled: <%= counts[:fulfilled] %>
+    <% end %>
+
+    <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).merge(status: 'rejected')),
+        style: "text-decoration: none;" do %>
+      Rejected: <%= counts[:rejected] %>
+    <% end %>
+
+    <% if params[:status].present? %>
+      <%= link_to admin_shop_orders_path(params.permit(:user_search, :shop_item_id, :date_from, :date_to, :sort, :view, :goob, :region, assignee_ids: []).except(:status)),
+          style: "text-decoration: none; background: #e5e7eb; color: #374151;" do %>
+        ✕ Clear filter
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if average_fulfillment_time %>
+    <div>
+      <strong>Average time from order to fulfilled:</strong>
+      <span>
+        <%= distance_of_time_in_words(average_fulfillment_time) %>
+      </span>
+    </div>
+  <% end %>
+</div>

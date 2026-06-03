@@ -1,34 +1,30 @@
 <%
-  liked = if current_user && defined?(@liked_devlog_ids) && @liked_devlog_ids.present?
+  liked = if current_user && defined?(@liked_devlog_ids)
     @liked_devlog_ids.include?(likeable.id)
   else
     current_user && likeable.likes.exists?(user: current_user)
   end
 %>
 
-<%= turbo_frame_tag dom_id(likeable, :like_button) do %>
-  <div class="like-button">
-    <% if current_user %>
-      <% if liked %>
-        <%= link_to devlog_like_path(likeable),
-              data: { turbo_method: :delete },
-              class: "like-button__btn like-button__btn--liked" do %>
-          <%= inline_svg_tag("icons/star_fill.svg", class: "like-button__icon") %>
-          <span class="like-button__count"><%= likeable.likes_count %></span>
-        <% end %>
-      <% else %>
-        <%= link_to devlog_like_path(likeable),
-              data: { turbo_method: :post },
-              class: "like-button__btn" do %>
-          <%= inline_svg_tag("icons/star_fill.svg", class: "like-button__icon") %>
-          <span class="like-button__count"><%= likeable.likes_count %></span>
-        <% end %>
-      <% end %>
-    <% else %>
-      <div class="like-button__btn like-button__btn--disabled">
-        <%= inline_svg_tag("icons/star_fill.svg", class: "like-button__icon") %>
-        <span class="like-button__count"><%= likeable.likes_count %></span>
-      </div>
-    <% end %>
-  </div>
-<% end %>
+<div id="<%= dom_id(likeable, :like_button) %>" class="like-button"
+     <% if current_user %>
+       data-controller="like-button"
+       data-like-button-url-value="<%= devlog_like_path(likeable) %>"
+       data-like-button-liked-value="<%= liked %>"
+     <% end %>>
+  <% if current_user %>
+    <button type="button"
+            class="like-button__btn <%= 'like-button__btn--liked' if liked %>"
+            data-like-button-target="btn"
+            data-action="click->like-button#toggle">
+      <div class="like-button__sprite <%= 'is-liked' if liked %>"
+           data-like-button-target="sprite"></div>
+      <span class="like-button__count" data-like-button-target="count"><%= likeable.likes_count %></span>
+    </button>
+  <% else %>
+    <div class="like-button__btn like-button__btn--disabled">
+      <div class="like-button__sprite"></div>
+      <span class="like-button__count"><%= likeable.likes_count %></span>
+    </div>
+  <% end %>
+</div>

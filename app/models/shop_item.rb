@@ -5,7 +5,6 @@
 #  id                                :bigint           not null, primary key
 #  accessory_tag                     :string
 #  agh_contents                      :jsonb
-#  attached_shop_item_ids            :bigint           default([]), is an Array
 #  blocked_countries                 :string           default([]), is an Array
 #  buyable_by_self                   :boolean          default(TRUE)
 #  default_assigned_user_id_au       :bigint
@@ -38,7 +37,6 @@
 #  max_qty                           :integer
 #  mission_prize_only                :boolean          default(FALSE), not null
 #  name                              :string
-#  old_prices                        :integer          default([]), is an Array
 #  one_per_person_ever               :boolean
 #  past_purchases                    :integer          default(0)
 #  payout_percentage                 :integer          default(0)
@@ -87,6 +85,8 @@
 #  fk_rails_...  (user_id => users.id)
 #
 class ShopItem < ApplicationRecord
+  def self.policy_class = ShopItemPolicy
+
   has_paper_trail
 
   include Shop::Regionalizable
@@ -97,7 +97,6 @@ class ShopItem < ApplicationRecord
   before_validation :floor_ticket_cost
   before_validation :clean_requires_achievement
 
-  after_commit :refresh_carousel_cache, if: :carousel_relevant_change?
   after_commit :invalidate_shop_page_cache
 
   GITHUB_STICKERS = %w[
@@ -153,9 +152,11 @@ class ShopItem < ApplicationRecord
 
   RECENTLY_ADDED_WINDOW = 2.weeks
   SHOP_PAGE_CACHE_KEY = "shop_items/shop_page"
+  SHOP_PAGE_CACHE_VERSION_KEY = "shop_items/shop_page/version"
+  SHOP_PAGE_CACHE_INITIAL_VERSION = 1
 
   def self.cached_shop_page_data
-    Rails.cache.fetch(SHOP_PAGE_CACHE_KEY, expires_in: 5.minutes) do
+    Rails.cache.fetch(versioned_shop_page_cache_key, expires_in: 5.minutes) do
       buyable = enabled.listed.buyable_standalone.where(mission_prize_only: false).includes(image_attachment: :blob).to_a
       item_ids = buyable.map(&:id)
 
@@ -180,7 +181,13 @@ class ShopItem < ApplicationRecord
   end
 
   def self.invalidate_shop_page_cache!
-    Rails.cache.delete(SHOP_PAGE_CACHE_KEY)
+    Rails.cache.write(SHOP_PAGE_CACHE_VERSION_KEY, SHOP_PAGE_CACHE_INITIAL_VERSION, raw: true, unless_exist: true)
+    Rails.cache.increment(SHOP_PAGE_CACHE_VERSION_KEY)
+  end
+
+  def self.versioned_shop_page_cache_key
+    version = Rails.cache.fetch(SHOP_PAGE_CACHE_VERSION_KEY, raw: true) { SHOP_PAGE_CACHE_INITIAL_VERSION }
+    "#{SHOP_PAGE_CACHE_KEY}/v=#{version}"
   end
 
   MANUAL_FULFILLMENT_TYPES = [
@@ -254,6 +261,19 @@ class ShopItem < ApplicationRecord
   has_many :mission_shop_unlocks,  class_name: "Mission::ShopUnlock", dependent: :destroy
   has_many :unlocking_missions,    through: :mission_shop_unlocks, source: :mission
 
+  has_many :shop_item_attachments, foreign_key: :parent_item_id, dependent: :destroy
+  has_many :accessories, through: :shop_item_attachments, source: :accessory_item
+
+  has_many :shop_wishlists, dependent: :destroy
+
+  has_many :shop_item_modifiers, dependent: :destroy
+  accepts_nested_attributes_for :shop_item_modifiers, allow_destroy: true,
+    reject_if: proc { |attrs| attrs["name"].blank? }
+  has_many :shop_item_categories, dependent: :destroy
+  has_many :shop_categories, through: :shop_item_categories
+  has_many :shop_item_sources, dependent: :destroy
+  has_many :shop_sources, through: :shop_item_sources
+
   def agh_contents=(value)
     if value.is_a?(String) && value.present?
       begin
@@ -274,18 +294,21 @@ class ShopItem < ApplicationRecord
     sale_percentage.present? && sale_percentage > 0
   end
 
-  def average_hours_estimated
-    return 0 unless ticket_cost.present?
-    ticket_cost / (Rails.configuration.game_constants.tickets_per_dollar * Rails.configuration.game_constants.dollars_per_mean_hour)
-  end
-
-  def hours_estimated
-    average_hours_estimated.to_i
-  end
-
   def fixed_estimate(price)
     return 0 unless price.present? && price > 0
     price / (Rails.configuration.game_constants.tickets_per_dollar * Rails.configuration.game_constants.dollars_per_mean_hour)
+  end
+
+  def hours_estimate_label(price)
+    return nil unless price.present? && price.to_f.positive?
+
+    base_hours = fixed_estimate(price).to_f
+    return nil unless base_hours.positive?
+
+    high = base_hours.ceil
+    low = (base_hours * 0.5).ceil
+
+    low == high ? "~#{low}" : "~#{low}-#{high}"
   end
 
   def remaining_stock
@@ -316,18 +339,37 @@ class ShopItem < ApplicationRecord
     c > 2 ? c : (past_purchases.to_i > 2 ? past_purchases : nil)
   end
 
-  def new_item? = created_at.present? && created_at > 7.days.ago
+  def old_prices
+    versions.where(event: "update")
+      .map { |v| v.object_changes&.dig("ticket_cost")&.first }
+      .compact
+      .uniq
+  end
+
+  def new_item?
+    return false if is_a?(ShopItem::FreeStickers) || is_a?(ShopItem::TutorialNothing)
+
+    created_at.present? && created_at > 7.days.ago
+  end
 
   def expired?
     enabled_until.present? && enabled_until <= Time.current
   end
 
   def available_accessories
-    ShopItem::Accessory.where("? = ANY(attached_shop_item_ids)", id).enabled
+    accessories.where(type: "ShopItem::Accessory").enabled
   end
 
   def has_accessories?
     available_accessories.exists?
+  end
+
+  def available_modifiers_for_region(region_code)
+    shop_item_modifiers.globally_enabled.ordered.select { |m| m.enabled_in_region?(region_code) }
+  end
+
+  def has_modifiers?
+    shop_item_modifiers.globally_enabled.exists?
   end
 
   def meet_ship_require?(user)
@@ -360,7 +402,12 @@ class ShopItem < ApplicationRecord
   end
 
   def required_achievement_objects
-    requires_achievement.map { |slug| Achievement.find(slug) }
+    requires_achievement.filter_map do |slug|
+      Achievement.find(slug)
+    rescue KeyError
+      Rails.logger.warn("[ShopItem##{id}] requires unknown achievement slug: #{slug}")
+      nil
+    end
   end
 
   # True iff this item is gated by mission_shop_unlocks AND the user has not
@@ -385,10 +432,6 @@ class ShopItem < ApplicationRecord
 
   def carousel_relevant_change?
     show_in_carousel? || saved_change_to_show_in_carousel?
-  end
-
-  def refresh_carousel_cache
-    Cache::CarouselPrizesJob.perform_later(force: true)
   end
 
   def invalidate_shop_page_cache

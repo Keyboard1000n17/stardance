@@ -18,7 +18,7 @@
 
                     <%= image_tag user.avatar %>
                     <h2>
-                        <%= link_to user.display_name, user_path(user) %>
+                        <%= link_to user.display_name, profile_path(user.display_name) %>
                     </h2>
 
                     <p><%= user.cached_balance %> <%= stardust_icon %></p>

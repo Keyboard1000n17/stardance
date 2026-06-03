@@ -11,7 +11,11 @@ module GitHost
       "github"
     end
 
-    def fetch_commits(since: nil, per_page: 100)
+    def provider_display_name
+      "GitHub"
+    end
+
+    def fetch_commits(since: nil, before: nil, per_page: 100)
       return [] unless owner && repo
 
       all_commits = []
@@ -21,6 +25,7 @@ module GitHost
         path = "repos/#{owner}/#{repo}/commits"
         params = { per_page: per_page, page: page }
         params[:since] = since.iso8601 if since
+        params[:until] = before.iso8601 if before
 
         full_url = "#{api_base}/#{path}?#{params.to_query}"
         commits = http_get(full_url, headers: auth_headers)
@@ -35,6 +40,14 @@ module GitHost
       end
 
       all_commits
+    end
+
+    def fetch_commit(sha)
+      return nil unless owner && repo && sha.present?
+
+      full_url = "#{api_base}/repos/#{owner}/#{repo}/commits/#{sha}"
+      raw = http_get(full_url, headers: auth_headers)
+      normalize_commit(raw) if raw.is_a?(Hash)
     end
 
     protected
@@ -57,6 +70,7 @@ module GitHost
         message: commit_data["message"],
         author_name: author["name"],
         author_email: author["email"],
+        author_login: raw["author"]&.dig("login"),
         authored_at: author["date"] ? Time.parse(author["date"]) : nil,
         url: raw["html_url"],
         additions: stats["additions"],

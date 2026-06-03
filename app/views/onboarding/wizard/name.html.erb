@@ -1,25 +1,49 @@
 <% content_for :title, "Your name" %>
 <main class="onboarding-screen onboarding-screen--name" data-controller="onboarding-transition">
+  <div class="onboarding-name__veil" aria-hidden="true"></div>
   <%= render Onboarding::ProgressBarComponent.new(step: :name) %>
 
   <div class="onboarding-screen__content">
-    <p class="onboarding-screen__subhead">So glad to have you here! Last question:</p>
+    <p class="onboarding-screen__eyebrow">almost there, just one final thing!!</p>
     <h1 class="onboarding-screen__title">What should we call you?</h1>
 
-    <%= form_with url: onboarding_name_path, method: :post, local: true,
-                   class: "onboarding-name__form" do |f| %>
-      <%= f.text_field :display_name,
-                       value: @display_name_default,
-                       placeholder: "Your name",
-                       autocomplete: "off",
-                       required: true,
-                       class: "onboarding-name__input" %>
+    <%= form_with url: onboarding_name_path, method: :post,
+                   class: "onboarding-name__form",
+                   data: {
+                     controller: "username-availability",
+                     username_availability_url_value: username_availability_path,
+                     username_availability_max_value: User::MAX_DISPLAY_NAME_LENGTH,
+                     username_availability_check_on_connect_value: true
+                   } do |f| %>
+      <% max_len = User::MAX_DISPLAY_NAME_LENGTH %>
+      <div class="onboarding-name__field">
+        <%= f.text_field :display_name,
+                         value: @display_name_default,
+                         placeholder: "Pick a username",
+                         autocomplete: "off",
+                         required: true,
+                         class: "onboarding-name__input",
+                         data: {
+                           username_availability_target: "input",
+                           action: "input->username-availability#onInput"
+                         } %>
+        <span class="onboarding-name__counter"
+              data-username-availability-target="counter"
+              aria-hidden="true">0/<%= max_len %></span>
+      </div>
       <%= render SpecialActionButtonComponent.new(
             text: "Go",
             type: :submit,
+            disabled: true,
             class: "onboarding-name__submit",
-            data: { action: "click->onboarding-transition#press" }
+            data: {
+              username_availability_target: "submit",
+              action: "click->onboarding-transition#press"
+            }
           ) %>
+      <p class="onboarding-name__availability"
+         data-username-availability-target="feedback"
+         aria-live="polite"></p>
     <% end %>
   </div>
 </main>

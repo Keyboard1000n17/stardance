@@ -1,14 +1,11 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static values = { target: String };
+  static targets = ["dialog"];
 
   connect() {
     this._boundBackdropClick = this.backdropClick.bind(this);
-
-    if (!this.hasTargetValue) {
-      this.element.addEventListener("click", this._boundBackdropClick);
-    }
+    this.element.addEventListener("click", this._boundBackdropClick);
 
     if (this.element.tagName === "DIALOG") {
       this._heldBodyOverflow = false;
@@ -32,12 +29,11 @@ export default class extends Controller {
     }
 
     this.openSettingsModalFromQueryParam();
+    this.openIdvModalFromQueryParam();
   }
 
   disconnect() {
-    if (!this.hasTargetValue) {
-      this.element.removeEventListener("click", this._boundBackdropClick);
-    }
+    this.element.removeEventListener("click", this._boundBackdropClick);
     if (this._dialogObserver) {
       this._dialogObserver.disconnect();
       this._dialogObserver = null;
@@ -48,42 +44,32 @@ export default class extends Controller {
     }
   }
 
-  open() {
-    const modal = document.getElementById(this.targetValue);
-    if (!modal) return;
-
-    if (modal.tagName === "DIALOG") {
-      modal.showModal();
+  open(event) {
+    event.preventDefault();
+    if (!this.hasDialogTarget) return;
+    if (typeof this.dialogTarget.showModal === "function") {
+      this.dialogTarget.showModal();
     } else {
-      modal.style.display = "flex";
+      // Fallback for the rare browser without <dialog> support.
+      this.dialogTarget.setAttribute("open", "");
     }
-
-    document.body.style.overflow = "hidden";
   }
 
-  close() {
+  close(event) {
+    event?.preventDefault();
+    if (this.hasDialogTarget) {
+      if (typeof this.dialogTarget.close === "function") {
+        this.dialogTarget.close();
+      } else {
+        this.dialogTarget.removeAttribute("open");
+      }
+      return;
+    }
+
     if (this.element.tagName === "DIALOG") {
       this.element.close();
       document.body.style.overflow = "";
-      return;
     }
-
-    if (this.hasTargetValue) {
-      const modal = document.getElementById(this.targetValue);
-      if (modal) {
-        if (modal.tagName === "DIALOG") {
-          modal.close();
-        } else {
-          modal.style.display = "none";
-        }
-      }
-      document.body.style.overflow = "";
-      return;
-    }
-
-    this.element.style.display = "none";
-
-    document.body.style.overflow = "";
   }
 
   backdropClick(event) {
@@ -120,6 +106,24 @@ export default class extends Controller {
     }
 
     params.delete("settings");
+    const query = params.toString();
+    const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${
+      window.location.hash
+    }`;
+    window.history.replaceState(window.history.state, "", nextUrl);
+  }
+
+  openIdvModalFromQueryParam() {
+    if (this.element.id !== "idv-verify-modal") return;
+
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("idv_check")) return;
+
+    if (!this.element.open) {
+      this.element.showModal();
+    }
+
+    params.delete("idv_check");
     const query = params.toString();
     const nextUrl = `${window.location.pathname}${query ? `?${query}` : ""}${
       window.location.hash

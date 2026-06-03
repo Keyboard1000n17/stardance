@@ -1,0 +1,65 @@
+<% content_for :title, "Shop Suggestions" %>
+<div>
+  <div>
+    <h1>Shop Suggestions</h1>
+    <span><%= @pagy.count %> suggestions</span>
+  </div>
+
+  <% if @suggestions.any? %>
+    <div>
+      <% @suggestions.each do |suggestion| %>
+        <div>
+          <div>
+            <% if suggestion.user.avatar.present? %>
+              <%= image_tag suggestion.user.avatar %>
+            <% end %>
+            <div>
+              <%= link_to suggestion.user.display_name, admin_user_path(suggestion.user) %>
+              <span><%= time_ago_in_words(suggestion.created_at) %> ago</span>
+            </div>
+          </div>
+
+          <div>
+            <div>
+              <label>Item</label>
+              <p><%= simple_format(suggestion.item) %></p>
+            </div>
+
+            <div>
+              <label>Explanation</label>
+              <p><%= simple_format(suggestion.explanation) %></p>
+            </div>
+
+            <% if suggestion.link.present? %>
+              <div>
+                <label>Link</label>
+                <p><%= link_to suggestion.link, suggestion.link, target: "_blank", rel: "noopener" %></p>
+              </div>
+            <% end %>
+          </div>
+
+          <div>
+            <%= button_to "Dismiss",
+                          dismiss_admin_shop_suggestion_path(suggestion),
+                          method: :post,
+                          data: { confirm: "Dismiss this suggestion?" } %>
+            <%= button_to "Disable for User",
+                          disable_for_user_admin_shop_suggestion_path(suggestion),
+                          method: :post,
+                          data: { confirm: "This will disable the suggestion box for #{suggestion.user.display_name} and dismiss this suggestion. Continue?" } %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <% if @pagy.pages > 1 %>
+      <div>
+        <%== @pagy.series_nav %>
+      </div>
+    <% end %>
+  <% else %>
+    <div>
+      <p>No suggestions yet.</p>
+    </div>
+  <% end %>
+</div>

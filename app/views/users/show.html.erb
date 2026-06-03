@@ -12,7 +12,7 @@
 <% own_profile = current_user&.id == @user.id %>
 <% banner_url = @user.banner.attached? ? url_for(@user.banner) : image_path("profile/default-banner.png") %>
 
-<div class="app-layout">
+<div class="app-layout" data-controller="profile-modal">
   <div class="app-layout__main">
     <%= turbo_frame_tag "profile_card" do %>
     <%= form_with model: @user, url: user_path(@user), method: :patch, multipart: true,
@@ -24,9 +24,18 @@
                   } do |f| %>
 
   <header class="profile__header">
-    <div class="profile__banner">
+    <div class="profile__banner<%= ' profile__banner--empty' unless @user.banner.attached? %>">
       <%= image_tag banner_url, alt: "", class: "profile__banner-image",
                     data: { "profile-edit-target": "banner" } %>
+      <% if own_profile && !@user.banner.attached? %>
+        <label class="profile__banner-placeholder" data-profile-edit-target="placeholder">
+          <span class="profile__banner-placeholder-text">Upload banner</span>
+          <%= f.file_field :banner, accept: "image/*",
+                           class: "profile__banner-input",
+                           data: { action: "change->profile-edit#previewBanner",
+                                   "profile-edit-target": "bannerInput" } %>
+        </label>
+      <% end %>
       <%= link_to back_path,
                   class: "profile__back",
                   "aria-label": "Back",
@@ -36,7 +45,7 @@
         </svg>
       <% end %>
 
-      <% if own_profile %>
+      <% if own_profile && @user.banner.attached? %>
         <label class="profile__banner-upload" data-profile-edit-target="bannerLabel">
           <span class="profile__banner-upload-text">Change banner</span>
           <%= f.file_field :banner, accept: "image/*",
@@ -55,18 +64,29 @@
           </div>
 
           <div class="profile__identity-text">
-            <h1 class="profile__handle">@<%= @user.display_name %></h1>
+            <h1 class="profile__handle">@<%= @user.display_name %><% if own_profile %><%= render IdvBadgeComponent.new(user: @user, context: :profile) %><% end %></h1>
             <% if own_profile %>
-              <div class="profile__handle-edit">
+              <div class="profile__handle-edit"
+                   data-controller="username-availability"
+                   data-username-availability-url-value="<%= username_availability_path %>"
+                   data-username-availability-max-value="<%= User::MAX_DISPLAY_NAME_LENGTH %>">
                 <span class="profile__handle-edit-at" aria-hidden="true">@</span>
                 <%= f.text_field :display_name,
                                  class: "profile__handle-input",
-                                 maxlength: 60,
+                                 maxlength: 30,
                                  required: true,
-                                 aria: { label: "Display name" } %>
+                                 pattern: "[a-zA-Z0-9_\\-]+",
+                                 aria: { label: "Display name" },
+                                 data: {
+                                   username_availability_target: "input",
+                                   action: "input->username-availability#onInput"
+                                 } %>
+                <span class="profile__handle-availability"
+                      data-username-availability-target="feedback"
+                      aria-live="polite"></span>
               </div>
             <% end %>
-            <p class="profile__joined">Joined <%= @user.created_at.to_date.strftime("%-d %b %Y").downcase %></p>
+            <p class="profile__joined">Joined <%= "#{@user.created_at.strftime("%B")} #{@user.created_at.day.ordinalize}, #{@user.created_at.year}" %></p>
           </div>
         </div>
 
@@ -109,19 +129,34 @@
         </div>
       <% end %>
 
+      <% if own_profile && @user.identity_verified? && !cookies[:idv_approved_dismissed] %>
+        <p class="profile__idv-alert profile__idv-alert--success"
+           data-controller="dismissable"
+           data-dismissable-cookie-value="idv_approved_dismissed">
+          You're verified — your work is now public!
+          <button type="button" class="profile__idv-alert-dismiss" data-action="click->dismissable#dismiss" aria-label="Dismiss">&times;</button>
+        </p>
+      <% end %>
+      <% if own_profile && (idv = idv_status_for(@user)) %>
+        <p class="profile__idv-alert profile__idv-alert--<%= idv[:variant] %>">
+          <%= idv[:line] %>
+          <button type="button" class="profile__idv-alert-link" onclick="document.getElementById('idv-verify-modal')?.showModal()"><%= idv[:cta] %></button>
+        </p>
+      <% end %>
+
       <div class="profile__footer">
         <p class="profile__follow-counts">
           <%= button_tag type: "button",
                          class: "profile__follow-count",
                          data: { action: "click->profile-modal#open",
-                                 "profile-modal-url-param": following_user_path(@user),
+                                "profile-modal-url-param": profile_following_path(@user.display_name),
                                  "profile-modal-title-param": "Following" } do %>
             <strong><%= @following_count %></strong> following
           <% end %>
           <%= button_tag type: "button",
                          class: "profile__follow-count",
                          data: { action: "click->profile-modal#open",
-                                 "profile-modal-url-param": followers_user_path(@user),
+                                "profile-modal-url-param": profile_followers_path(@user.display_name),
                                  "profile-modal-title-param": "Followers" } do %>
             <strong><%= @follower_count %></strong> followers
           <% end %>
@@ -166,8 +201,8 @@
 <%= turbo_frame_tag "profile_tabs", target: "_top" do %>
 <nav class="profile-tabs" role="tablist" aria-label="Profile sections">
   <% [
-    [ "feed",     "Feed",                         user_path(@user) ],
-    [ "projects", "Projects (#{@stats[:projects_count]})", projects_user_path(@user) ]
+    [ "feed",     "Feed",                         profile_path(@user.display_name) ],
+    [ "projects", "Projects (#{@stats[:projects_count]})", profile_projects_path(@user.display_name) ]
   ].each do |key, label, path| %>
     <% tab_active = (@active_tab == key) %>
     <%= link_to label,
@@ -182,17 +217,7 @@
 <section class="profile-tab-content" role="tabpanel" aria-label="<%= @active_tab.titleize %>">
   <% case @active_tab %>
   <% when "feed" %>
-    <% if @activity.any? %>
-      <% @activity.each do |post| %>
-        <% if post.postable_type == "Post::ShipEvent" %>
-          <%= render "projects/ship_card", post: post, project: post.project %>
-        <% else %>
-          <%= render PostComponent.new(post: post, current_user: current_user, theme: :profile_dark) %>
-        <% end %>
-      <% end %>
-    <% else %>
-      <p class="profile-tab-content__empty">No activity yet.</p>
-    <% end %>
+    <%= render "users/feed_page" %>
   <% when "projects" %>
     <% if @projects.any? %>
       <ul class="project-list">
@@ -220,16 +245,6 @@
                   </ul>
                 </div>
 
-                <% authors = project.users.to_a %>
-                <% if authors.any? %>
-                  <p class="profile-project-card__authors">
-                    By
-                    <% authors.each_with_index do |author, idx| %>
-                      <%= "and " if idx > 0 && idx == authors.length - 1 %><span class="profile-project-card__author">@<%= author.display_name %></span><%= "," if idx < authors.length - 2 && authors.length > 2 %>
-                    <% end %>
-                  </p>
-                <% end %>
-
                 <% if project.description.present? %>
                   <p class="profile-project-card__description"><%= project.description %></p>
                 <% end %>
@@ -254,7 +269,7 @@
         <% if own_profile %>
           <li class="project-list__item">
             <%= link_to new_project_path, class: "profile-project-card profile-project-card--new" do %>
-              <span>Create a new Project</span>
+              <span>+ Create a new Project</span>
             <% end %>
           </li>
         <% end %>
@@ -267,8 +282,7 @@
           </p>
           <p class="empty-project-banner__subhead">to begin posting</p>
           <span class="empty-project-banner__reward">
-            <span class="empty-project-banner__reward-label">EARNS 10 STARDUST</span>
-            <%= image_tag "icons/stardust.png", alt: "", class: "empty-project-banner__reward-icon" %>
+            <span class="empty-project-banner__reward-label">EARN FREE STICKERS</span>
           </span>
         <% end %>
       <% else %>
@@ -281,17 +295,17 @@
   </div>
 
   <%= render DiscoverRailComponent.new %>
-</div>
 
-<dialog id="followers-modal"
-        class="followers-modal"
-        data-controller="profile-modal"
-        data-profile-modal-target="dialog">
-  <header class="followers-modal__header">
-    <h2 class="followers-modal__title" data-profile-modal-target="title">Followers</h2>
-    <button type="button" class="followers-modal__close" data-action="click->profile-modal#close" aria-label="Close">×</button>
-  </header>
-  <div class="followers-modal__body" data-profile-modal-target="body">
-    <p class="followers-modal__loading">Loading…</p>
-  </div>
-</dialog>
+  <dialog id="followers-modal"
+          class="followers-modal"
+          data-profile-modal-target="dialog"
+          data-action="click->profile-modal#backdropClose">
+    <header class="followers-modal__header">
+      <h2 class="followers-modal__title" data-profile-modal-target="title">Followers</h2>
+      <button type="button" class="followers-modal__close" data-action="click->profile-modal#close" aria-label="Close">×</button>
+    </header>
+    <div class="followers-modal__body" data-profile-modal-target="body">
+      <p class="followers-modal__loading">Loading…</p>
+    </div>
+  </dialog>
+</div>

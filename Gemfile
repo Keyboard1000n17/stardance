@@ -100,6 +100,7 @@ gem "active_storage_validations"
 gem "rails_performance"
 
 gem "commonmarker"
+gem "rouge"
 gem "inline_svg"
 
 gem "dartsass-rails", "~> 0.5.1"
@@ -114,7 +115,7 @@ gem "faraday-retry"
 gem "faker", "~> 3.6"
 gem "jsbundling-rails", "~> 1.3"
 gem "stackprof"
-gem "sentry-ruby", "~> 6.4"
+gem "sentry-ruby", "~> 6.6"
 gem "sentry-rails", "~> 6.5"
 
 # for pagination
@@ -148,3 +149,4 @@ gem "ferret", github: "hackclub/ferret-gem"
 gem "neighbor"
 
 gem "email_reply_parser"
+gem "appsignal"

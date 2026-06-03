@@ -5,7 +5,6 @@
 #  id                                :bigint           not null, primary key
 #  accessory_tag                     :string
 #  agh_contents                      :jsonb
-#  attached_shop_item_ids            :bigint           default([]), is an Array
 #  blocked_countries                 :string           default([]), is an Array
 #  buyable_by_self                   :boolean          default(TRUE)
 #  default_assigned_user_id_au       :bigint
@@ -38,7 +37,6 @@
 #  max_qty                           :integer
 #  mission_prize_only                :boolean          default(FALSE), not null
 #  name                              :string
-#  old_prices                        :integer          default([]), is an Array
 #  one_per_person_ever               :boolean
 #  past_purchases                    :integer          default(0)
 #  payout_percentage                 :integer          default(0)
@@ -87,7 +85,7 @@
 #  fk_rails_...  (user_id => users.id)
 #
 class ShopItem::FreeStickers < ShopItem
-  QUEUE_ID = "stardance-tutorial-stickers"
+  QUEUE_ID = "stardance-free-stickers"
 
   def fulfill!(shop_order)
     email   = shop_order.user&.email
@@ -95,12 +93,18 @@ class ShopItem::FreeStickers < ShopItem
 
     if email.blank? || address.blank?
       Rails.logger.warn(
-        "FreeStickers order #{shop_order.id} missing email or address — re-enqueuing"
+        "FreeStickers order #{shop_order.id} missing email or address — will retry via daily job"
       )
+      return
+    end
 
-      # push to end of queue (new job)
-      FulfillShopOrderJob.perform_later(shop_order.id)
-
+    # In dev/test, pretend the queue accepted the letter so the shop
+    # walkthrough can complete end-to-end. If a Theseus API key is configured
+    # locally (e.g. devs explicitly want to exercise the live path), fall
+    # through to the real call instead.
+    if (Rails.env.development? || Rails.env.test?) && Rails.application.credentials.dig(:theseus, :api_key).blank?
+      Rails.logger.info("FreeStickers order #{shop_order.id}: dev-mode bypass (no Theseus API key configured), marking fulfilled without Theseus call")
+      shop_order.mark_fulfilled!("dev-bypass-#{shop_order.id}", nil, "System")
       return
     end
 

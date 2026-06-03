@@ -1,0 +1,106 @@
+<% content_for :title, "Review: #{@ship.project.title}" %>
+
+<%
+  owner = @ship.project.memberships.find(&:owner?)&.user
+  can_review = @ship.reviewer_id == current_user.id && !@ship.claim_expired?
+%>
+
+<div class="app-layout app-layout--wide">
+  <div class="app-layout__main app-layout__main--wide ship-review">
+    <%= link_to "← back to queue", admin_certification_ships_path, class: "ship-review__back" %>
+
+    <div class="ship-review__momentum" role="status" aria-live="polite">
+      <% if @reviewed_today.zero? %>
+        <span class="ship-review__momentum-label">First review of the day. Let's go.</span>
+      <% else %>
+        <span class="ship-review__momentum-count"><%= @reviewed_today %></span>
+        <span class="ship-review__momentum-label">reviewed today. Keep the momentum going.</span>
+      <% end %>
+    </div>
+
+    <header class="ship-review__header">
+      <div class="ship-review__title">
+        <h1><%= @ship.project.title %></h1>
+        <span class="status-pill status-pill--<%= @ship.status %>"><%= @ship.status.capitalize %></span>
+      </div>
+      <span class="ship-review__id">#<%= @ship.id %></span>
+    </header>
+
+    <div class="ship-review__body">
+      <section class="ship-review__details">
+        <% if @ship.project.description.present? %>
+          <div class="ship-review__panel">
+            <h2 class="ship-review__panel-title">Description</h2>
+            <p class="ship-review__description"><%= @ship.project.description %></p>
+          </div>
+        <% end %>
+
+        <div class="ship-review__panel">
+          <h2 class="ship-review__panel-title">AI Declaration</h2>
+          <% if @ship.project.ai_declaration.present? %>
+            <p class="ship-review__description"><%= @ship.project.ai_declaration %></p>
+          <% else %>
+            <p class="ship-review__no-declaration">No AI declaration provided for this project.</p>
+          <% end %>
+        </div>
+
+        <div class="ship-review__panel">
+          <h2 class="ship-review__panel-title">Links</h2>
+          <dl class="ship-review__links">
+            <% if @ship.project.repo_url.present? %>
+              <dt>Repo</dt>
+              <dd><%= link_to @ship.project.repo_url, @ship.project.repo_url, target: "_blank", rel: "noopener" %></dd>
+            <% end %>
+            <% if @ship.project.demo_url.present? %>
+              <dt>Demo</dt>
+              <dd><%= link_to @ship.project.demo_url, @ship.project.demo_url, target: "_blank", rel: "noopener" %></dd>
+            <% end %>
+            <% if @ship.project.readme_url.present? %>
+              <dt>README</dt>
+              <dd><%= link_to @ship.project.readme_url, @ship.project.readme_url, target: "_blank", rel: "noopener" %></dd>
+            <% end %>
+            <dt>Project</dt>
+            <dd><%= link_to "View project page", project_path(@ship.project), target: "_blank", rel: "noopener" %></dd>
+          </dl>
+        </div>
+
+        <div class="ship-review__panel">
+          <h2 class="ship-review__panel-title">Submission</h2>
+          <dl class="ship-review__meta">
+            <dt>Submitter</dt>
+            <dd><%= owner&.display_name || "—" %></dd>
+            <dt>Submitted</dt>
+            <dd><%= time_ago_in_words(@ship.project.shipped_at || @ship.created_at) %> ago</dd>
+            <% if @ship.reviewer %>
+              <dt>Reviewer</dt>
+              <dd><%= @ship.reviewer.display_name %></dd>
+            <% end %>
+            <dt>Updated project</dt>
+            <dd>
+              <% if @ship.project.update_description.present? %>
+                <span class="ship-review__badge ship-review__badge--yes">Yes</span>
+                <p class="ship-review__update-desc"><%= @ship.project.update_description %></p>
+              <% else %>
+                <span class="ship-review__badge ship-review__badge--no">No</span>
+              <% end %>
+            </dd>
+          </dl>
+        </div>
+      </section>
+
+      <aside class="ship-review__sidebar">
+        <% if can_review %>
+          <%= render "form", ship: @ship %>
+        <% else %>
+          <div class="ship-review__claim">
+            <p>You don't currently hold the claim on this review.</p>
+            <%= button_to "Claim this review", claim_admin_certification_ship_path(@ship), method: :post,
+                  class: "action-btn action-btn--large action-btn--primary" %>
+            <%= link_to "Back to queue", admin_certification_ships_path,
+                  class: "action-btn action-btn--small action-btn--secondary" %>
+          </div>
+        <% end %>
+      </aside>
+    </div>
+  </div>
+</div>

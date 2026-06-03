@@ -5,7 +5,7 @@
 
   <div class="onboarding-screen__content">
     <p class="onboarding-screen__eyebrow">no worries — here are some ideas ✦</p>
-    <h1 class="onboarding-screen__title onboarding-screen__title--lower">pick a mission to start with</h1>
+    <h1 class="onboarding-screen__title onboarding-screen__title--lower">Pick a mission to start with</h1>
     <p class="onboarding-screen__subhead">
       Each mission has steps to follow and a prize when you ship.
     </p>
@@ -13,7 +13,7 @@
     <% if @missions.any? %>
       <div class="project-setup-missions__grid">
         <% @missions.each do |mission| %>
-          <%= form_with url: projects_setup_submit_mission_path, method: :post, local: true,
+          <%= form_with url: projects_setup_submit_mission_path, method: :post,
                          class: "project-setup-missions__card-form" do %>
             <%= hidden_field_tag :mission_slug, mission.slug %>
             <button type="submit"
@@ -29,8 +29,21 @@
               <span class="project-setup-missions__card-body">
                 <span class="project-setup-missions__card-title"><%= mission.name %></span>
                 <span class="project-setup-missions__card-description"><%= truncate(mission.description.to_s, length: 110) %></span>
-                <% if mission.difficulty.present? %>
-                  <span class="project-setup-missions__card-difficulty"><%= mission.difficulty %></span>
+                <% if mission.difficulty.present? || mission.steps_count > 0 || mission.estimated_completion_label.present? %>
+                  <span class="project-setup-missions__card-meta">
+                    <% if mission.difficulty.present? %>
+                      <span class="project-setup-missions__card-difficulty"><%= mission.difficulty %></span>
+                    <% end %>
+                    <% if mission.steps_count > 0 %>
+                      <span class="project-setup-missions__card-steps"><%= mission.steps_count %>-step guide</span>
+                    <% end %>
+                    <% if mission.estimated_completion_label.present? %>
+                      <span class="project-setup-missions__card-duration"><%= mission.estimated_completion_label %></span>
+                    <% end %>
+                  </span>
+                <% end %>
+                <% if mission.has_prizes? %>
+                  <span class="project-setup-missions__card-prize">Prize available</span>
                 <% end %>
               </span>
             </button>
@@ -38,10 +51,13 @@
         <% end %>
       </div>
     <% else %>
-      <p class="project-setup-missions__empty">No missions available right now — pick "Figure it out later" and you can browse missions whenever you're ready.</p>
+      <div class="project-setup-missions__empty">
+        <span class="project-setup-missions__empty-icon" aria-hidden="true">✦</span>
+        <p class="project-setup-missions__empty-text">You've explored the whole universe! No more missions are available right now.</p>
+      </div>
     <% end %>
 
-    <%= form_with url: projects_setup_submit_mission_path, method: :post, local: true,
+    <%= form_with url: projects_setup_submit_mission_path, method: :post,
                    class: "project-setup-missions__later-form" do %>
       <%= hidden_field_tag :figure_it_out_later, "1" %>
       <button type="submit" class="project-setup-missions__later"

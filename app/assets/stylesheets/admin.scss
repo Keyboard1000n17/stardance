@@ -1,3 +1,10 @@
+/* Import page-specific styles */
+@use "pages/admin/ysws_reviews";
+@use "pages/shop/admin_shop_shared";
+@use "pages/shop/admin_shop_dashboard";
+@use "pages/shop/admin_shop_item_form";
+@use "pages/shop/admin_shop_item_show";
+
 /* Admin Layout */
 body {
   background: var(--color-bg);
@@ -117,22 +124,22 @@ body {
 
 .btn-primary {
   @extend %btn-base;
-  background: var(--color-brown-500);
-  color: white;
+  background: var(--color-brand-blue);
+  color: var(--color-set-1-bg);
 
   &:hover {
-    background: var(--color-brown-400);
+    background: var(--color-brand-lilac);
     box-shadow: var(--shadow);
   }
 }
 
 .btn-primary-dark {
   @extend %btn-base;
-  background: var(--color-brown-700);
+  background: var(--color-space-surface-strong);
   color: white;
 
   &:hover {
-    background: var(--color-brown-600);
+    background: var(--color-space-surface);
     box-shadow: var(--shadow);
   }
 }
@@ -200,6 +207,17 @@ a.super-mega-dashboard-btn {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr 1fr;
   gap: 1rem;
+}
+
+.admin-workspace {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: var(--space-m) 0;
+}
+
+.admin-workspace__link {
+  min-width: 10rem;
 }
 
 .info-rows > * {
@@ -808,11 +826,11 @@ dialog {
   }
 
   &--primary {
-    background: var(--color-brown-500);
-    color: white;
+    background: var(--color-brand-blue);
+    color: var(--color-set-1-bg);
 
     &:hover {
-      background: var(--color-brown-400);
+      background: var(--color-brand-lilac);
       box-shadow: var(--shadow);
     }
   }

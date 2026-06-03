@@ -13,12 +13,18 @@
 #  enriched_ref                 :string
 #  experience_level             :string
 #  first_name                   :string
+#  geocoded_country             :string
+#  geocoded_lat                 :float
+#  geocoded_lon                 :float
+#  geocoded_subdivision         :string
 #  granted_roles                :string           default([]), not null, is an Array
+#  guest_email                  :string
 #  has_gotten_free_stickers     :boolean          default(FALSE)
 #  has_pending_achievements     :boolean          default(FALSE), not null
 #  hcb_email                    :string
 #  interests                    :string           default([]), is an Array
 #  internal_notes               :text
+#  ip_address                   :string
 #  last_name                    :string
 #  manual_ysws_override         :boolean
 #  mission_review_notifications :boolean          default(TRUE), not null
@@ -27,13 +33,16 @@
 #  regions                      :string           default([]), is an Array
 #  session_token                :string
 #  shop_region                  :enum
+#  shop_tutorial_completed_at   :datetime
+#  shop_tutorial_started_at     :datetime
 #  synced_at                    :datetime
 #  things_dismissed             :string           default([]), not null, is an Array
-#  tutorial_steps_completed     :string           default([]), is an Array
+#  user_agent                   :string
+#  user_ref                     :string
+#  verification_checked_at      :datetime
 #  verification_status          :string           default("needs_submission"), not null
 #  vote_balance                 :integer          default(0), not null
 #  votes_count                  :integer
-#  voting_locked                :boolean          default(FALSE), not null
 #  ysws_eligible                :boolean          default(FALSE), not null
 #  created_at                   :datetime         not null
 #  updated_at                   :datetime         not null
@@ -41,11 +50,12 @@
 #
 # Indexes
 #
-#  index_users_on_email               (email)
-#  index_users_on_lower_email_unique  (lower((email)::text)) UNIQUE WHERE ((email IS NOT NULL) AND ((email)::text <> ''::text))
-#  index_users_on_onboarded_at        (onboarded_at)
-#  index_users_on_session_token       (session_token) UNIQUE
-#  index_users_on_slack_id            (slack_id) UNIQUE
+#  index_users_on_email                      (email)
+#  index_users_on_lower_display_name_unique  (lower((display_name)::text)) UNIQUE WHERE ((display_name IS NOT NULL) AND ((display_name)::text <> ''::text))
+#  index_users_on_lower_email_unique         (lower((email)::text)) UNIQUE WHERE ((email IS NOT NULL) AND ((email)::text <> ''::text))
+#  index_users_on_onboarded_at               (onboarded_at)
+#  index_users_on_session_token              (session_token) UNIQUE
+#  index_users_on_slack_id                   (slack_id) UNIQUE
 #
 require "test_helper"
 
@@ -71,15 +81,9 @@ class UserTest < ActiveSupport::TestCase
     assert_not user.has_role?(:helper)
   end
 
-  test "tutorial steps and dismissals mutate array state once" do
+  test "dismissals mutate array state once" do
     user = users(:one)
-    user.update_columns(tutorial_steps_completed: [], things_dismissed: [])
-
-    assert user.complete_tutorial_step!(:setup_hackatime)
-    assert user.tutorial_step_completed?(:setup_hackatime)
-    assert_no_difference -> { user.reload.tutorial_steps.count } do
-      user.complete_tutorial_step!(:setup_hackatime)
-    end
+    user.update_columns(things_dismissed: [])
 
     assert user.dismiss_thing!("flagship_ad")
     assert user.has_dismissed?("flagship_ad")
@@ -190,5 +194,94 @@ class UserTest < ActiveSupport::TestCase
     user = users(:one)
     user.hcb_email = nil
     assert user.valid?
+  end
+
+  test "shop_tutorial_needed? requires HCA, a project, and an unfinished walkthrough" do
+    user = create_user(slack_id: "U_TUT_NEEDED", display_name: "tutorialneeded")
+    refute user.shop_tutorial_needed?, "no project yet"
+
+    project = Project.create!(title: "p", description: "d")
+    project.memberships.create!(user: user, role: :owner)
+    user.reload
+
+    assert user.shop_tutorial_needed?, "HCA + project + uncompleted = needed"
+
+    user.mark_shop_tutorial_completed!
+    refute user.shop_tutorial_needed?, "completed tutorials drop out"
+  end
+
+  test "shop_tutorial_needed? is false for guests (no HCA)" do
+    user = create_user(slack_id: "U_GUEST", display_name: "guesty", hca_linked: false)
+    refute user.shop_tutorial_needed?
+  end
+
+  test "mark_shop_tutorial_completed! is idempotent and backfills started_at" do
+    user = users(:one)
+    user.update_columns(shop_tutorial_started_at: nil, shop_tutorial_completed_at: nil)
+
+    user.mark_shop_tutorial_completed!
+    first_completion = user.reload.shop_tutorial_completed_at
+    assert first_completion.present?
+    assert user.shop_tutorial_started_at.present?
+
+    travel 5.minutes do
+      user.mark_shop_tutorial_completed!
+      assert_equal first_completion.to_i, user.reload.shop_tutorial_completed_at.to_i,
+        "second call should not advance the timestamp"
+    end
+  end
+
+  test "display_name must be present" do
+    user = users(:one)
+    user.display_name = ""
+    assert_not user.valid?
+    assert_includes user.errors[:display_name], "can't be blank"
+  end
+
+  test "display_name rejects spaces" do
+    user = users(:one)
+    user.display_name = "hello world"
+    assert_not user.valid?
+    assert user.errors[:display_name].any? { |m| m.include?("can only contain") }
+  end
+
+  test "display_name rejects unicode and special characters" do
+    user = users(:one)
+    %w[héllo user@name cool! ñoño 🚀rocket].each do |bad_name|
+      user.display_name = bad_name
+      assert_not user.valid?, "Expected '#{bad_name}' to be invalid"
+    end
+  end
+
+  test "display_name allows letters digits hyphens and underscores" do
+    user = users(:one)
+    %w[hello Hello_World test-user User123 a-b_c].each do |good_name|
+      user.display_name = good_name
+      assert user.valid?, "Expected '#{good_name}' to be valid but got: #{user.errors.full_messages}"
+    end
+  end
+
+  test "display_name enforces max length of 30" do
+    user = users(:one)
+    user.display_name = "a" * 31
+    assert_not user.valid?
+    assert user.errors[:display_name].any? { |m| m.include?("too long") }
+  end
+
+  test "display_name must be unique case-insensitively" do
+    user = users(:one)
+    other = users(:two)
+    other.update_column(:display_name, "TakenName")
+    user.display_name = "takenname"
+    assert_not user.valid?
+    assert user.errors[:display_name].any? { |m| m.include?("taken") }
+  end
+
+  test "random_funny_display_name produces safe characters" do
+    20.times do
+      name = User.random_funny_display_name
+      assert_match(/\A[a-zA-Z0-9_-]+\z/, name, "Generated name '#{name}' contains unsafe chars")
+      assert name.length <= 30, "Generated name '#{name}' exceeds 30 chars"
+    end
   end
 end

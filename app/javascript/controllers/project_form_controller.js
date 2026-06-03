@@ -11,6 +11,9 @@ export default class extends Controller {
     "readmeContainer",
     "submit",
     "requirementsContainer",
+    "updateDeclaration",
+    "updateDescriptionContainer",
+    "updateDescriptionField",
   ];
 
   // Maps form-field keys → the requirement keys they satisfy. Reachability
@@ -30,10 +33,17 @@ export default class extends Controller {
       type: String,
       default: "project-form--readme-locked",
     },
+    // Field keys (matching FIELD_REQUIREMENT_MAP) that arrived unfinished and
+    // should be highlighted red until the user fills them in.
+    incompleteFields: {
+      type: Array,
+      default: [],
+    },
   };
 
   connect() {
     this.submitting = false;
+    this.trackedFields = new Set(this.incompleteFieldsValue);
     this.userEditedReadme = false;
     this.debouncedDetect = this.debounce(() => this.detectReadme(), 400);
     this.boundRecheck = () => this.recheckRequirements();
@@ -53,6 +63,7 @@ export default class extends Controller {
 
     this.restoreReadmeState();
     this.recheckRequirements();
+    this.toggleUpdateDescription();
 
     if (
       this.hasRepoUrlTarget &&
@@ -69,6 +80,7 @@ export default class extends Controller {
   }
 
   recheckRequirements() {
+    this.refreshHighlights();
     if (!this.hasRequirementsContainerTarget) return;
 
     const filled = {
@@ -127,6 +139,52 @@ export default class extends Controller {
     // `banner` requirement was never in the list to begin with — recheck
     // still works either way.
     return false;
+  }
+
+  // Toggles the red "still to complete" highlight on each tracked field: shown
+  // while the field is empty, removed as soon as it's filled (re-added if the
+  // user clears it again).
+  refreshHighlights() {
+    if (!this.trackedFields || this.trackedFields.size === 0) return;
+
+    this.trackedFields.forEach((field) => {
+      const el = this.highlightElementFor(field);
+      if (!el) return;
+      el.classList.toggle(
+        this.highlightClassFor(field),
+        !this.fieldFilledFor(field),
+      );
+    });
+  }
+
+  highlightElementFor(field) {
+    switch (field) {
+      case "description":
+        return this.hasDescriptionTarget ? this.descriptionTarget : null;
+      case "demo_url":
+        return this.hasDemoUrlTarget ? this.demoUrlTarget : null;
+      case "repo_url":
+        return this.hasRepoUrlTarget ? this.repoUrlTarget : null;
+      case "readme_url":
+        return this.hasReadmeUrlTarget ? this.readmeUrlTarget : null;
+      case "banner":
+        return this.element.querySelector(".project-show__banner");
+      default:
+        return null;
+    }
+  }
+
+  highlightClassFor(field) {
+    if (field === "description")
+      return "project-show__description-input--incomplete";
+    if (field === "banner") return "project-show__banner--incomplete";
+    return "project-show__control--incomplete";
+  }
+
+  fieldFilledFor(field) {
+    if (field === "banner") return this.bannerFilled();
+    const el = this.highlightElementFor(field);
+    return this.fieldFilled(el);
   }
 
   validateTitle(event) {
@@ -221,9 +279,6 @@ export default class extends Controller {
 
   async detectReadme() {
     if (!this.hasRepoUrlTarget || !this.hasReadmeUrlTarget) return;
-    if (this.userEditedReadme && !this.readmeUrlTarget.dataset.autofilled) {
-      return;
-    }
 
     const repoValue = (this.repoUrlTarget.value || "").trim();
     if (!repoValue) return;
@@ -265,10 +320,7 @@ export default class extends Controller {
       return;
     }
 
-    if (
-      !this.readmeUrlTarget.value ||
-      this.readmeUrlTarget.dataset.autofilled
-    ) {
+    if (!this.userEditedReadme) {
       this.readmeUrlTarget.value = readmeUrl;
       this.readmeUrlTarget.dataset.autofilled = "true";
       this.userEditedReadme = false;
@@ -317,12 +369,43 @@ export default class extends Controller {
   restoreReadmeState() {
     if (!this.hasReadmeUrlTarget) return;
 
-    const hasValue = (this.readmeUrlTarget.value || "").trim().length > 0;
-    if (hasValue) this.showReadme();
+    const readmeValue = (this.readmeUrlTarget.value || "").trim();
+    if (readmeValue) this.showReadme();
 
     const autofilled = this.readmeUrlTarget.dataset.autofilled === "true";
-    this.userEditedReadme = hasValue && !autofilled;
-    this.setReadmeLocked(autofilled);
+    const derivedFromRepo = this.readmeDerivedFromRepo(readmeValue);
+    this.userEditedReadme =
+      readmeValue.length > 0 && !autofilled && !derivedFromRepo;
+    this.setReadmeLocked(autofilled || derivedFromRepo);
+  }
+
+  readmeDerivedFromRepo(readmeValue) {
+    if (!readmeValue || !this.hasRepoUrlTarget) return false;
+
+    const repoValue = (this.repoUrlTarget.value || "").trim();
+    if (!repoValue) return false;
+
+    let url;
+    try {
+      url = new URL(repoValue);
+    } catch {
+      return false;
+    }
+
+    const host = url.host.toLowerCase();
+    const [, owner, rawRepo] = (url.pathname || "").split("/");
+    if (!owner || !rawRepo) return false;
+
+    const repo = rawRepo.replace(/\.git$/i, "");
+
+    if (host === "github.com") {
+      return readmeValue.includes(
+        `raw.githubusercontent.com/${owner}/${repo}/`,
+      );
+    } else if (host === "gitlab.com") {
+      return readmeValue.includes(`gitlab.com/${owner}/${repo}/`);
+    }
+    return false;
   }
 
   showReadme() {
@@ -376,5 +459,18 @@ export default class extends Controller {
     wrapper.offsetWidth;
     wrapper.classList.add("project-form--shake");
     setTimeout(() => wrapper.classList.remove("project-form--shake"), 400);
+  }
+
+  toggleUpdateDescription() {
+    if (!this.hasUpdateDescriptionContainerTarget) return;
+
+    const checked =
+      this.hasUpdateDeclarationTarget && this.updateDeclarationTarget.checked;
+    this.updateDescriptionContainerTarget.hidden = !checked;
+
+    if (this.hasUpdateDescriptionFieldTarget) {
+      this.updateDescriptionFieldTarget.required = checked;
+      if (!checked) this.updateDescriptionFieldTarget.value = "";
+    }
   }
 }

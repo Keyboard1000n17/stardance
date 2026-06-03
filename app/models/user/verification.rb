@@ -6,6 +6,7 @@ module User::Verification
   end
 
   def identity_verified? = verification_verified?
+  def identity_submitted? = verification_verified? || verification_pending?
 
   def ysws_eligible?
     return manual_ysws_override if manual_ysws_override.in?([ true, false ])
@@ -31,6 +32,10 @@ module User::Verification
   def apply_hca_verification_payload!(payload, persist_with_callbacks: true)
     status = payload["verification_status"].to_s
     return :invalid_status unless self.class.verification_statuses.key?(status)
+
+    # Record when we last pulled a status from HCA — drives the "last checked"
+    # line on the verify popup — regardless of whether anything changed.
+    update_columns(verification_checked_at: Time.current)
 
     fatal_rejection = payload["fatal_rejection"] == true
     return :ignored_ineligible if status == "ineligible" && !fatal_rejection

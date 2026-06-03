@@ -1,13 +1,33 @@
 import { Controller } from "@hotwired/stimulus";
+import confetti from "canvas-confetti";
+
+const CONFETTI_COLORS = [
+  "#81ffff", // mint
+  "#ebb7ff", // lilac
+  "#ff8d9d", // salmon
+  "#ffe564", // yellow
+  "#ffd598", // peach
+];
 
 export default class extends Controller {
-  static targets = ["spotlight", "tooltip", "text", "back", "next", "counter"];
+  static targets = [
+    "spotlight",
+    "tooltip",
+    "text",
+    "subtitle",
+    "back",
+    "next",
+    "counter",
+  ];
 
   static values = {
     step: { type: Number, default: 0 },
     steps: Array,
     minWidth: { type: Number, default: 900 },
     lockScroll: { type: Boolean, default: true },
+    // When set, finishing the tour records a server-side dismissal so it
+    // doesn't show again (via POST /my/dismissals).
+    dismissThing: { type: String, default: "" },
   };
 
   connect() {
@@ -20,10 +40,19 @@ export default class extends Controller {
     this._onKey = this._onKey.bind(this);
     this._onDocumentClick = this._onDocumentClick.bind(this);
 
+    this._onOverlayClick = this._onOverlayClick.bind(this);
+
     window.addEventListener("resize", this._onReflow);
     window.addEventListener("scroll", this._onReflow, { passive: true });
     document.addEventListener("keydown", this._onKey);
     document.addEventListener("click", this._onDocumentClick, true);
+    // Lets an outside trigger (e.g. the shop's inline "Ok, I'll do it!" button)
+    // dismiss the tour, which still records the server-side dismissal.
+    this._onExternalDismiss = () => this.finish();
+    document.addEventListener("welcome-tour:dismiss", this._onExternalDismiss);
+
+    const overlay = this.element.querySelector(".welcome-tour__overlay");
+    if (overlay) overlay.addEventListener("click", this._onOverlayClick);
 
     if (this.lockScrollValue) {
       this._previousOverflow = document.body.style.overflow;
@@ -37,10 +66,17 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this._clearAutoAdvance();
+    const overlay = this.element.querySelector(".welcome-tour__overlay");
+    if (overlay) overlay.removeEventListener("click", this._onOverlayClick);
     window.removeEventListener("resize", this._onReflow);
     window.removeEventListener("scroll", this._onReflow);
     document.removeEventListener("keydown", this._onKey);
     document.removeEventListener("click", this._onDocumentClick, true);
+    document.removeEventListener(
+      "welcome-tour:dismiss",
+      this._onExternalDismiss,
+    );
     this._clearWaitForTarget();
     if (this._previousOverflow !== undefined) {
       document.body.style.overflow = this._previousOverflow;
@@ -49,10 +85,12 @@ export default class extends Controller {
 
   stepValueChanged() {
     if (!this.hasSpotlightTarget) return;
+    this._clearAutoAdvance();
     this._render();
   }
 
   next() {
+    this._clearAutoAdvance();
     this._advancing = false;
     this._clearWaitForTarget();
     if (this.stepValue >= this.stepsValue.length - 1) {
@@ -63,12 +101,45 @@ export default class extends Controller {
   }
 
   back() {
+    this._clearAutoAdvance();
     if (this.stepValue > 0) this.stepValue -= 1;
   }
 
   finish() {
+    this._clearAutoAdvance();
     this._clearWaitForTarget();
+    if (this.dismissThingValue) this._recordDismissal(this.dismissThingValue);
     this.element.remove();
+  }
+
+  _recordDismissal(thing) {
+    const token = document.querySelector('meta[name="csrf-token"]')?.content;
+    fetch("/my/dismissals", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": token || "",
+      },
+      body: JSON.stringify({ thing_name: thing }),
+    }).catch(() => {});
+  }
+
+  _clearAutoAdvance() {
+    if (this._autoAdvanceTimer) {
+      clearTimeout(this._autoAdvanceTimer);
+      this._autoAdvanceTimer = null;
+    }
+    if (this._confettiTimer) {
+      clearTimeout(this._confettiTimer);
+      this._confettiTimer = null;
+    }
+  }
+
+  _onOverlayClick() {
+    const step = this.stepsValue[this.stepValue];
+    if (step?.clickToAdvance) return;
+    if (!this.dismissThingValue) return;
+    this.finish();
   }
 
   _onReflow() {
@@ -81,7 +152,7 @@ export default class extends Controller {
     // them skip past it with Escape or arrow keys.
     if (step?.clickToAdvance) return;
 
-    if (event.key === "Escape") {
+    if (event.key === "Escape" && this.dismissThingValue) {
       this.finish();
     } else if (event.key === "ArrowRight") {
       this.next();
@@ -125,9 +196,24 @@ export default class extends Controller {
 
     this.element.classList.toggle("welcome-tour--intro", !!step.intro);
     this.element.classList.toggle(
+      "welcome-tour--ceremonial",
+      !!step.ceremonial,
+    );
+    this.element.classList.remove("welcome-tour--ceremonial-leaving");
+    this.element.classList.toggle(
       "welcome-tour--click-to-advance",
       !!step.clickToAdvance,
     );
+
+    if (this.hasSubtitleTarget) {
+      if (step.subtitle) {
+        this.subtitleTarget.textContent = step.subtitle;
+        this.subtitleTarget.hidden = false;
+      } else {
+        this.subtitleTarget.textContent = "";
+        this.subtitleTarget.hidden = true;
+      }
+    }
 
     if (step.intro) {
       this._renderIntro(step);
@@ -149,11 +235,20 @@ export default class extends Controller {
     }
     this._clearWaitForTarget();
 
+    // Bring the highlighted target to the vertical middle of the viewport the
+    // first time we render it (scroll reflow re-runs _render, repositioning
+    // the spotlight to follow).
+    if (step.scrollToCenter && !this._scrolledToCenter) {
+      this._scrolledToCenter = true;
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+    }
+
     const pad = step.padding ?? 12;
     const rect = target.getBoundingClientRect();
+    const vh = window.innerHeight;
 
     let top = rect.top - pad;
-    const bottom = rect.bottom + pad;
+    let bottom = rect.bottom + pad;
 
     if (step.excludeTop) {
       const excluded = this._findTarget(step.excludeTop);
@@ -162,6 +257,11 @@ export default class extends Controller {
         const floor = excludedRect.bottom + (step.excludeGap ?? 0);
         if (floor > top) top = floor;
       }
+    }
+
+    if (!this.lockScrollValue) {
+      top = Math.max(top, 0);
+      bottom = Math.min(bottom, vh);
     }
 
     const left = rect.left - pad;
@@ -181,12 +281,20 @@ export default class extends Controller {
     });
 
     this.textTarget.textContent = step.text;
-    this.counterTarget.textContent = `${this.stepValue + 1}/${this.stepsValue.length}`;
 
-    const isLast = this.stepValue === this.stepsValue.length - 1;
-    this.nextTarget.textContent = isLast
-      ? "Finish! →"
-      : `Next (${this.stepValue + 1}/${this.stepsValue.length}) →`;
+    // Counter shows position among user-clickable steps only — auto-advance
+    // (ceremonial intro) doesn't count as a step the user can navigate.
+    const autoBeforeMe = this.stepsValue
+      .slice(0, this.stepValue)
+      .filter((s) => s.autoAdvance).length;
+    const visibleIndex = this.stepValue - autoBeforeMe;
+    const visibleTotal = this.stepsValue.filter((s) => !s.autoAdvance).length;
+    this.counterTarget.textContent = `${visibleIndex + 1}/${visibleTotal}`;
+
+    const isLast = visibleIndex === visibleTotal - 1;
+    this.nextTarget.textContent =
+      step.nextLabel ||
+      (isLast ? "Finish! →" : `Next (${visibleIndex + 1}/${visibleTotal}) →`);
     this.nextTarget.hidden = !!step.clickToAdvance;
     this.backTarget.hidden = this.stepValue === 0 || !!step.clickToAdvance;
 
@@ -235,12 +343,87 @@ export default class extends Controller {
       : `Next (${this.stepValue + 1}/${this.stepsValue.length}) →`;
     this.backTarget.hidden = this.stepValue === 0;
 
+    // On auto-advance steps the user shouldn't need to click — hide the nav
+    // and let the timer take us to the next step.
+    const auto = !!step.autoAdvance;
+    this.nextTarget.hidden = auto;
+    if (auto) this.backTarget.hidden = true;
+
     const tooltip = this.tooltipTarget;
     const tooltipRect = tooltip.getBoundingClientRect();
     Object.assign(tooltip.style, {
       top: `${Math.max(16, window.innerHeight / 2 - tooltipRect.height / 2)}px`,
       left: `${Math.max(16, window.innerWidth / 2 - tooltipRect.width / 2)}px`,
     });
+
+    if (auto) {
+      const FADE_OUT_MS = 500;
+
+      // Fire confetti immediately as the welcome ceremony starts — bursts
+      // appear against the black veil while the welcome text fades in.
+      if (step.ceremonial) {
+        this._fireConfetti();
+      }
+
+      // Trigger a fade-out class first, then advance once the animation has
+      // had time to play. Both timers are tracked via _autoAdvanceTimer so
+      // _clearAutoAdvance/next/back can cancel them at any point.
+      this._autoAdvanceTimer = setTimeout(() => {
+        this.element.classList.add("welcome-tour--ceremonial-leaving");
+        this._autoAdvanceTimer = setTimeout(() => this.next(), FADE_OUT_MS);
+      }, step.autoAdvance);
+    }
+  }
+
+  _fireConfetti() {
+    if (typeof confetti !== "function") return;
+
+    const base = {
+      colors: CONFETTI_COLORS,
+      zIndex: 10000,
+      shapes: ["star", "square"],
+      ticks: 220,
+    };
+
+    // Two cannons from the lower corners arcing toward the middle.
+    confetti({
+      ...base,
+      particleCount: 70,
+      angle: 60,
+      spread: 58,
+      startVelocity: 55,
+      origin: { x: 0, y: 0.85 },
+      scalar: 1.05,
+    });
+    confetti({
+      ...base,
+      particleCount: 70,
+      angle: 120,
+      spread: 58,
+      startVelocity: 55,
+      origin: { x: 1, y: 0.85 },
+      scalar: 1.05,
+    });
+
+    // A slow drift of stars falling from above, sustained for ~1.4s so the
+    // burst tapers into something gentler instead of cutting off hard.
+    const driftEnd = performance.now() + 1400;
+    const drift = () => {
+      confetti({
+        ...base,
+        particleCount: 3,
+        startVelocity: 0,
+        gravity: 0.5,
+        ticks: 320,
+        shapes: ["star"],
+        scalar: 0.85,
+        origin: { x: Math.random(), y: -0.05 },
+      });
+      if (performance.now() < driftEnd) {
+        this._confettiTimer = setTimeout(drift, 110);
+      }
+    };
+    drift();
   }
 
   _findTarget(selector) {
@@ -285,9 +468,7 @@ export default class extends Controller {
     let resolved = placement;
     if (placement === "right" && !fitsRight) {
       if (canShrinkRight) resolved = "right-shrink";
-      else if (fitsLeft) resolved = "left";
-      else if (canShrinkLeft) resolved = "left-shrink";
-      else resolved = "below";
+      else resolved = "right-force";
     }
     if (placement === "left" && !fitsLeft) {
       if (canShrinkLeft) resolved = "left-shrink";
@@ -314,6 +495,9 @@ export default class extends Controller {
     } else if (resolved === "above") {
       appliedWidth = naturalWidth;
       tooltipLeft = left + width / 2 - appliedWidth / 2;
+    } else if (resolved === "right-force") {
+      appliedWidth = Math.min(naturalWidth, vw / 3);
+      tooltipLeft = vw - appliedWidth - margin * 2;
     } else {
       // right or right-shrink
       appliedWidth = resolved === "right-shrink" ? roomRight : naturalWidth;
@@ -339,7 +523,7 @@ export default class extends Controller {
       }
     }
 
-    this._lastResolvedPlacement = resolved.replace("-shrink", "");
+    this._lastResolvedPlacement = resolved.replace(/-shrink|-force/, "");
 
     if (tooltipLeft < margin) tooltipLeft = margin;
     if (tooltipLeft + finalRect.width + margin > vw) {

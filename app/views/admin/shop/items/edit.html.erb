@@ -1,0 +1,13 @@
+<% content_for :title, "Edit Shop Item" %>
+<% content_for :stylesheets do %>
+  <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
+<% end %>
+<div class="shop-item-form__page" style="padding: 0 clamp(1.5rem, 4vw, 3rem) 4rem;">
+  <h1 class="shop-item-form__page-title">Edit <span style="color: #83828d; font-weight: 400;"><%= @shop_item.name %></span></h1>
+
+  <%= render 'form', shop_item: @shop_item %>
+
+  <div class="shop-item-form__back" style="margin-top: var(--space-m);">
+    <%= link_to "← Back to Item", admin_shop_item_path(@shop_item) %>
+  </div>
+</div>

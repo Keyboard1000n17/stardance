@@ -1,0 +1,15 @@
+// "What is a ship?" rail module — shown when the project isn't on a guided
+// mission. Matches the mission / payout-votes module tile.
+.ship-intro-module {
+  padding: var(--space-m);
+  border-radius: 14px;
+  border: 1px solid var(--color-space-border, rgba(255, 255, 255, 0.12));
+  background: var(--color-space-card, rgba(255, 255, 255, 0.04));
+  color: var(--color-space-text);
+}
+
+.ship-intro-module__title {
+  margin: 0 0 var(--space-s);
+  font-size: 1.25rem;
+  font-weight: 700;
+}

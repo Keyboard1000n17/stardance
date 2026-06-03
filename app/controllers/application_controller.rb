@@ -6,6 +6,7 @@ class ApplicationController < ActionController::Base
   include Pundit::Authorization
   include Pagy::Method
   include Achievementable
+  include Trackable
 
   before_action :store_referral_code
   before_action :remember_page
@@ -17,6 +18,7 @@ class ApplicationController < ActionController::Base
   before_action :show_pending_achievement_notifications!
   before_action :apply_dev_override_ref
   before_action :allow_profiler
+  before_action :prepare_boot_splash
 
   # Track who makes changes in PaperTrail
   def user_for_paper_trail
@@ -27,16 +29,54 @@ class ApplicationController < ActionController::Base
   rescue_from ActionController::InvalidAuthenticityToken, with: :handle_invalid_auth_token
   rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
+  # Declares which discover-rail widgets render on this controller's pages, and
+  # optionally the page context handed to them:
+  #
+  #   class MissionsController < ApplicationController
+  #     discover_rail_widgets :mission_guide, :available_missions,
+  #                           context: -> { { mission: @mission } }
+  #   end
+  #
+  # Slugs are resolved against the widget registry (DiscoverRail::BaseWidget),
+  # so naming a slug no widget has claimed is simply ignored. Subclasses that
+  # stay silent inherit an empty rail.
+  class_attribute :discover_rail_widget_slugs, default: [], instance_accessor: false
+  class_attribute :discover_rail_context_proc, default: nil, instance_accessor: false
+
+  def self.discover_rail_widgets(*slugs, context: nil)
+    self.discover_rail_widget_slugs = slugs.map(&:to_sym)
+    self.discover_rail_context_proc = context if context
+  end
+
+  def discover_rail_widgets
+    self.class.discover_rail_widget_slugs
+  end
+  helper_method :discover_rail_widgets
+
+  def discover_rail_context
+    proc = self.class.discover_rail_context_proc
+    proc ? instance_exec(&proc) : {}
+  end
+  helper_method :discover_rail_context
+
   def current_user(preloads = [])
     return @current_user if defined?(@current_user)
 
     if session[:user_id]
       scope = User.where(id: session[:user_id])
       scope = scope.eager_load(*Array(preloads)) if preloads.present?
-      @current_user = scope.to_a.first
+      user = scope.to_a.first
+
+      if user && session[:auth_level] != "hca" && user.hca_linked?
+        reset_session
+        return @current_user = nil
+      end
+
+      @current_user = user
     end
   end
   helper_method :current_user
+  helper_method :admin_policy
 
   def impersonating?
     session[:impersonator_user_id].present? && session[:user_id].present?
@@ -55,23 +95,14 @@ class ApplicationController < ActionController::Base
     impersonating? ? real_user : current_user
   end
 
-  def tutorial_message(msg)
-    flash[:tutorial_messages] ||= []
-    if msg.is_a?(Array)
-      flash[:tutorial_messages] += msg
-    else
-      flash[:tutorial_messages] << msg
-    end
-  end
-
-  def tutorial_messages
-    flash[:tutorial_messages] || []
-  end
-  helper_method :tutorial_messages
-
   rescue_from Pundit::NotAuthorizedError, with: :user_not_authorized
 
   private
+
+  def sign_in_user(user, auth_level: "guest")
+    session[:user_id] = user.id
+    session[:auth_level] = auth_level
+  end
 
   # https://stackoverflow.com/questions/70960161/ruby-on-rails-back-button-that-will-take-you-back-to-the-previous-page
   # improvised a bit. a linked list sorta..
@@ -90,6 +121,21 @@ class ApplicationController < ActionController::Base
     end
   end
 
+  def client_ip_address
+    request.headers["CF-Connecting-IP"].presence || request.remote_ip
+  end
+
+  def prepare_boot_splash
+    @show_boot_splash = false
+    return if controller_name == "landing"
+    return unless request.get? && request.format.html?
+    return if turbo_frame_request? || request.xhr?
+    return if cookies[:stardance_booted].present?
+
+    @show_boot_splash = true
+    cookies[:stardance_booted] = { value: "1", same_site: :lax } # session cookie (cleared when the browser closes)
+  end
+
   def store_referral_code
     return unless params[:ref].present? && params[:ref].length <= 64
 
@@ -101,7 +147,12 @@ class ApplicationController < ActionController::Base
   end
 
   def render_not_found
-    render file: Rails.root.join("public/404.html"), status: :not_found, layout: false
+    @body_class = "error-page-body"
+    respond_to do |format|
+      format.html { render "errors/not_found", status: :not_found, layout: "application" }
+      format.json { render json: { error: "Not found" }, status: :not_found }
+      format.any { head :not_found }
+    end
   end
 
   def user_not_authorized(exception)
@@ -124,13 +175,15 @@ class ApplicationController < ActionController::Base
       return
     end
 
-    @error_title = "Whoa there, explorer!"
-    @error_message = exception.message.presence || "You don't have the right ingredients to access this page."
-    @back_path = safe_referrer
+    render_not_authorized(exception)
+  end
+
+  def render_not_authorized(exception = nil)
+    message = exception&.message.presence || "You don't have permission to access this page."
 
     respond_to do |format|
-      format.html { render "errors/not_authorized", status: :forbidden }
-      format.json { render json: { error: @error_message }, status: :forbidden }
+      format.html { render "errors/not_authorized", status: :forbidden, layout: "application" }
+      format.json { render json: { error: message }, status: :forbidden }
     end
   end
 
@@ -153,12 +206,33 @@ class ApplicationController < ActionController::Base
     nil
   end
 
+  def pundit_namespace(record)
+    record
+  end
+
+  def authorize(record, ...)
+    super(pundit_namespace(record), ...)
+  end
+
+  def policy_scope(scope, ...)
+    super(pundit_namespace(scope), ...)
+  end
+
+  def policy(record)
+    super(pundit_namespace(record))
+  end
+
+  def admin_policy(record)
+    policy([ :admin, record ])
+  end
+
   def handle_invalid_auth_token
     reset_session
     redirect_to root_path, alert: "Your session has expired. Please try again."
   end
 
   def handle_error(exception)
+    @body_class = "error-page-body"
     event_id = Sentry.last_event_id || Sentry.capture_exception(exception)&.event_id
     @trace_id = event_id || request.request_id
     @exception = exception if current_user&.admin?
@@ -210,15 +284,30 @@ class ApplicationController < ActionController::Base
     return unless params[:portal_status].present? && current_user
 
     identity = current_user.identities.find_by(provider: "hack_club")
-    return unless identity&.access_token.present?
+    unless identity&.access_token.present?
+      redirect_to "/auth/hack_club?origin=#{ERB::Util.url_encode(request.fullpath)}" and return
+    end
 
     identity_payload = HCAService.identity(identity.access_token)
-    return if identity_payload.blank?
+    if identity_payload.blank?
+      flash.now[:alert] = "Couldn't reach the verification server. Try again in a moment."
+      return
+    end
 
-    latest_status = identity_payload["verification_status"].to_s
-    current_user.complete_tutorial_step!(:identity_verified) if %w[pending verified].include?(latest_status)
     current_user.apply_hca_verification_payload!(identity_payload)
+    current_user.reload
+
+    return_path = request.path
+    clean_params = request.query_parameters.except("portal_status")
+    return_url = clean_params.any? ? "#{return_path}?#{clean_params.to_query}" : return_path
+
+    if current_user.identity_verified?
+      redirect_to return_url, notice: "You're verified — your work is now public!" and return
+    else
+      redirect_to "#{return_url}#{return_url.include?('?') ? '&' : '?'}idv_check=1" and return
+    end
   rescue StandardError => e
     Rails.logger.warn("Portal return identity refresh failed: #{e.class}: #{e.message}")
+    flash.now[:alert] = "Something went wrong checking your verification. Try again."
   end
 end
