@@ -66,6 +66,15 @@
               <dt>Reviewer</dt>
               <dd><%= @ship.reviewer.display_name %></dd>
             <% end %>
+            <dt>Updated project</dt>
+            <dd>
+              <% if @ship.project.update_description.present? %>
+                <span class="ship-review__badge ship-review__badge--yes">Yes</span>
+                <p class="ship-review__update-desc"><%= @ship.project.update_description %></p>
+              <% else %>
+                <span class="ship-review__badge ship-review__badge--no">No</span>
+              <% end %>
+            </dd>
           </dl>
         </div>
       </section>
