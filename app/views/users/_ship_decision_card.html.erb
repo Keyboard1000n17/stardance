@@ -20,14 +20,13 @@
          ) %>">
   <div class="ship-decision-card__flag">
     <%= inline_svg_tag "icons/ship.svg", class: "ship-decision-card__flag-icon" %>
-    <span>Shipwright Verdict</span>
-    <span class="ship-decision-card__info"
+    <span class="ship-decision-card__label"
           tabindex="0"
           aria-label="Who are Shipwrights?"
           data-controller="tooltip"
           data-tooltip-title-value="Who are Shipwrights?"
           data-tooltip-message-value="Shipwrights review submitted ships for quality, working demos, clear writeups, and program rules before projects move forward."
-          data-tooltip-position-value="top">?</span>
+          data-tooltip-position-value="top">Shipwright Verdict</span>
     <span class="status-pill status-pill--<%= decision.verdict %>"><%= decision.verdict.capitalize %></span>
   </div>
 
