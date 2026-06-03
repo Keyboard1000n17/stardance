@@ -1128,6 +1128,13 @@
     text-underline-offset: 3px;
   }
 
+  &__visibility {
+    margin: 0;
+    color: var(--color-space-text-muted);
+    font-size: var(--font-size-s);
+    line-height: 1.35;
+  }
+
   &__message {
     margin: 0;
     color: var(--color-space-text);
