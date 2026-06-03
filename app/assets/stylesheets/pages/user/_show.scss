@@ -775,7 +775,7 @@ turbo-frame#profile_tabs {
 .profile-project-card {
   display: flex;
   flex-direction: column;
-  height:100%;
+  height: 100%;
   gap: var(--space-m);
   background: var(--color-set-2-bg);
   // Use box-shadow as a fake border so the banner image can extend over it
@@ -880,7 +880,7 @@ turbo-frame#profile_tabs {
 
   display: -webkit-box;
   -webkit-box-orient: vertical;
-  overflow:hidden;
+  overflow: hidden;
   line-clamp: 4;
   -webkit-line-clamp: 4;
 }
@@ -999,7 +999,7 @@ turbo-frame#profile_tabs {
   }
 
   .project-list {
-  	grid-template-columns: 1fr;
+    grid-template-columns: 1fr;
   }
 }
 
