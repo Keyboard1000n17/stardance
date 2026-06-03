@@ -67,3 +67,6 @@ vendor
 .venv
 
 staff-search
+
+# Ignore the encrypted dev key, should be regenerated
+config/credentials/development.yml.enc
