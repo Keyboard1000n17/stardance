@@ -78,9 +78,7 @@
                   <%= link_to "DM on Slack ↗", "https://hackclub.enterprise.slack.com/archives/#{owner.slack_id}", target: "_blank", rel: "noopener", class: "ship-review__slack-link" %>
                   <div class="ship-review__slack-id-wrapper">
                     <span class="ship-review__slack-id"><%= owner.slack_id %></span>
-                    <button type="button" class="ship-review__copy-btn" 
-                            onclick="navigator.clipboard.writeText('<%= owner.slack_id %>'); const tooltip = this.querySelector('.ship-review__copy-tooltip'); tooltip.textContent = 'Copied!'; setTimeout(() => tooltip.textContent = 'Copy', 1500);" 
-                            aria-label="Copy Slack ID" title="Copy Slack ID">
+                    <button type="button" class="ship-review__copy-btn" data-copy="<%= owner.slack_id %>" onclick="navigator.clipboard.writeText(this.dataset.copy); const tooltip = this.querySelector('.ship-review__copy-tooltip'); tooltip.textContent = 'Copied!'; setTimeout(() => tooltip.textContent = 'Copy', 1500);" aria-label="Copy Slack ID" title="Copy Slack ID">
                       <svg class="icon icon-copy" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
