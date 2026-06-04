@@ -903,6 +903,36 @@
     box-shadow: none;
   }
 
+  &--fire {
+    background: var(--color-set-4-bg);
+    border-color: var(--color-brand-highlight);
+  }
+
+  &__super-star {
+    padding: var(--space-l);
+    padding-left: var(--feed-content-offset);
+    text-align: center;
+    @media (max-width: 640px) {
+      padding-left: 0;
+    }
+  }
+
+  // Same pill as on project card, same stylings
+  &__super-star-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 1rem;
+    font-weight: 700;
+    white-space: nowrap;
+
+    background: var(--gradient-extra-highlight) center / cover no-repeat;
+    color: var(--color-set-1-bg);
+
+    margin: var(--space-xs);
+  }
+
   .like-button,
   &__like {
     display: flex;

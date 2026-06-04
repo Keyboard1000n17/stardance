@@ -60,10 +60,13 @@
     </div>
   </header>
 
-  <% if body.present? && !quote_repost? %>
-    <div class="feed-post-card__body">
-      <%= helpers.md(body, allow_images: false) %>
+  <% if fire_event? %>
+    <div class="feed-post-card__super-star">
+      <span class="feed-post-card__super-star-eyebrow">⭐ Super Star</span>
+        <%= helpers.md(body, allow_images: false) %>
     </div>
+  <% elsif body.present? && !quote_repost? %>
+    <div class="feed-post-card__body"><%= helpers.md(body, allow_images: false) %></div>
   <% end %>
 
   <%= render "shared/post_media", attachments: attachments %>

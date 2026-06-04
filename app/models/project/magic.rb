@@ -90,7 +90,7 @@ class Project::Magic
   end
 
   def fire_event_body(user)
-    "⭐ #{user.display_name} marked your project as a Super Star! As a prize for your great work, look out for a bonus prize in the mail :)"
+    "## #{user.display_name} marked your project as a Super Star! \n As a prize for your great work, look out for a bonus prize in the mail :)"
   end
 
   def enqueue_magic_jobs
