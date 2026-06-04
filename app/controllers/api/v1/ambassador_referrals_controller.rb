@@ -3,31 +3,30 @@ class Api::V1::AmbassadorReferralsController < Api::V1::BaseController
   private_constant :BOOLEAN
 
   def index
-    render json: payload(scope_for_mode)
+    render json: payload(User.ambassador_referrals, rsvp_scope: Rsvp.ambassador_referrals)
   end
 
   def show
     code = params[:id].to_s
     if code.start_with?(Rsvp::AMBASSADOR_REFERRAL_PREFIX)
-      render json: payload(scope_for_mode.matching_ref(code))
+      render json: payload(
+        User.ambassador_referrals.matching_ref(code),
+        rsvp_scope: Rsvp.ambassador_referrals.matching_ref(code)
+      )
     else
       render json: { error: "Not found" }, status: :not_found
     end
   end
 
   private
-    def rsvp_mode?
+    def include_rsvps?
       BOOLEAN.cast(params[:rsvp])
     end
 
-    def scope_for_mode
-      rsvp_mode? ? Rsvp.ambassador_referrals : User.ambassador_referrals
-    end
-
-    def payload(scope)
-      rsvp_mode = rsvp_mode?
+    def payload(scope, rsvp_scope:)
       records = scope.order(:id).to_a
-      referrals = rsvp_mode ? rsvp_items(records) : user_items(records)
+      referrals = user_items(records)
+      referrals += rsvp_items(rsvp_scope.order(:id).to_a) if include_rsvps?
 
       {
         prefix: Rsvp::AMBASSADOR_REFERRAL_PREFIX,
@@ -50,15 +49,13 @@ class Api::V1::AmbassadorReferralsController < Api::V1::BaseController
     def rsvp_items(rsvps)
       users_by_email = User.matching_emails(rsvps.map(&:email))
                            .index_by { |user| user.email.to_s.downcase }
-      metrics = AmbassadorReferralMetrics.new(users_by_email.values)
 
-      rsvps.map do |rsvp|
-        user = users_by_email[rsvp.email.to_s.downcase]
+      rsvps.reject { |rsvp| users_by_email.key?(rsvp.email.to_s.downcase) }.map do |rsvp|
         rsvp.ambassador_referral_payload.merge(
-          rsvp: user.blank?,
-          verification_status: user&.verification_status,
-          hours_logged: user ? hours(metrics.logged_seconds[user.id]) : nil,
-          hours_approved: user ? hours(metrics.approved_seconds[user.id]) : nil
+          rsvp: true,
+          verification_status: nil,
+          hours_logged: nil,
+          hours_approved: nil
         )
       end
     end
