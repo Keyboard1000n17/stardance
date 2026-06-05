@@ -637,6 +637,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_201158) do
     t.integer "memberships_count", default: 0, null: false
     t.datetime "nominated_fire_at"
     t.bigint "nominated_fire_by_id"
+    t.string "project_categories", default: [], array: true
     t.string "project_type"
     t.text "readme_url"
     t.text "repo_url"
@@ -1305,8 +1306,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_04_201158) do
   add_foreign_key "projects", "users", column: "marked_fire_by_id"
   add_foreign_key "projects", "users", column: "nominated_fire_by_id"
   add_foreign_key "raffle_participants", "raffle_weeks", column: "signup_week_id"
+  add_foreign_key "raffle_participants", "users"
   add_foreign_key "raffle_referrals", "raffle_participants", column: "participant_id"
   add_foreign_key "raffle_referrals", "raffle_weeks", column: "credited_week_id"
+  add_foreign_key "raffle_referrals", "users", column: "referred_user_id"
   add_foreign_key "raffle_weeks", "raffle_participants", column: "winner_participant_id"
   add_foreign_key "report_review_tokens", "project_reports", column: "report_id"
   add_foreign_key "reviewer_payout_requests", "users"
