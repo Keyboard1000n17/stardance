@@ -113,6 +113,14 @@ class Project < ApplicationRecord
     current_mission_attachment&.mission
   end
 
+  def display_banner
+    if banner.attached?
+      banner
+    elsif current_mission&.banner&.attached?
+      current_mission.banner
+    end
+  end
+
   # True once this project has shipped to the given mission at least once.
   # After that first ship the mission stays attached (for display) but future
   # ships are regular, non-mission ships.
