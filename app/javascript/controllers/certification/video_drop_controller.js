@@ -63,7 +63,11 @@ export default class extends Controller {
     this.videoTarget.src = this.objectUrl;
     this.filenameTarget.textContent = file.name;
 
-    this.element.classList.remove(this.errorClass, this.doneClass, this.acceptedClass);
+    this.element.classList.remove(
+      this.errorClass,
+      this.doneClass,
+      this.acceptedClass,
+    );
     this.promptTarget.hidden = true;
     this.previewTarget.hidden = false;
 
@@ -111,7 +115,11 @@ export default class extends Controller {
     this.revoke();
     this.blobField?.remove();
     this.blobField = null;
-    this.element.classList.remove(this.acceptedClass, this.uploadingClass, this.doneClass);
+    this.element.classList.remove(
+      this.acceptedClass,
+      this.uploadingClass,
+      this.doneClass,
+    );
     this.element.classList.add(this.errorClass);
     this.previewTarget.hidden = true;
     this.promptTarget.hidden = false;
