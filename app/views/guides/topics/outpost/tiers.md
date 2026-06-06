@@ -28,7 +28,7 @@ Some examples are:
 
 ---
 
-## X tier
+## X tier ($350+ USD in funding, case-by-case)
 
 Have a big idea you want to work on? This is the place! Comes with Outpost ticket + extra travel stipend. DM @alexren if you have an idea
 

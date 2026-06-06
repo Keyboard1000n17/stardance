@@ -35,4 +35,4 @@ Make sure to include a screenshot of your PCB(s)/wiring diagram if applicable - 
 
 ## 5. Submit!
 
-If you're done your project, you can submit it by filling out [this form](https://forms.hackclub.com/opensauce2026-design)
+If you're done your project, you can submit it by filling out [this form](https://forms.hackclub.com/outpost-design)

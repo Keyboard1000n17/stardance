@@ -1,6 +1,6 @@
 # Outpost
 
-Outpost is a 6-day hardware hackathon + expo we're hosting with [Open Sauce](https://opensauce.com)!
+Outpost is a 6-day hardware hackathon + expo we're hosting with [Open Sauce](https://opensauce.com) from July 14-19th!
 
 First, after arriving in San Francisco with the projects you built, you'll team up with 2-3 other Hack Clubbers for a 4-day hardware hackathon to build out your demo booths.
 
@@ -8,7 +8,6 @@ A booth is an 8x8 feet area that you'll share with your teammates to actually de
 
 ![image](https://cdn.hackclub.com/019e45c8-371b-701c-af2f-c88daf56ea25/paste-1779287202837.png)
 
-At the hackathon, there'll be
 There'll be scrap wood, cardboard, hot glue, and electronics to throw together whatever crazy things you can. This is also the time to fix anything that might've broken on the way there!
 
 After that, you'll transport your hackathon projects + qualifier projects to Open Sauce and set it up to exhibit, where you'll be showcasing your projects to 35,000+ people that weekend with your fellow Hack Clubbers!
