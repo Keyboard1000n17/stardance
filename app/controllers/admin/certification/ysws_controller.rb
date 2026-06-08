@@ -14,6 +14,9 @@ class Admin::Certification::YswsController < Admin::Certification::ApplicationCo
       .find(params[:id])
     authorize @review
 
+    # Check if review is already in unified DB
+    @review.check_and_update_unified_db_status!
+
     devlog_minutes = @review.devlog_reviews.map(&:original_minutes).compact
 
     @stats = {
@@ -160,5 +163,45 @@ class Admin::Certification::YswsController < Admin::Certification::ApplicationCo
     else
       render json: { success: false, errors: report.errors.full_messages }, status: :unprocessable_entity
     end
+  end
+
+  def complete
+    Rails.logger.info "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Starting complete action"
+
+    @review = ::Certification::Ysws.includes(:devlog_reviews).find(params[:id])
+    authorize @review, :update?
+
+    @review.check_and_update_unified_db_status!
+
+    if @review.in_unified_db.present?
+      Rails.logger.warn "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Blocked: already in unified DB (#{@review.in_unified_db})"
+      return render json: { success: false, error: "This review is already in the unified DB" }, status: :unprocessable_entity
+    end
+
+    incomplete = @review.devlog_reviews.select { |dr| dr.pending? || dr.justification.blank? }
+    if incomplete.any?
+      Rails.logger.warn "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Blocked: #{incomplete.count} incomplete devlog(s): #{incomplete.map(&:id).inspect}"
+      return render json: { success: false, error: "Fill in all devlogs" }, status: :unprocessable_entity
+    end
+
+    @review.update_columns(reviewer_id: current_user.id, reviewed_at: Time.current)
+    Rails.logger.info "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Marked reviewed_at=#{@review.reviewed_at}; enqueuing AirtableSyncJob"
+
+    ::Certification::YswsAirtableSyncJob.perform_later(@review.id)
+    Rails.logger.info "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} AirtableSyncJob enqueued successfully"
+
+    render json: {
+      success: true,
+      message: "Review completed! Syncing to Airtable in the background...",
+      redirect_url: admin_certification_ysws_reviews_path
+    }, status: :ok
+  rescue StandardError => e
+    skip_authorization unless pundit_policy_authorized?
+    Rails.logger.error "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} #{e.class}: #{e.message}\n#{e.backtrace&.first(5)&.join("\n")}"
+    Sentry.capture_exception(e, tags: { category: "certification.ysws" }, extra: { ysws_review_id: params[:id], user_id: current_user&.id })
+    render json: {
+      success: false,
+      error: "Failed to complete review: #{e.message}. Let AVD know!"
+    }, status: :unprocessable_entity
   end
 end

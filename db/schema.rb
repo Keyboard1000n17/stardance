@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_08_154500) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_08_170638) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -190,6 +190,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_08_154500) do
     t.integer "approved_minutes"
     t.datetime "created_at", null: false
     t.datetime "demo_checked_at", precision: nil
+    t.string "in_unified_db"
     t.integer "original_minutes"
     t.bigint "post_ship_event_id", null: false
     t.bigint "project_id", null: false

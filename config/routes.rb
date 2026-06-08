@@ -739,6 +739,7 @@ Rails.application.routes.draw do
       get "review/:id", to: "ysws#show", as: "ysws_review"
       get "review/:id/commits", to: "ysws#commits", as: "ysws_commits"
       post "review/:id/report_fraud", to: "ysws#report_fraud", as: "ysws_report_fraud"
+      post "review/:id/complete", to: "ysws#complete", as: "complete_ysws_review"
 
       # Admin payout management
       resources :payouts, only: [ :index, :show ] do
