@@ -6,6 +6,7 @@ module Raffle
              foreign_key: :credited_week_id, dependent: :nullify, inverse_of: :credited_week
     has_many :signup_participants, class_name: "Raffle::Participant",
              foreign_key: :signup_week_id, dependent: :nullify, inverse_of: :signup_week
+    has_many :draws, class_name: "Raffle::Draw", foreign_key: :week_id, dependent: :destroy
     belongs_to :winner_participant, class_name: "Raffle::Participant", optional: true
 
     enum :status, { active: "active", archived: "archived" }, prefix: :status
@@ -71,6 +72,14 @@ module Raffle
 
     def drawn?
       winner_participant_id.present?
+    end
+
+    def voided_draws
+      draws.status_voided.chronological
+    end
+
+    def voided_winner_ids
+      draws.status_voided.pluck(:winner_participant_id)
     end
   end
 end

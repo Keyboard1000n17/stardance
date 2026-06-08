@@ -398,6 +398,18 @@ a.super-mega-dashboard-btn {
     color: white;
     font-weight: 700;
   }
+
+  &.badge-active,
+  &.badge-verified {
+    background-color: #10b981;
+    color: white;
+  }
+
+  &.badge-archived,
+  &.badge-self_referral {
+    background-color: #6b7280;
+    color: white;
+  }
 }
 
 /* Action Status Indicators */

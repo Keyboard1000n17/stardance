@@ -622,6 +622,7 @@ Rails.application.routes.draw do
         member do
           post :close
           post :draw
+          post :void_draw
         end
       end
     end
