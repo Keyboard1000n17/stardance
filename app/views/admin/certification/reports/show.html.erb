@@ -1,7 +1,4 @@
 <% content_for :title, "Report ##{@report.id}" %>
-<% content_for :stylesheets do %>
-  <%= stylesheet_link_tag "admin", "data-turbo-track": "reload" %>
-<% end %>
 
 <main class="admin-reports">
   <%= link_to "← back to reports", admin_certification_reports_path, class: "btn-back" %>
