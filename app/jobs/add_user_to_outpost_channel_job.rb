@@ -5,7 +5,9 @@ class AddUserToOutpostChannelJob < ApplicationJob
   OUTPOST_CHANNEL_ID = "C0B04RP43TQ".freeze
 
   def perform(user_id)
-    return if Rails.env.development?
+    # Don't touch Slack from development unless explicitly opted in for testing
+    # (set OUTPOST_SLACK_IN_DEV=1) — otherwise this would invite real people.
+    return if Rails.env.development? && ENV["OUTPOST_SLACK_IN_DEV"].blank?
 
     user = User.find_by(id: user_id)
     return if user&.slack_id.blank?
