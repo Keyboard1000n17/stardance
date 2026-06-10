@@ -250,6 +250,25 @@ class User < ApplicationRecord
     "#{local.first(MAX_DISPLAY_NAME_LENGTH - 5)}_#{rand(1000..9999)}"
   end
 
+  def verified_referral_count
+    raffle_participant&.referrals&.status_verified&.count || 0
+  end
+
+  REFERRAL_ACHIEVEMENTS = { referral_2: 2, referral_5: 5 }.freeze
+
+  def sync_referral_achievements!
+    return unless Flipper.enabled?(:week_2_release, self)
+
+    count = verified_referral_count
+    REFERRAL_ACHIEVEMENTS.each do |slug, threshold|
+      if count >= threshold
+        award_achievement!(slug)
+      else
+        revoke_achievement!(slug)
+      end
+    end
+  end
+
   def ambassador_referral_payload(hours_logged:, hours_approved:)
     {
       id: id,
