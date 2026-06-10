@@ -1,9 +1,6 @@
 <% content_for :title, "Review: #{@ship.project.title}" %>
 
-<%
-  owner = @ship.project.memberships.find(&:owner?)&.user
-  can_review = @ship.claim_held_by?(current_user) && @ship.pending?
-%>
+<% can_review = @ship.claim_held_by?(current_user) && @ship.pending? %>
 
 <div class="app-layout app-layout--wide"
      data-controller="certification--queue"
@@ -82,7 +79,7 @@
           <h2 class="ship-review__panel-title">Submission</h2>
           <dl class="ship-review__meta">
             <dt>Submitter</dt>
-            <dd><%= owner&.display_name || "—" %></dd>
+            <dd><%= @owner&.display_name || "—" %></dd>
             <dt>Submitted</dt>
             <dd><%= time_ago_in_words(@ship.project.shipped_at || @ship.created_at) %> ago</dd>
             <% if @ship.reviewer %>
@@ -103,6 +100,33 @@
       </section>
 
       <aside class="ship-review__sidebar">
+        <% if @submitter_history %>
+          <div class="ship-review__panel">
+            <h2 class="ship-review__panel-title">Submitter history</h2>
+            <% if @submitter_history[:total] <= 1 %>
+              <p class="ship-review__description">First submission from <%= @owner.display_name %>.</p>
+            <% else %>
+              <dl class="ship-review__meta">
+                <dt>Submitted</dt>
+                <dd><%= pluralize(@submitter_history[:total], "review") %> across <%= pluralize(@submitter_history[:projects], "project") %></dd>
+                <dt>Verdicts</dt>
+                <dd>
+                  <span class="status-pill status-pill--approved"><%= @submitter_history[:approved] %> approved</span>
+                  <span class="status-pill status-pill--returned"><%= @submitter_history[:returned] %> returned</span>
+                </dd>
+                <% if (last_return = @submitter_history[:last_returned]) %>
+                  <dt>Last return</dt>
+                  <dd>
+                    <%= time_ago_in_words(last_return.decided_on) %> ago
+                    <% if last_return.feedback.present? %>
+                      <p class="ship-review__update-desc"><%= truncate(last_return.feedback, length: 240) %></p>
+                    <% end %>
+                  </dd>
+                <% end %>
+              </dl>
+            <% end %>
+          </div>
+        <% end %>
         <% if can_review %>
           <%= render "form", ship: @ship %>
         <% else %>
