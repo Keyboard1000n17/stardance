@@ -1,7 +1,9 @@
 <% content_for :title, "Project Search" %>
 <h1>Project Search</h1>
 
-<p><%= link_to "→ Super Stars", admin_super_stars_path %></p>
+<% if policy(:super_star_dashboard).show? %>
+  <p><%= link_to "→ Super Stars", admin_super_stars_path %></p>
+<% end %>
 
 <div>
   <%= link_to "Active", admin_projects_path(filter: "active", query: params[:query]) %>

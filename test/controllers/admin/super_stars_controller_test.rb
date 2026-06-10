@@ -20,6 +20,20 @@ class Admin::SuperStarsControllerTest < ActionDispatch::IntegrationTest
     assert_select "td", text: "Already Starred"
   end
 
+  test "project search links to the dashboard for admins only" do
+    helper = User.create!(slack_id: "U_SS_HELPER", display_name: "ss_helper", email: "ss_helper@example.test")
+    helper.grant_role!(:helper)
+
+    sign_in @admin
+    get admin_projects_path
+    assert_select "a[href=?]", admin_super_stars_path
+
+    sign_in helper
+    get admin_projects_path
+    assert_response :success
+    assert_select "a[href=?]", admin_super_stars_path, count: 0
+  end
+
   test "non-admin cannot access the page" do
     sign_in @nominator
 
