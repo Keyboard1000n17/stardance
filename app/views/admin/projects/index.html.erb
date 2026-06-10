@@ -2,7 +2,15 @@
 
 <div class="admin-users">
   <h1 class="admin-user-show__title">Projects</h1>
+<% if policy(:super_star_dashboard).show? %>
+  <p><%= link_to "→ Super Stars", admin_super_stars_path %></p>
+<% end %>
 
+<div>
+  <%= link_to "Active", admin_projects_path(filter: "active", query: params[:query]) %>
+  <%= link_to "Deleted", admin_projects_path(filter: "deleted", query: params[:query]) %>
+  <%= link_to "All", admin_projects_path(filter: "all", query: params[:query]) %>
+</div>
   <div style="display:flex; gap: var(--space-s);">
     <%= render ActionButtonComponent.new(text: "Active", href: admin_projects_path(filter: "active", query: params[:query]), size: :small, variant: params[:filter] == "active" || params[:filter].blank? ? :primary : :secondary) %>
     <%= render ActionButtonComponent.new(text: "Deleted", href: admin_projects_path(filter: "deleted", query: params[:query]), size: :small, variant: params[:filter] == "deleted" ? :primary : :secondary) %>

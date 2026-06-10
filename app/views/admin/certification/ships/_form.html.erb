@@ -4,7 +4,16 @@
       id: "unclaim-form-#{ship.id}" do %>
 <% end %>
 
-<%= form_with model: ship, url: admin_certification_ship_path(ship), method: :patch, class: "review-form" do |f| %>
+<%# The video-drop controller sits on the form (not the drop zone) so its
+    submitBtn target is in scope and it can block submits mid-upload. %>
+<%= form_with model: ship, url: admin_certification_ship_path(ship), method: :patch, class: "review-form",
+      data: { controller: "certification--video-drop",
+              action: "submit->certification--video-drop#guardSubmit",
+              "certification--video-drop-over-class": "video-drop--over",
+              "certification--video-drop-uploading-class": "video-drop--uploading",
+              "certification--video-drop-done-class": "video-drop--done",
+              "certification--video-drop-error-class": "video-drop--error",
+              "certification--video-drop-direct-upload-url-value": rails_direct_uploads_url } do |f| %>
 <% if ship.claim_expires_at.present? %>
   <div class="review-form__claim-banner">
     <span>Claim active</span>
@@ -41,12 +50,9 @@
   </div>
 
   <div class="review-form__field">
-    <%= f.label :verdict_video, "Walkthrough video (mp4, webm, or mov, max 250 MB)" %>
+    <%= f.label :verdict_video, "Walkthrough video (mp4, webm, or mov)" %>
     <div class="video-drop"
-         data-controller="certification--video-drop"
-         data-certification--video-drop-over-class="video-drop--over"
-         data-certification--video-drop-accepted-class="video-drop--accepted"
-         data-certification--video-drop-error-class="video-drop--error"
+         data-certification--video-drop-target="zone"
          data-action="dragover->certification--video-drop#over
                       dragleave->certification--video-drop#leave
                       drop->certification--video-drop#drop">
@@ -67,6 +73,11 @@
           Choose a different video
         </button>
       </div>
+      <div class="video-drop__progress" role="progressbar" aria-label="Video upload"
+           aria-valuemin="0" aria-valuemax="100"
+           data-certification--video-drop-target="progressWrapper" hidden>
+        <div class="video-drop__progress-bar" data-certification--video-drop-target="progressBar"></div>
+      </div>
       <p class="video-drop__status" role="status" aria-live="polite"
          data-certification--video-drop-target="status"></p>
     </div>
@@ -78,7 +89,8 @@
   </div>
 
   <div class="review-form__actions">
-    <%= f.submit "Submit verdict", class: "action-btn action-btn--large action-btn--primary" %>
+    <%= f.submit "Submit verdict", class: "action-btn action-btn--large action-btn--primary",
+          data: { "certification--video-drop-target": "submitBtn" } %>
     <%= link_to "Skip and get next", next_admin_certification_ships_path(skip: ship.id),
           class: "action-btn action-btn--small action-btn--secondary" %>
     <button type="submit" form="unclaim-form-<%= ship.id %>"

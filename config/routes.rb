@@ -609,6 +609,7 @@ Rails.application.routes.draw do
         get  :votes
       end
     end
+    get "super_stars", to: "super_stars#show", as: :super_stars
     get "user-perms", to: "users#user_perms"
     resource :support, only: [ :show ], controller: "support/dashboards"
     resource :fraud, only: [ :show ], controller: "fraud/dashboards"
@@ -616,7 +617,25 @@ Rails.application.routes.draw do
     # Referral raffle management (reads the Raffle engine's models).
     get "raffles", to: "raffles/dashboard#show", as: :raffles
     namespace :raffles do
-      resources :participants, only: [ :index, :show ]
+      resource :fraud, only: [ :show ], controller: "fraud" do
+        get :cleared, controller: "fraud"
+        post :reject_all_flagged, controller: "fraud"
+        post :reject_and_ban_all_flagged, controller: "fraud"
+      end
+      resources :participants, only: [ :index, :show ] do
+        member do
+          post :reject_referrals
+          post :ban_participant
+          post :ban_user
+          post :ban_referred_users
+          post :reject_selected
+          post :ban_selected
+          post :reject_referral
+          post :ban_referred_user
+          post :clear_fraud
+          post :unclear_fraud
+        end
+      end
       resources :referrals, only: [ :index, :update ]
       resources :weeks, only: [ :index, :show ] do
         member do
@@ -731,6 +750,7 @@ Rails.application.routes.draw do
       get "review/:id/commits", to: "ysws#commits", as: "ysws_commits"
       post "review/:id/report_fraud", to: "ysws#report_fraud", as: "ysws_report_fraud"
       post "review/:id/complete", to: "ysws#complete", as: "complete_ysws_review"
+      post "review/:id/return_to_ship_cert", to: "ysws#return_to_ship_cert", as: "return_to_ship_cert_ysws_review"
 
       # Admin payout management
       resources :payouts, only: [ :index, :show ] do
