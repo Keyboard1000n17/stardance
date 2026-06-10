@@ -179,12 +179,6 @@
   white-space: nowrap;
 }
 
-.discover-rail__widgets {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
 .discover-rail__section {
   display: flex;
   flex-direction: column;
@@ -200,16 +194,6 @@
   margin: 0;
   opacity: 0.7;
   text-transform: uppercase;
-}
-
-.discover-rail__placeholder {
-  background: rgba(217, 217, 217, 0.5);
-  border-radius: var(--profile-radius);
-  height: 59px;
-
-  &--tall {
-    height: 238px;
-  }
 }
 
 .discover-rail__placeholder-text {
@@ -240,17 +224,6 @@
   display: block;
   min-height: 48px;
   padding: var(--space-xs) var(--space-s);
-
-  &--link {
-    text-decoration: none;
-    transition: border-color 0.15s ease;
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--color-brand-mint);
-      outline: 0;
-    }
-  }
 }
 
 .discover-rail__card-title {

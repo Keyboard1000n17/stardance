@@ -43,11 +43,11 @@ module DiscoverRail
       return "happening now" if ends_at && event[:start] <= now && now <= ends_at
 
       distance = event[:start] - now
-      return "now" if distance.abs < 1.minute
+      # The visibility filter guarantees start (or end, handled above) is in
+      # the future, so a negative distance only happens in a sub-second race.
+      return "now" if distance < 1.minute
 
-      if distance < 0
-        "started #{time_ago_in_words(distance.abs)} ago"
-      elsif distance < 1.hour
+      if distance < 1.hour
         "in #{(distance / 60).ceil}min"
       elsif distance < 1.day
         "in #{(distance / 3600).round}h"
@@ -122,16 +122,6 @@ module DiscoverRail
       }
     rescue ArgumentError
       nil
-    end
-
-    def time_ago_in_words(seconds)
-      if seconds < 3600
-        "#{(seconds / 60).round}min"
-      elsif seconds < 86400
-        "#{(seconds / 3600).round}h"
-      else
-        "#{(seconds / 86400).round}d"
-      end
     end
   end
 end
