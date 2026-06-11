@@ -1213,6 +1213,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_10_172657) do
     t.boolean "manual_ysws_override"
     t.boolean "mission_review_notifications", default: true, null: false
     t.datetime "onboarded_at"
+    t.datetime "outpost_email_sent_at"
     t.string "ref"
     t.string "regions", default: [], array: true
     t.string "session_token"

@@ -31,6 +31,7 @@
 #  manual_ysws_override         :boolean
 #  mission_review_notifications :boolean          default(TRUE), not null
 #  onboarded_at                 :datetime
+#  outpost_email_sent_at        :datetime
 #  ref                          :string
 #  regions                      :string           default([]), is an Array
 #  session_token                :string
@@ -306,6 +307,23 @@ class User < ApplicationRecord
                                                   .where(posts: { user_id: id })
                                                   .distinct
                                                   .pluck(:mission_id)
+  end
+
+  # Fires the Outpost email at most once per user, and adds them to the #outpost
+  # Slack channel. Locks the row so concurrent /outpost hits can't enqueue the
+  # work twice.
+  def deliver_outpost_email!
+    return if email.blank?
+
+    with_lock("FOR UPDATE OF users") do
+      return if outpost_email_sent_at.present?
+
+      update_column(:outpost_email_sent_at, Time.current)
+    end
+
+    UserMailer.outpost(self).deliver_later
+    # Slack invite temporarily disabled — re-enable to auto-add users to the #outpost channel.
+    # AddUserToOutpostChannelJob.perform_later(id)
   end
 
   private
