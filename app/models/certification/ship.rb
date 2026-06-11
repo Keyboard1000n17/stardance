@@ -56,6 +56,10 @@ module Certification
       super || project_with_deleted
     end
 
+    def owner
+      @owner ||= project.memberships.owner.first&.user
+    end
+
     enum :status, {
       pending: 0,
       approved: 1,
@@ -246,10 +250,6 @@ module Certification
         project: project,
         ship_cert_id: id
       ).call
-    end
-
-    def owner
-      @owner ||= project.memberships.owner.first&.user
     end
 
     def post_decision_to_timeline!
