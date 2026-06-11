@@ -3,8 +3,6 @@
 # Table name: mission_submissions
 #
 #  id                               :bigint           not null, primary key
-#  claim_expires_at                 :datetime
-#  claimed_at                       :datetime
 #  deleted_at                       :datetime
 #  payout_path                      :string           not null
 #  rejection_message                :text
@@ -21,7 +19,6 @@
 #
 # Indexes
 #
-#  idx_mission_submissions_on_status_claim_expires     (status,claim_expires_at)
 #  index_mission_submissions_active_per_ship_event     (ship_event_id) UNIQUE WHERE (deleted_at IS NULL)
 #  index_mission_submissions_on_chosen_prize_id        (chosen_prize_id)
 #  index_mission_submissions_on_deleted_at             (deleted_at)

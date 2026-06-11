@@ -49,6 +49,12 @@ class Project::MissionAttachmentTest < ActiveSupport::TestCase
     assert_includes other.errors[:base], "Detach the current mission before attaching another"
   end
 
+  test "database enforces one active attachment even when validations are bypassed" do
+    @project.mission_attachments.create!(mission: @mission)
+    sneaky = @project.mission_attachments.build(mission: create_mission, attached_at: Time.current)
+
+    assert_raises(ActiveRecord::RecordNotUnique) { sneaky.save!(validate: false) }
+  end
 
   test "cannot attach a mission to a shipped project" do
     @project.update!(shipped_at: Time.current)
