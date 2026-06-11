@@ -34,6 +34,12 @@ application.register(
   Certification__Ysws__DevlogTimeChartController,
 );
 
+import Certification__FeedbackTemplatesController from "./certification/feedback_templates_controller";
+application.register(
+  "certification--feedback-templates",
+  Certification__FeedbackTemplatesController,
+);
+
 import Certification__QueueController from "./certification/queue_controller";
 application.register("certification--queue", Certification__QueueController);
 
@@ -105,6 +111,9 @@ application.register("discover-rail-search", DiscoverRailSearchController);
 
 import DismissableController from "./dismissable_controller";
 application.register("dismissable", DismissableController);
+
+import EventTimeController from "./event_time_controller";
+application.register("event-time", EventTimeController);
 
 import EmojiPickerController from "./emoji_picker_controller";
 application.register("emoji-picker", EmojiPickerController);
