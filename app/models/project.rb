@@ -171,11 +171,11 @@ class Project < ApplicationRecord
     scope.order(created_at: :desc).first&.mission
   end
 
-  # Missions this project could switch to after shipping its current mission.
-  def follow_up_missions
-    mission = current_mission
-    return Mission.none if mission.nil? || !shipped_to_mission?(mission)
-    mission.unlocks.available
+  # Whether `mission` may replace the current attachment: draft projects
+  # switch freely; shipped projects only move to a follow-up or back to a
+  # mission they shipped to. The attachment validation enforces this too.
+  def may_swap_mission_to?(mission)
+    !shipped? || shipped_to_mission?(mission) || eligible_follow_up_mission?(mission)
   end
 
   # Follow-up missions for the switch UI, in one pass: :ready to attach now
@@ -183,9 +183,10 @@ class Project < ApplicationRecord
   # in-review ships clearing (shown as disabled teasers).
   def follow_up_targets_for(user)
     targets = { ready: [], awaiting: [] }
-    return targets if user.nil?
+    mission = current_mission
+    return targets if user.nil? || mission.nil? || !shipped_to_mission?(mission)
 
-    missions = follow_up_missions.includes(:prerequisites).to_a
+    missions = mission.unlocks.available.includes(:prerequisites).to_a
     return targets if missions.empty?
 
     completed_ids = user.completed_mission_ids
@@ -628,14 +629,6 @@ class Project < ApplicationRecord
   end
 
   private
-
-  # Draft projects switch missions freely; shipped projects only move to a
-  # follow-up or back to a mission they shipped to (same rule the attachment
-  # validation enforces — checked here so a disallowed attach leaves the
-  # current attachment in place).
-  def may_swap_mission_to?(mission)
-    !shipped? || shipped_to_mission?(mission) || eligible_follow_up_mission?(mission)
-  end
 
   def do_url_probe(url)
     response = SafeUrl.safe_get(

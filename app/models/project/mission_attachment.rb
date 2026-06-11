@@ -68,13 +68,11 @@ class Project::MissionAttachment < ApplicationRecord
   end
 
   # Shipped projects keep their mission, except to continue into a follow-up
-  # mission whose prerequisites the project itself shipped to — or to restore
-  # a mission it already shipped to (detaching a follow-up falls back here).
+  # or to restore a mission they shipped to. Single source for the rule:
+  # Project#may_swap_mission_to?.
   def project_unshipped_or_follow_up
-    return unless project_id
-    return unless project&.shipped?
-    return if project.shipped_to_mission?(mission)
-    return if project.eligible_follow_up_mission?(mission)
+    return unless project_id && project
+    return if project.may_swap_mission_to?(mission)
 
     errors.add(:base, "Can't attach a mission to a project that has already shipped")
   end
