@@ -400,7 +400,7 @@ class Project < ApplicationRecord
     end
 
     event :resubmit_for_review do
-      transitions from: :needs_changes, to: :submitted
+      transitions from: :needs_changes, to: :submitted, guard: :shippable?
     end
   end
 
