@@ -90,6 +90,8 @@ class FeedPresentationComponentsTest < ViewComponent::TestCase
     assert_selector ".feed-post-card"
     assert_no_selector ".feed-post-card[data-controller='feed-engagement']"
     assert_no_text "Don't show me posts like this"
+  end
+
   test "post card hides the view count without week_2_release" do
     render_inline Posts::CardComponent.new(post: @post, current_user: @user)
 
