@@ -50,7 +50,7 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
     if @ship.update(ship_params)
       verb = @ship.approved? ? "Approved" : "Returned"
       count = ::Certification::Ship.reviewed_today(current_user)
-      redirect_to next_admin_certification_ships_path,
+      redirect_to admin_certification_ships_path,
                   notice: "#{verb} “#{@ship.project.title}.” That's #{count} reviewed today. Keep going!"
     else
       render :show, status: :unprocessable_entity
