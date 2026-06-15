@@ -100,7 +100,7 @@ class VotesController < ApplicationController
       return unless assigned_ship_post
 
       @timeline_posts = @project.posts
-        .includes(postable: [ :attachments_attachments ])
+        .includes(postable: { attachments_attachments: :blob })
         .where("posts.created_at <= ?", assigned_ship_post.created_at)
         .order(created_at: :desc)
         .select { |post| post.postable.present? }
