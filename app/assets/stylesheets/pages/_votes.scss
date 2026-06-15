@@ -219,11 +219,32 @@
 }
 
 .vote-scorecard__feedback-help {
-  margin: 0 0 var(--space-s);
+  margin: 0;
   color: var(--color-space-text);
   font-size: var(--font-size-m);
   line-height: normal;
   opacity: 0.6;
+}
+
+.vote-scorecard__feedback-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-s);
+  margin-bottom: var(--space-s);
+}
+
+.vote-scorecard__word-count {
+  flex-shrink: 0;
+  color: var(--color-space-text);
+  font-size: var(--font-size-s);
+  line-height: normal;
+  opacity: 0.6;
+}
+
+.vote-scorecard__word-count--complete {
+  color: var(--color-brand-cream);
+  opacity: 1;
 }
 
 .vote-scorecard__textarea {

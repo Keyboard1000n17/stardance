@@ -9,7 +9,15 @@
     </span>
   </header>
 
-  <%= form_with model: vote, url: votes_path, class: "vote-scorecard__form" do |form| %>
+  <%= form_with model: vote,
+                url: votes_path,
+                class: "vote-scorecard__form",
+                data: {
+                  controller: "vote-scorecard",
+                  action: "input->vote-scorecard#validate change->vote-scorecard#validate",
+                  vote_scorecard_required_score_count_value: Vote::SCORE_COLUMNS_BY_CATEGORY.size,
+                  vote_scorecard_minimum_word_count_value: 10
+                } do |form| %>
     <%= hidden_field_tag :vote_assignment_id, assignment.id %>
 
     <% if vote.errors.any? %>
@@ -36,7 +44,10 @@
 
     <div class="vote-scorecard__feedback">
       <%= form.label :reason, "Feedback", class: "vote-scorecard__label" %>
-      <p class="vote-scorecard__feedback-help">Any thoughts for the creator? (At least 10 words)</p>
+      <div class="vote-scorecard__feedback-meta">
+        <p class="vote-scorecard__feedback-help">Any thoughts for the creator? (At least 10 words)</p>
+        <span class="vote-scorecard__word-count" data-vote-scorecard-target="counter">0/10 words</span>
+      </div>
       <%= form.text_area :reason,
                          rows: 6,
                          class: "vote-scorecard__textarea" %>
@@ -44,7 +55,9 @@
 
     <%= render ActionButtonComponent.new(
           text: "Submit vote",
-          class: "vote-scorecard__submit"
+          disabled: true,
+          class: "vote-scorecard__submit",
+          data: { vote_scorecard_target: "submit" }
         ) %>
   <% end %>
 </section>
