@@ -161,22 +161,22 @@ module Certification
 
       # Calculate minutes
       total_original_minutes = devlog_reviews.sum { |dr| dr.original_minutes.to_i }
-      total_approved_minutes = devlog_reviews.sum { |dr| dr.approved_minutes.to_i }
+      total_approved_minutes = review.approved_minutes_total
       hours_spent = (total_approved_minutes / 60.0).round(2)
 
-      # Check if all devlogs rejected OR under 6 minutes
+      # Check if all devlogs rejected OR under threshold
       all_rejected = devlog_reviews.all? { |dr| dr.rejected? }
-      under_min_threshold = total_approved_minutes < 6
+      under_min_threshold = total_approved_minutes < ::Certification::Ysws::MIN_APPROVED_MINUTES
 
       # Determine final rejection status
-      final_rejected = rejection_info[:rejected] || all_rejected || under_min_threshold
+      final_rejected = review.review_rejected?
       final_rejection_reason = if rejection_info[:rejected]
         rejection_info[:rejection_reason]
       elsif all_rejected
         summary = ai_summary.presence || review.summary_justification.presence || ""
         "Rejected by YSWS reviewer because: #{summary}".strip
       elsif under_min_threshold
-        "Rejected because under 6 approved minutes."
+        "Rejected because under #{::Certification::Ysws::MIN_APPROVED_MINUTES} approved minutes."
       else
         nil
       end
