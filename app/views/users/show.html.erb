@@ -178,6 +178,14 @@
                     data-profile-edit-target="saveBtn"
                     hidden>Save</button>
           <% elsif current_user %>
+            <% if @user.slack_id.present? %>
+              <%= link_to "https://hackclub.slack.com/team/#{ERB::Util.url_encode(@user.slack_id)}",
+                          class: "profile__action-btn profile__action-btn--slack",
+                          target: "_blank",
+                          rel: "noopener noreferrer" do %>
+                <%= inline_svg_tag "icons/slack.svg", class: "profile__action-btn-icon" %> Open in Slack
+              <% end %>
+            <% end %>
             <%# link_to + data-turbo-method instead of button_to: button_to renders %>
             <%# its own <form>, which HTML5 parsing strips when nested inside the %>
             <%# profile-edit form_with — clicking it would otherwise submit the %>
