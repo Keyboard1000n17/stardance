@@ -1,7 +1,8 @@
 <% content_for :title, @user.display_name %>
-<% content_for :og_title, "#{@user.display_name} on Stardance" %>
-<% content_for :og_description, "#{@stats[:projects_count]} projects · #{@stats[:ships_count]} ships · #{@stats[:devlogs_count]} devlogs" %>
+<% content_for :og_title, "@#{@user.display_name} | Stardance" %>
+<% content_for :og_description, @user.bio.present? ? truncate(@user.bio, length: 200) : "#{@stats[:projects_count]} projects · #{@stats[:ships_count]} ships · #{@stats[:devlogs_count]} devlogs" %>
 <% content_for :og_image, user_og_image_url(@user, format: :png) %>
+<% content_for :twitter_card, "summary_large_image" %>
 
 <% if @user.preference&.search_engine_indexing_off? %>
   <% content_for :head do %>
