@@ -891,6 +891,8 @@ Rails.application.routes.draw do
 
   resource :username_availability, only: [ :show ], controller: "users/username_availabilities"
 
+  post "markdown_preview", to: "markdown_previews#create"
+
   # Autocomplete search endpoints (used by the bio editor and elsewhere).
   get "search/users",    to: "search#users",    as: :search_users
   get "search/projects", to: "search#projects", as: :search_projects
