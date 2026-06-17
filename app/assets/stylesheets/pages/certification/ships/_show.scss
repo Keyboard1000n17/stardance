@@ -584,6 +584,16 @@
     }
   }
 
+  &__warning {
+    margin: 0;
+    padding: var(--space-s) var(--space-m);
+    font-size: 0.9rem;
+    color: var(--color-brand-yellow);
+    background: rgba(255, 229, 100, 0.1);
+    border: 1px solid rgba(255, 229, 100, 0.35);
+    border-radius: 8px;
+  }
+
   &__actions {
     display: flex;
     flex-wrap: wrap;
