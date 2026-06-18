@@ -530,51 +530,6 @@
         }
       }
     }
-
-    .btn-quick-review,
-    .btn-quick-dismiss {
-      padding: var(--space-xxs) var(--space-s);
-      border-radius: var(--profile-radius);
-      font-size: var(--font-size-xs);
-      font-weight: 700;
-      font-family: var(--font-family-sans);
-      cursor: pointer;
-      border: 2px solid;
-      transition: all 0.2s ease;
-      @media (prefers-reduced-motion: reduce) {
-        transition: none;
-      }
-    }
-
-    .btn-quick-review {
-      background: rgba(129, 255, 255, 0.1);
-      color: var(--color-brand-mint);
-      border-color: var(--color-brand-mint);
-
-      &:hover {
-        background: rgba(129, 255, 255, 0.25);
-        transform: translateY(-1px);
-        @media (prefers-reduced-motion: reduce) {
-          transform: none;
-        }
-      }
-    }
-
-    .btn-quick-dismiss {
-      background: rgba(255, 255, 255, 0.05);
-      color: var(--color-space-text-muted);
-      border-color: var(--color-space-border);
-
-      &:hover {
-        background: rgba(255, 141, 157, 0.1);
-        color: var(--color-brand-salmon);
-        border-color: var(--color-brand-salmon);
-        transform: translateY(-1px);
-        @media (prefers-reduced-motion: reduce) {
-          transform: none;
-        }
-      }
-    }
   }
 
   // ── SHOW PAGE ────────────────────────────────────────────────────────────────
