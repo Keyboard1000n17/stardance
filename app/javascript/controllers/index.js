@@ -88,6 +88,9 @@ application.register(
   Certification__Ysws__ReviewSidebarController,
 );
 
+import ClipboardController from "./clipboard_controller";
+application.register("clipboard", ClipboardController);
+
 import CommandPaletteController from "./command_palette_controller";
 application.register("command-palette", CommandPaletteController);
 
