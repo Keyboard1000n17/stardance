@@ -861,7 +861,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
     t.text "adjust_reason"
     t.integer "adjusted_amount"
     t.bigint "admin_id"
-    t.integer "amount"
+    t.integer "amount", null: false
     t.datetime "created_at", null: false
     t.integer "paid_amount"
     t.datetime "paid_at"
@@ -869,6 +869,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_18_120000) do
     t.bigint "user_id", null: false
     t.index ["admin_id"], name: "index_reviewer_payout_requests_on_admin_id"
     t.index ["user_id"], name: "index_reviewer_payout_requests_on_user_id"
+    t.index ["user_id"], name: "index_reviewer_payout_requests_on_user_id_pending", unique: true, where: "((aasm_state)::text = 'pending'::text)"
   end
 
   create_table "rsvp_games", force: :cascade do |t|
