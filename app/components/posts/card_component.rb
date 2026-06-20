@@ -4,9 +4,9 @@ module Posts
   class CardComponent < ViewComponent::Base
     delegate :inline_svg_tag, to: :helpers
 
-    attr_reader :post, :current_user, :theme, :compact, :show_likes, :show_comments, :show_reposts, :show_actions, :source, :position, :page, :feed_request_id, :track_engagement
+    attr_reader :post, :current_user, :theme, :compact, :show_likes, :show_comments, :show_reposts, :show_actions, :source, :position, :page, :feed_request_id, :track_engagement, :current_user_reposted_post_ids, :show_views
 
-    def initialize(post:, current_user: nil, theme: :feed, compact: false, show_likes: true, show_comments: true, show_reposts: true, show_actions: true, source: nil, position: nil, page: nil, feed_request_id: nil, track_engagement: true)
+    def initialize(post:, current_user: nil, theme: :feed, compact: false, show_likes: true, show_comments: true, show_reposts: true, show_actions: true, source: nil, position: nil, page: nil, feed_request_id: nil, track_engagement: true, current_user_reposted_post_ids: nil, show_views: nil)
       @post = post
       @current_user = current_user
       @theme = theme
@@ -20,6 +20,8 @@ module Posts
       @page = page
       @feed_request_id = feed_request_id
       @track_engagement = track_engagement
+      @current_user_reposted_post_ids = current_user_reposted_post_ids
+      @show_views = show_views
     end
 
     def render?
@@ -49,6 +51,21 @@ module Posts
         "feed-post-card--compact": compact,
         "feed-post-card--quote-repost": quote_repost?,
         "feed-post-card--#{theme}": theme.present?
+      )
+    end
+
+    def card_data
+      url = card_link_url
+      data = engagement_data
+      return data if url.blank?
+
+      controllers = [ data[:controller], "card-link" ].compact.join(" ")
+      actions = [ data[:action], "click->card-link#navigate auxclick->card-link#navigate" ].compact.join(" ")
+
+      data.merge(
+        controller: controllers,
+        card_link_url_value: url,
+        action: actions
       )
     end
 
@@ -123,6 +140,8 @@ module Posts
     end
 
     def show_views?
+      return show_views unless show_views.nil?
+
       helpers.show_post_views?
     end
 
@@ -165,11 +184,10 @@ module Posts
     end
 
     def reposted_by_current_user?
-      if current_user.present? && repostable?
-        Post::Repost.exists?(original_post: repost_target, user: current_user)
-      else
-        false
-      end
+      return false unless current_user.present? && repostable?
+      return current_user_reposted_post_ids.include?(repost_target.id) if current_user_reposted_post_ids
+
+      Post::Repost.exists?(original_post: repost_target, user: current_user)
     end
 
     def quote_dialog_id

@@ -53,6 +53,7 @@ class ProjectsController < ApplicationController
         @all_hackatime_projects = current_user.hackatime_projects
         result = current_user.try_sync_hackatime_data!
         @hackatime_times = result&.dig(:projects) || {}
+        @hackatime_token_stale = current_user.hackatime_token_stale?
 
         linked_ids = @linked_hackatime_projects.map(&:id).to_set
         taken_project_ids = @all_hackatime_projects.map(&:project_id).compact.uniq - [ @project.id ]
@@ -165,17 +166,25 @@ class ProjectsController < ApplicationController
           latest_ship_event.present? &&
           latest_ship_event.certification_status == "approved" &&
           latest_ship_event.payout.blank? &&
-          latest_ship_event.mission_submission&.payout_path != "static_prize" &&
           !latest_ship_event.mission_submission&.rejected?
+
+        is_static = latest_ship_event.mission_submission&.payout_path == "static_prize"
 
         required = Post::ShipEvent::VOTES_REQUIRED_FOR_PAYOUT
         current = latest_ship_event.votes.payout_countable.count
         remaining = [ required - current, 0 ].max
 
+        ratings_total = Post::ShipEvent::VOTE_COST_PER_SHIP
+        ratings_remaining = [ -current_user.vote_balance, 0 ].max
+        ratings_given = ratings_total - ratings_remaining
+
         @votes_for_payout = {
           current: current,
           required: required,
-          remaining: remaining
+          remaining: remaining,
+          ratings_given: ratings_given,
+          ratings_total: ratings_total,
+          static_prize: is_static
         }
       end
     end

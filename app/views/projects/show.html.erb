@@ -1,11 +1,10 @@
+<% owner = @project.memberships.find_by(role: :owner)&.user %>
 <% content_for :title, @project.title %>
-<% content_for :og_title, @project.title %>
-<% content_for :og_description, truncate(@project.display_description.to_s, length: 200) %>
+<% content_for :og_title, "#{@project.title} by @#{owner&.display_name} | Stardance" %>
+<% content_for :og_description, @project.display_description.present? ? truncate(@project.display_description.to_s, length: 200) : "#{@project.devlogs_count} devlogs · #{(@project.duration_seconds.to_i / 3600.0).round} hours worked" %>
 <% content_for :og_image, project_og_image_url(@project, format: :png) %>
 <% content_for :twitter_card, "summary_large_image" %>
-<% content_for :og_author, @project.memberships.find_by(role: :owner)&.user&.display_name %>
-
-<% owner = @project.memberships.find_by(role: :owner)&.user %>
+<% content_for :og_author, owner&.display_name %>
 <% if owner&.preference&.search_engine_indexing_off? %>
   <% content_for :head do %>
     <meta name="robots" content="noindex, nofollow">
@@ -45,7 +44,7 @@
         <%= hidden_field_tag :inline_project_show, "1" %>
 
         <header class="project-show__hero">
-          <div class="project-show__banner<%= ' project-show__banner--empty' unless @project.banner.attached? %>" data-controller="file-upload" data-file-upload-empty-class-value="project-show__banner--empty" data-file-upload-placeholder-selector-value=".project-show__banner-placeholder">
+          <div class="project-show__banner<%= ' project-show__banner--empty' unless @project.banner.attached? %><%= ' ai-detected' if current_user&.admin? && @project.banner.attached? && @project.banner.blob.metadata["ai_generated"] %>" data-controller="file-upload" data-file-upload-empty-class-value="project-show__banner--empty" data-file-upload-placeholder-selector-value=".project-show__banner-placeholder">
             <%= image_tag banner_url, alt: "", class: "project-show__banner-image", data: { "file-upload-target": "preview" } %>
             <% unless @project.banner.attached? %>
               <label class="project-show__banner-placeholder">
@@ -242,23 +241,34 @@
                       </div>
 
                       <div class="project-show__hackatime-dropdown" data-hackatime-link-target="dropdown" hidden>
-                        <% @hackatime_dropdown_items.reject { |i| i[:linked] }.each do |item| %>
-                          <button type="button"
-                                  class="project-show__hackatime-dropdown-item<%= " project-show__hackatime-dropdown-item--taken" if item[:taken] %>"
-                                  data-action="hackatime-link#select"
-                                  data-id="<%= item[:id] %>"
-                                  data-name="<%= item[:name] %>"
-                                  data-hours="<%= item[:hours] %>"
-                                  <%= "disabled" if item[:taken] %>>
-                            <span class="project-show__hackatime-dropdown-name"><%= item[:name] %></span>
-                            <span class="project-show__hackatime-dropdown-time"><%= format_seconds(item[:seconds]) %></span>
-                            <% if item[:taken] %>
-                              <span class="project-show__hackatime-dropdown-taken">linked to <%= item[:taken_by] %></span>
-                            <% end %>
-                          </button>
-                        <% end %>
+                        <div class="project-show__hackatime-dropdown-items">
+                          <% @hackatime_dropdown_items.reject { |i| i[:linked] }.each do |item| %>
+                            <button type="button"
+                                    class="project-show__hackatime-dropdown-item<%= " project-show__hackatime-dropdown-item--taken" if item[:taken] %>"
+                                    data-action="hackatime-link#select"
+                                    data-id="<%= item[:id] %>"
+                                    data-name="<%= item[:name] %>"
+                                    data-hours="<%= item[:hours] %>"
+                                    <%= "disabled" if item[:taken] %>>
+                              <span class="project-show__hackatime-dropdown-name"><%= item[:name] %></span>
+                              <span class="project-show__hackatime-dropdown-time"><%= format_seconds(item[:seconds]) %></span>
+                              <% if item[:taken] %>
+                                <span class="project-show__hackatime-dropdown-taken">linked to <%= item[:taken_by] %></span>
+                              <% end %>
+                            </button>
+                          <% end %>
+                        </div>
+                        <%= link_to "CAN'T FIND YOUR PROJECT? →", guide_path(:hackatime), class: "project-show__hackatime-dropdown-help", data: { turbo_frame: "_top" } %>
                       </div>
                     </div>
+                  </div>
+                <% end %>
+                <% if @hackatime_token_stale %>
+                  <div class="project-show__hackatime-stale">
+                    <span>Your Hackatime connection may be outdated — hours might be inaccurate.</span>
+                    <button type="button" class="project-show__hackatime-reconnect" onclick="document.getElementById('settings-modal').showModal()">
+                      Reconnect in settings →
+                    </button>
                   </div>
                 <% end %>
               </div>
@@ -357,7 +367,7 @@
     <% else %>
       <article class="project-show">
         <header class="project-show__hero">
-          <div class="project-show__banner">
+          <div class="project-show__banner <%= 'ai-detected' if current_user&.admin? && @project.banner.attached? && @project.banner.blob.metadata["ai_generated"] %>">
             <%= image_tag banner_url, alt: "", class: "project-show__banner-image" %>
             <%= link_to back_path,
                         class: "project-show__back",
@@ -748,6 +758,15 @@
             </p>
           <% end %>
         </header>
+
+        <% if Flipper.enabled?(:hardware_flow, current_user) && @project.hardware? %>
+          <%= link_to guide_path("hardware"),
+                      class: "action-btn action-btn--large action-btn--primary project-show__onboarding-cta",
+                      target: "_blank", rel: "noopener",
+                      data: { turbo: false } do %>
+            Read on how to start your hardware project!<%= inline_svg_tag "icons/right-arrow.svg", class: "action-btn__icon action-btn__icon--trailing", aria: { hidden: true } %>
+          <% end %>
+        <% end %>
       </section>
     <% end %>
 
@@ -959,7 +978,8 @@
                       placeholder: "What did you make? What was challenging? What are you proud of? What should people know so they can test your project?",
                       aria: { label: "Ship update" },
                       data: { composer_target: "textarea",
-                              action: "input->composer#autogrow input->composer#refreshSubmit" } %>
+                              controller: "mention-autocomplete",
+                              action: "input->composer#autogrow input->composer#refreshSubmit keydown->mention-autocomplete#onKeydown input->mention-autocomplete#onInput blur->mention-autocomplete#onBlur" } %>
 
                 <div class="feed-composer__attach-wrap feed-composer__attach-wrap--expanded" data-composer-target="attachWrap">
                   <label class="feed-composer__attach">
@@ -1037,7 +1057,7 @@
         <%= form_with url: project_funding_request_path(@project),
                       method: :post,
                       data: { turbo: false },
-                      html: { class: "ship-modal__form", data: { tier_maxes: Certification::FundingRequest::TIER_MAX_DOLLARS.to_json, stardust_per_dollar: Certification::FundingRequest::DISCOUNT_STARDUST_PER_DOLLAR } } do |form| %>
+                      html: { class: "ship-modal__form", data: { tier_maxes: Certification::FundingRequest::TIER_MAX_DOLLARS.to_json, tier_discounts: Certification::FundingRequest.tier_discount_summary.to_json } } do |form| %>
           <div class="ship-modal__panel funding-modal__panel">
             <header class="funding-modal__header">
               <%= image_tag "outpost.png", alt: "Outpost", class: "funding-modal__logo" %>
@@ -1067,7 +1087,7 @@
             <p class="funding-modal__discount" role="status" hidden></p>
 
             <p class="funding-modal__note">
-              Spend less than your tier and the rest becomes Stardust toward the Outpost Ticket.
+              Get your design approved to earn Stardust toward the Outpost Ticket — higher tiers cover more of it.
               <%= link_to "How tiers work", guide_path("tiers"), class: "funding-modal__guide-link", target: "_blank", rel: "noopener" %>
             </p>
 
@@ -1086,7 +1106,7 @@
         function fundingValidate(form) {
           if (!form) return;
           var maxes = JSON.parse(form.dataset.tierMaxes || "{}");
-          var perDollar = parseInt(form.dataset.stardustPerDollar || "0", 10);
+          var discounts = JSON.parse(form.dataset.tierDiscounts || "{}");
           var tier = form.querySelector('[name="complexity_tier"]:checked');
           var amountEl = form.querySelector('[name="requested_amount"]');
           var err = form.querySelector(".funding-request__error");
@@ -1103,12 +1123,11 @@
           submit.disabled = over;
 
           if (discountEl) {
-            if (max != null && !isNaN(amount) && amount >= 1 && amount <= max) {
-              var unused = max - amount;
-              var stardust = unused * perDollar;
-              discountEl.textContent = unused > 0
-                ? "Leaving $" + unused + " unrequested earns ✦ " + stardust + " toward the Outpost Ticket."
-                : "Requesting your full tier, so no Outpost Ticket discount this time.";
+            var d = tier ? discounts[tier.value] : null;
+            if (d) {
+              discountEl.textContent = d.pct >= 100
+                ? "Approved at " + d.code + " tier = a free Outpost Ticket (✦ " + d.sd + ", 100% off)."
+                : "Approved at " + d.code + " tier = " + d.pct + "% off the Outpost Ticket (✦ " + d.sd + ").";
               discountEl.hidden = false;
             } else {
               discountEl.hidden = true;

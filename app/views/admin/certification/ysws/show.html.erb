@@ -7,20 +7,13 @@
 
     <div class="header-content">
       <div class="header-left">
-        <h1>YSWS Review</h1>
-        <div style="display: flex; align-items: center; gap: var(--space-m);">
+        <div class="ysws-title-row">
+          <h1>YSWS Review</h1>
+          <%= render "projects/fire_controls", project: @review.project %>
+        </div>
+        <div class="header-title-row">
           <h2 class="project-name"><%= @review.project.title %></h2>
-          <% if @review.airtable_synced_at.present? %>
-            <% if @review.approved_minutes.to_i > 0 %>
-              <span class="status-approved">approved</span>
-            <% else %>
-              <span class="status-rejected">rejected</span>
-            <% end %>
-          <% elsif @review.reviewed_at.present? %>
-            <span class="status-awaiting-sync">awaiting sync</span>
-          <% else %>
-            <span class="status-pending">pending</span>
-          <% end %>
+          <%= review_status_badge(@review) %>
         </div>
         <% unless @review.ship_cert_id %>
           <p class="ship-event-note">This is a standalone ship event (reship)</p>
@@ -87,7 +80,7 @@
       <section class="review-card video-card">
         <h3>Ship Cert Video</h3>
         <% if @review.ship_cert&.verdict_video&.attached? %>
-          <video class="video-card__player" src="<%= url_for(@review.ship_cert.verdict_video) %>"
+          <video class="video-card__player" src="<%= rails_storage_redirect_path(@review.ship_cert.verdict_video) %>"
                  controls playsinline preload="metadata" style="width:100%;border-radius:var(--profile-radius)"></video>
         <% else %>
           <div class="video-placeholder">
@@ -95,6 +88,16 @@
           </div>
         <% end %>
       </section>
+
+      <% if @review.project.update_description.present? %>
+        <!-- Update Description Card -->
+        <section class="review-card update-description-card">
+          <h3>Project Update Description</h3>
+          <div class="update-description-content">
+            <pre><%= @review.project.update_description %></pre>
+          </div>
+        </section>
+      <% end %>
 
       <!-- Time Stats Section -->
       <section class="review-card stats-card">
@@ -157,7 +160,7 @@
             <li>Looks like over 30% ai - even if it is declared</li>
             <li>Looks like it isn't shipped (shipwrights messed up)</li>
             <li>last project edit was before the event launch</li>
-            <li>project was worked on before event, and not marked as Project Update: in description (return to shipwrights)</li>
+            <li>project was worked on before event, and not marked as Project Update (return to shipwrights)</li>
           </ul>
         </div>
       </section>
@@ -171,7 +174,7 @@
           <div class="detail-item">
             <span class="detail-key">Project:</span>
             <span class="detail-value">
-              <%= link_to @review.project.title, admin_project_path(@review.project), class: "link-primary" %>
+              <%= link_to @review.project.title, project_path(@review.project), class: "link-primary" %>
             </span>
           </div>
 
@@ -310,9 +313,9 @@
                   <div class="media-grid">
                     <% devlog_review.post_devlog.attachments.each do |attachment| %>
                       <% if attachment.video? %>
-                        <a href="<%= url_for(attachment) %>" class="media-item video-item" data-action="click->certification--ysws--media-viewer#open">
+                        <a href="<%= rails_storage_redirect_path(attachment) %>" class="media-item video-item" data-action="click->certification--ysws--media-viewer#open">
                           <video class="media-thumbnail" muted>
-                            <source src="<%= url_for(attachment) %>" type="<%= attachment.content_type %>">
+                            <source src="<%= rails_storage_redirect_path(attachment) %>" type="<%= attachment.content_type %>">
                           </video>
                           <div class="media-type-badge">Video</div>
                         </a>

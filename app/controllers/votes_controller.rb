@@ -5,10 +5,31 @@ class VotesController < ApplicationController
     authorize Vote
 
     @vote_policy = policy(Vote)
-    if @vote_policy.open?
+
+    if current_user && @vote_policy.open?
+      if !current_user.shipped_projects.exists?
+        @vote_blocked_reason = "You rate others' projects, they rate yours, and everyone earns stardust. Median payout is about 10 stardust/hr. Ship a project to unlock 15 ratings."
+        @vote_blocked_title = "Ship first to rate"
+        return
+      end
+
+      if current_user.vote_balance >= 0 && !@vote_policy.has_voting_path_ship?
+        @vote_blocked_reason = "Rating is only available for projects going through the voting payout path."
+        return
+      end
+
+      if current_user.vote_balance >= 0
+        @vote_blocked_reason = "You've finished rating for this ship! Once your payout is processed, you can ship again to unlock more ratings."
+        return
+      end
+
       load_assignment
       track_assignment_view if @assignment
     end
+
+    @ratings_total = Post::ShipEvent::VOTE_COST_PER_SHIP
+    remaining = current_user ? [ -current_user.vote_balance, 0 ].max : 0
+    @ratings_given = @ratings_total - remaining
   end
 
   def create
@@ -30,7 +51,7 @@ class VotesController < ApplicationController
                        properties: submit_timing_properties(@assignment)
                          .merge(score_properties(@vote))
                          .merge(feedback_stats(@vote.reason)))
-      redirect_to new_rate_path, notice: "Vote submitted."
+      redirect_to new_rate_path, notice: "Rating submitted."
     else
       @ship_event = @assignment.ship_event
       @project = @ship_event.project
@@ -100,7 +121,7 @@ class VotesController < ApplicationController
       return unless assigned_ship_post
 
       @timeline_posts = @project.posts
-        .includes(postable: [ :attachments_attachments ])
+        .includes(postable: { attachments_attachments: :blob })
         .where("posts.created_at <= ?", assigned_ship_post.created_at)
         .order(created_at: :desc)
         .select { |post| post.postable.present? }

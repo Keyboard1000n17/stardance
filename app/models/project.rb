@@ -63,6 +63,7 @@ class Project < ApplicationRecord
     "Desktop App (Windows)", "Desktop App (Linux)", "Desktop App (macOS)",
     "Minecraft Mods", "Hardware", "Android App", "iOS App", "Other"
   ].freeze
+  USER_SELECTABLE_TYPES = (AVAILABLE_CATEGORIES - [ "Hardware" ]).freeze
 
   # Hardware projects carry a build/design stage; software projects leave
   # hardware_stage nil. Drives the Lookout screen-recording flow on the project
@@ -257,6 +258,7 @@ class Project < ApplicationRecord
   # allows nil, but not "").
   normalizes :hardware_stage, with: ->(value) { value.presence }
   validates :hardware_stage, inclusion: { in: HARDWARE_STAGES }, allow_nil: true
+  validates :project_type, inclusion: { in: AVAILABLE_CATEGORIES }, allow_nil: true
   validate :hardware_stage_locked_after_funding_request
 
   def hardware_stage_locked_after_funding_request

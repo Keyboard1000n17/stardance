@@ -16,6 +16,9 @@ application.register("bio-editor", BioEditorController);
 import BulkSelectController from "./bulk_select_controller";
 application.register("bulk-select", BulkSelectController);
 
+import CardLinkController from "./card_link_controller";
+application.register("card-link", CardLinkController);
+
 import Certification__FeedbackTemplatesController from "./certification/feedback_templates_controller";
 application.register(
   "certification--feedback-templates",
@@ -25,10 +28,22 @@ application.register(
 import Certification__QueueController from "./certification/queue_controller";
 application.register("certification--queue", Certification__QueueController);
 
+import Certification__ScreenshotCheckController from "./certification/screenshot_check_controller";
+application.register(
+  "certification--screenshot-check",
+  Certification__ScreenshotCheckController,
+);
+
 import Certification__VideoDropController from "./certification/video_drop_controller";
 application.register(
   "certification--video-drop",
   Certification__VideoDropController,
+);
+
+import Certification__Ships__MonitorChartController from "./certification/ships/monitor_chart_controller";
+application.register(
+  "certification--ships--monitor-chart",
+  Certification__Ships__MonitorChartController,
 );
 
 import Certification__Ysws__CompleteReviewController from "./certification/ysws/complete_review_controller";
@@ -139,6 +154,9 @@ application.register("feed-engagement", FeedEngagementController);
 import FeedKeyboardController from "./feed_keyboard_controller";
 application.register("feed-keyboard", FeedKeyboardController);
 
+import FeedTabsController from "./feed_tabs_controller";
+application.register("feed-tabs", FeedTabsController);
+
 import FileUploadController from "./file_upload_controller";
 application.register("file-upload", FileUploadController);
 
@@ -174,6 +192,9 @@ application.register("lookout-recorder", LookoutRecorderController);
 
 import MarkdownPreviewController from "./markdown_preview_controller";
 application.register("markdown-preview", MarkdownPreviewController);
+
+import MentionAutocompleteController from "./mention_autocomplete_controller";
+application.register("mention-autocomplete", MentionAutocompleteController);
 
 import MissionGuideLanguageController from "./mission_guide_language_controller";
 application.register("mission-guide-language", MissionGuideLanguageController);
