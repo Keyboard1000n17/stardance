@@ -344,7 +344,7 @@ module Certification
     private_class_method :median_value
 
     # Stardust earned per completed review
-    REVIEW_BOUNTY = 1.0 # This will be updated once we add the project types.
+    REVIEW_BOUNTY = 1.25 # This will be updated once we add the project types.
 
     before_save :stamp_claimed_at, if: -> { will_save_change_to_reviewer_id? && reviewer_id.present? && claimed_at.nil? }
     before_save :stamp_decided_at, if: -> { will_save_change_to_status? && status_change&.last != "pending" && decided_at.nil? }
