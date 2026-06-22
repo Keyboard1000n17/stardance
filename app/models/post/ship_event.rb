@@ -35,6 +35,7 @@
 class Post::ShipEvent < ApplicationRecord
   include Postable
   include Ledgerable
+  include Post::ShipEvent::Payouts
   include SemanticSearchIndexable
   semantic_search_indexable type: "ship"
 
@@ -113,6 +114,7 @@ class Post::ShipEvent < ApplicationRecord
     project.posts.of_devlogs(join: true)
            .where("posts.created_at >= ? AND posts.created_at <= ?", ship_window_start_time, post.created_at)
            .where(post_devlogs: { deleted_at: nil })
+           .then { |scope| project.hardware? ? scope.where(post_devlogs: { phase: "build" }) : scope }
            .sum("post_devlogs.duration_seconds")
            .to_f / 3600
   end

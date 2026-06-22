@@ -57,6 +57,7 @@ class Vote < ApplicationRecord
   has_paper_trail on: [ :create, :update, :destroy ]
 
   after_commit :increment_user_vote_balance, on: :create
+  after_commit :refresh_ship_event_payout_later, on: [ :create, :destroy ]
   after_create_commit :send_gorse_vote_later
 
   scope :payout_countable, -> { all }
@@ -97,6 +98,10 @@ class Vote < ApplicationRecord
 
   def increment_user_vote_balance
     user.increment!(:vote_balance, 1)
+  end
+
+  def refresh_ship_event_payout_later
+    ShipEventPayoutRefreshJob.perform_later
   end
 
   def send_gorse_vote_later
