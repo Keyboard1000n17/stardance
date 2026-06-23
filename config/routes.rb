@@ -532,6 +532,7 @@ Rails.application.routes.draw do
   get "rng/history", to: "daily_rolls#history", as: :rng_history
   delete "daily_roll/clear", to: "daily_rolls#clear", as: :clear_daily_roll if Rails.env.development? || Rails.env.test?
   namespace :home do
+    resource :discover_rail, only: [ :show ]
     resource :feed, only: [ :show ]
   end
 

@@ -37,6 +37,6 @@
   </main>
 
   <% if current_user.present? %>
-    <%= render DiscoverRailComponent.new %>
+    <%= turbo_frame_tag "home_discover_rail", src: home_discover_rail_path %>
   <% end %>
 </div>
