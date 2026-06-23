@@ -493,14 +493,6 @@
     z-index: 100;
     border-radius: var(--border-radius);
     box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-
-    em-emoji-picker {
-      --rgb-background: 52, 54, 81;
-      --rgb-input: 96, 102, 132;
-      --rgb-color: 255, 255, 255;
-      --font-family: "Exo 2", sans-serif;
-      max-height: 340px;
-    }
   }
 
   &__emote-suggestions {
