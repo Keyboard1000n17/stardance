@@ -8,7 +8,10 @@ class OneTime::BackfillVoteAutoDiscardsJob < ApplicationJob
   end
 
   def perform(batch_size: 1_000)
-    return unless defined?(Secrets::VoteAutoDiscarder)
+    unless vote_auto_discarder_available?
+      Rails.logger.warn "[OneTime::BackfillVoteAutoDiscards] Skipped because Secrets::VoteAutoDiscarder is unavailable"
+      return 0
+    end
 
     count = 0
 
@@ -18,5 +21,11 @@ class OneTime::BackfillVoteAutoDiscardsJob < ApplicationJob
     end
 
     Rails.logger.info "[OneTime::BackfillVoteAutoDiscards] Enqueued #{count} vote auto-discard jobs"
+    count
   end
+
+  private
+    def vote_auto_discarder_available?
+      "Secrets::VoteAutoDiscarder".safe_constantize.present?
+    end
 end
