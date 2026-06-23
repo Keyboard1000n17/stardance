@@ -153,16 +153,6 @@
     font-weight: 600;
     border: 1px solid var(--card-border);
     color: var(--muted);
-
-    &--stardust {
-      border-color: rgba(255, 229, 100, 0.5);
-      color: var(--color-brand-yellow);
-
-      .currency-icon {
-        width: 14px;
-        height: 14px;
-      }
-    }
   }
 
   &__briefing-rubric {
@@ -741,33 +731,6 @@
     font-size: 1.1rem;
   }
 
-  &__description {
-    margin: 0 0 var(--space-s);
-    line-height: 1.5;
-  }
-
-  &__links {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: var(--space-xxs) var(--space-m);
-    font-size: 0.95rem;
-
-    dt {
-      font-weight: 600;
-      color: var(--muted);
-    }
-
-    dd {
-      margin: 0;
-      overflow-wrap: break-word;
-      min-width: 0;
-    }
-
-    a {
-      color: var(--color-brand-mint);
-    }
-  }
-
   &__meta {
     display: grid;
     grid-template-columns: auto 1fr;
@@ -782,58 +745,6 @@
     dd {
       margin: 0;
     }
-  }
-
-  &__devlogs {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-m);
-  }
-
-  &__devlog {
-    padding-top: var(--space-m);
-    border-top: 1px solid var(--card-border);
-
-    &:first-child {
-      padding-top: 0;
-      border-top: 0;
-    }
-  }
-
-  &__devlog-header {
-    display: flex;
-    align-items: center;
-    gap: var(--space-s);
-    margin-bottom: var(--space-xs);
-    font-size: 0.85rem;
-  }
-
-  &__devlog-author {
-    font-weight: 600;
-  }
-
-  &__devlog-time {
-    color: var(--muted);
-  }
-
-  &__devlog-body {
-    margin: 0;
-    line-height: 1.5;
-    font-size: 0.95rem;
-  }
-
-  &__devlog-media {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-s);
-    margin-top: var(--space-s);
-  }
-
-  &__devlog-img {
-    max-width: 300px;
-    max-height: 200px;
-    border-radius: 8px;
-    object-fit: cover;
   }
 
   &__rubric-body {

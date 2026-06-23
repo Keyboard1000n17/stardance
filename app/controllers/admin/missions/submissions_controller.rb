@@ -10,11 +10,11 @@ module Admin
 
       def overview
         authorize Mission::Submission, :index?
-        @missions = if current_user.admin? || current_user.has_role?(:helper) || current_user.has_role?(:mission_reviewer)
-                      Mission.enabled.order(:name)
-                    else
-                      Mission.enabled.where(id: current_user.mission_memberships.select(:mission_id)).order(:name)
-                    end
+        @missions = if global_reviewer?
+          Mission.enabled.order(:name)
+        else
+          Mission.enabled.where(id: current_user.mission_memberships.select(:mission_id)).order(:name)
+        end
 
         pending_counts = Mission::Submission
                            .where(status: "pending", deleted_at: nil)
@@ -60,7 +60,6 @@ module Admin
       def show
         authorize @submission
         @reviewed_today = Mission::Submission.reviewed_today(current_user, mission: @mission)
-        @devlogs = load_devlogs_since_last_ship
         @versions = @submission.versions.order(created_at: :asc).to_a
         whodunnit_ids = @versions.map(&:whodunnit).compact.uniq
         @whodunnit_users = User.where(id: whodunnit_ids).index_by { |u| u.id.to_s }
@@ -178,9 +177,15 @@ module Admin
       end
 
       def accessible_mission?(mission)
-        return true if current_user.admin? || current_user.has_role?(:helper) || current_user.has_role?(:mission_reviewer)
+        return true if global_reviewer?
 
         mission.memberships.exists?(user_id: current_user.id)
+      end
+
+      # Admins, helpers, and global mission reviewers can review any mission;
+      # everyone else is scoped to missions they're a member of.
+      def global_reviewer?
+        current_user.admin? || current_user.has_role?(:helper) || current_user.has_role?(:mission_reviewer)
       end
 
       def set_submission
@@ -206,25 +211,6 @@ module Admin
 
       def parse_skip_ids
         params[:skip].to_s.split(",").map(&:to_i).reject(&:zero?)
-      end
-
-      def load_devlogs_since_last_ship
-        project = @submission.ship_event&.post&.project
-        return [] unless project
-
-        previous_ship = project.posts
-          .where(postable_type: "Post::ShipEvent")
-          .where.not(postable_id: @submission.ship_event_id)
-          .order(created_at: :desc)
-          .first
-
-        scope = project.posts
-          .where(postable_type: "Post::Devlog")
-          .includes(:user, postable: { attachments_attachments: :blob })
-          .order(created_at: :desc)
-
-        scope = scope.where("posts.created_at > ?", previous_ship.created_at) if previous_ship
-        scope.limit(50).to_a
       end
 
       def apply_filters(scope)
