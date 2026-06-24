@@ -3,8 +3,17 @@
 class StreakBadgeComponent < ViewComponent::Base
   attr_reader :user
 
-  def initialize(user:)
+  TIERS = [
+    { min: 10, icon: "streak/10day.png" },
+    { min: 7,  icon: "streak/7day.png" },
+    { min: 5,  icon: "streak/5day.png" },
+    { min: 3,  icon: "streak/3day.png" },
+    { min: 1,  icon: "streak/1day.png" }
+  ].freeze
+
+  def initialize(user:, size: :default)
     @user = user
+    @size = size
   end
 
   def render?
@@ -17,5 +26,20 @@ class StreakBadgeComponent < ViewComponent::Base
 
   def streak_days
     @streak_days ||= user.current_streak
+  end
+
+  def css_classes
+    classes = ["streak-badge"]
+    classes << "streak-badge--shooting" if shooting?
+    classes << "streak-badge--large" if @size == :large
+    classes.join(" ")
+  end
+
+  def shooting?
+    streak_days >= 10
+  end
+
+  def icon_path
+    TIERS.find { |t| streak_days >= t[:min] }[:icon]
   end
 end
