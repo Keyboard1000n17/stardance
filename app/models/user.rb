@@ -40,6 +40,7 @@
 #  shop_region                      :enum
 #  shop_tutorial_completed_at       :datetime
 #  shop_tutorial_started_at         :datetime
+#  streak_synced_at                 :datetime
 #  synced_at                        :datetime
 #  things_dismissed                 :string           default([]), not null, is an Array
 #  timezone                         :string

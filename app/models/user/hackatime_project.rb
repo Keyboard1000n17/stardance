@@ -34,12 +34,13 @@ class User::HackatimeProject < ApplicationRecord
   validate :project_not_already_linked, if: :project_id_changed?
   validate :not_used_in_devlog, if: :project_id_changed?
 
-  after_commit :enqueue_streak_backfill, if: -> { saved_change_to_project_id? && project_id.present? }
+  after_commit :enqueue_streak_resync, if: -> { saved_change_to_project_id? && project_id.present? }
 
   private
 
-  def enqueue_streak_backfill
-    StreakBackfillJob.perform_later(user_id)
+  def enqueue_streak_resync
+    user.update_column(:streak_synced_at, nil)
+    StreakSyncJob.perform_later(user_id)
   end
 
   def project_not_already_linked

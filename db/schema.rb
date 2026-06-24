@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_23_151542) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_24_150253) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -1360,6 +1360,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_151542) do
     t.datetime "shop_tutorial_completed_at"
     t.datetime "shop_tutorial_started_at"
     t.string "slack_id"
+    t.datetime "streak_synced_at"
     t.datetime "synced_at"
     t.string "things_dismissed", default: [], null: false, array: true
     t.string "timezone"
