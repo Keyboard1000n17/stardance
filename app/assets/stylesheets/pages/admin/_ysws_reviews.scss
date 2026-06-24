@@ -2301,3 +2301,68 @@ body:has(.certification-ysws) {
     display: none !important;
   }
 }
+
+// Reviewer stats banner lazy-loaded into the review queue index.
+.ysws-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-m);
+  margin-block: var(--space-l);
+
+  @media (max-width: 960px) {
+    grid-template-columns: 1fr;
+  }
+
+  &__panel {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: var(--border-radius);
+    padding: var(--space-m);
+  }
+
+  &__heading {
+    margin: 0 0 var(--space-s);
+    font-size: var(--font-size-l);
+    color: var(--color-brand-off-white);
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      padding: var(--space-xs) var(--space-s);
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    th {
+      font-size: var(--font-size-xs);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  &__col-rank {
+    width: 2.5rem;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  &__col-num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__chart {
+    position: relative;
+    height: 280px;
+  }
+
+  &__empty,
+  &__loading {
+    color: rgba(255, 255, 255, 0.6);
+    font-style: italic;
+  }
+}

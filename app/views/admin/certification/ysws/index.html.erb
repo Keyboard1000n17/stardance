@@ -3,6 +3,10 @@
 <main class="ysws-queue" role="main">
   <h1>YSWS Review Queue</h1>
 
+  <%= turbo_frame_tag "ysws_dashboard", src: admin_certification_ysws_dashboard_path, loading: "lazy" do %>
+    <p class="ysws-dashboard__loading">Loading reviewer stats…</p>
+  <% end %>
+
   <% if @reviews.any? %>
     <div class="ysws-queue__summary" role="status" aria-live="polite">
       <span class="ysws-queue__summary-label">Pending reviews</span>

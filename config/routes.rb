@@ -805,6 +805,7 @@ Rails.application.routes.draw do
       get "devlogs/:devlog_id/commits", to: "devlog_commits#index", as: "devlog_commits"
 
       get "review", to: "ysws#index", as: "ysws_reviews"
+      get "review/dashboard", to: "ysws/dashboard#show", as: "ysws_dashboard"
       get "review/:id", to: "ysws#show", as: "ysws_review"
       get "review/:id/commits", to: "ysws#commits", as: "ysws_commits"
       post "review/:id/report_fraud", to: "ysws#report_fraud", as: "ysws_report_fraud"
