@@ -181,6 +181,7 @@ Guide = Data.define(:slug, :title, :description, :category, :icon, :reading_minu
       slug: :software,
       title: "Software in Stardance 101",
       description: "Step-by-step on how to make software projects in Stardance!",
+      category: :craft,
       icon: "rocket",
       reading_minutes: 2,
       related: %i[github_repository, hackatime, good_git_commits, devlogs, what_is_shipping, how_to_ship],
