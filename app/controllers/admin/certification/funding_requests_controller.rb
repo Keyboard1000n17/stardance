@@ -48,6 +48,7 @@ class Admin::Certification::FundingRequestsController < Admin::Certification::Ap
                   notice: "#{verb} funding for “#{@funding_request.project.title}.” That's #{count} reviewed today. Keep going!"
     else
       @reviewed_today = ::Certification::FundingRequest.reviewed_today(current_user)
+      @lapse_timelapses = lapse_timelapses_for_review
       render :show, status: :unprocessable_entity
     end
   end
