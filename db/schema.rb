@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_24_150253) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_24_203854) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_stat_statements"
@@ -1336,6 +1336,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_24_150253) do
     t.text "banned_reason"
     t.text "bio"
     t.datetime "created_at", null: false
+    t.integer "current_streak", default: 0, null: false
     t.string "display_name"
     t.string "email"
     t.string "enriched_ref"
