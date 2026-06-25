@@ -611,6 +611,16 @@ dialog {
   padding: var(--space-m);
   margin-top: var(--space-m);
 
+  // When audit-log is used inside admin-section it acts as a layout helper
+  // only — strip its standalone container styles to avoid double borders/bg.
+  .audit-log {
+    margin-top: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    overflow: visible; // no clipping needed — parent card handles it
+  }
+
   &--highlighted {
     border: 2px solid var(--color-brand-yellow);
     background: rgba(255, 229, 100, 0.06);
@@ -710,7 +720,8 @@ dialog {
   border: 1px solid var(--color-space-border);
   border-radius: 8px;
   background: var(--color-space-surface-faint);
-  overflow: hidden;
+  overflow-y: hidden;  // clip table corners to card border-radius
+  overflow-x: auto;   // horizontal scroll at the card level, not in a nested box
 }
 
 .audit-log__header {
@@ -734,7 +745,7 @@ dialog {
 }
 
 .audit-log__table-wrap {
-  overflow-x: auto;
+  // overflow-x is handled by the parent .audit-log to avoid a nested scroll context
 }
 
 .audit-log__table {
@@ -912,6 +923,77 @@ dialog {
   padding: var(--space-m);
   text-align: center;
   font-style: italic;
+}
+
+/* ── Audit log filter form ───────────────────────────────────────── */
+
+.admin-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-s);
+}
+
+.admin-filters__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-s);
+
+  &--inline {
+    align-items: center;
+  }
+}
+
+.admin-filters__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  flex: 1;
+}
+
+.admin-filters__label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-space-text-muted);
+
+  &--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: var(--space-xs);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: var(--font-size-s);
+    color: var(--color-space-text);
+    cursor: pointer;
+  }
+}
+
+.admin-filters__input,
+.admin-filters__select {
+  padding: var(--space-xs) var(--space-s);
+  background: var(--color-set-2-bg);
+  border: 1px solid var(--color-space-border);
+  border-radius: 6px;
+  color: var(--color-space-text);
+  font-size: var(--font-size-s);
+  font-family: inherit;
+  outline: none;
+
+  &:focus {
+    border-color: var(--color-brand-highlight);
+  }
+
+  &::placeholder {
+    color: var(--color-space-text-muted);
+  }
+}
+
+.admin-filters__actions {
+  display: flex;
+  gap: var(--space-xs);
+  padding-top: var(--space-xs);
 }
 
 /* ── Fraud dashboard ─────────────────────────────────────────────── */
