@@ -22,6 +22,7 @@ class Admin::UsersController < Admin::ApplicationController
     authorize @user
 
     @all_projects = @user.projects.with_deleted.order(deleted_at: :desc)
+    @audit_pagy, @audit_versions = pagy(:offset, @user.versions.order(created_at: :desc), limit: 25)
   end
 
   def update
