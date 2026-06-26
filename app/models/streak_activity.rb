@@ -72,8 +72,11 @@ class StreakActivity < ApplicationRecord
         record.update!(coded_seconds: seconds)
       end
 
+      first_sync = last_synced.nil?
+      previous_streak = user.current_streak
       user.update_column(:streak_synced_at, Time.current)
       user.recalculate_streak!
+      SetSlackStreakStatusJob.perform_later(user.id, previous_streak: previous_streak) unless first_sync
     end
 
     def streak_date_for(time, timezone)
