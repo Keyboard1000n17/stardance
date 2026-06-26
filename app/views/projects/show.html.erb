@@ -440,6 +440,17 @@
               <div class="project-show__panel-actions">
                 <%= render "projects/fire_controls", project: @project %>
 
+                <% if @project.repo_url.present? %>
+                  <%= link_to @project.repo_url,
+                              class: "project-show__pill project-show__pill--outline project-show__pill--github",
+                              target: "_blank",
+                              rel: "noopener noreferrer",
+                              aria: { label: "View source on GitHub" } do %>
+                    <%= inline_svg_tag "icons/github.svg", class: "project-show__github-icon" %>
+                    Source
+                  <% end %>
+                <% end %>
+
                 <% if can_edit_project %>
                   <%= link_to "Edit project", project_path(@project, editing: true),
                               class: "project-show__pill project-show__pill--outline",
