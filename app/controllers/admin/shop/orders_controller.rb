@@ -38,7 +38,7 @@ class Admin::Shop::OrdersController < Admin::ApplicationController
     end
 
     # Base query
-    orders = ShopOrder.includes(:shop_item, :user, :accessory_orders, :assigned_to_user)
+    orders = ShopOrder.includes(:shop_item, { user: :projects }, :accessory_orders, :assigned_to_user)
 
     # Apply status filter first if explicitly set (takes priority over view)
     if params[:status].present?
