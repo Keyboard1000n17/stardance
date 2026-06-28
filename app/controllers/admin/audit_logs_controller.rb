@@ -5,10 +5,10 @@ module Admin
     def index
       authorize ::PaperTrail::Version
 
-      @versions = ::PaperTrail::Version.all
+      @versions = ::PaperTrail::Version.order(created_at: :desc)
 
       # Show system activities by default; opt out via checkbox
-      @show_system = params[:show_system] != "0"
+      @show_system = params[:show_system] == "1"
       @versions = @versions.where.not(whodunnit: nil) unless @show_system
 
       # Apply filters

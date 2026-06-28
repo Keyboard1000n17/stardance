@@ -35,10 +35,6 @@
           <span class="aorder__row-label">Reviewers</span>
           <span class="aorder__row-value"><strong><%= @run.lines.count %></strong></span>
         </div>
-        <div class="aorder__row">
-          <span class="aorder__row-label">Tickets per order</span>
-          <span class="aorder__row-value"><%= FraudPayoutRun::TICKETS_PER_ORDER %> <%= stardust_icon %></span>
-        </div>
         <% if @run.approved? && @run.approved_by_user %>
           <div class="aorder__row">
             <span class="aorder__row-label">Approved by</span>

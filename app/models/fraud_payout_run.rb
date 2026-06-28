@@ -23,7 +23,6 @@ class FraudPayoutRun < ApplicationRecord
   has_many :lines, class_name: "FraudPayoutLine", dependent: :destroy
   belongs_to :approved_by_user, class_name: "User", optional: true
 
-  TICKETS_PER_ORDER = 2
   REVIEW_STATES = %w[awaiting_periodical_fulfillment rejected on_hold].freeze
 
   # Base scope for PaperTrail versions that could represent a fraud review.

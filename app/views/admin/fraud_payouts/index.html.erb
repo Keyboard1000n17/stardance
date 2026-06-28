@@ -52,7 +52,7 @@
           <tbody>
             <% @leaderboard.each_with_index do |row, index| %>
               <% is_me = row[:user] == current_user.id %>
-              <tr<%= is_me ? ' style="background: rgba(149,219,255,0.08);"'.html_safe : "" %>>
+              <tr class="<%= "fraud-leaderboard__row--me" if is_me %>">
                 <td style="color: var(--color-space-text-muted);"><%= index + 1 %></td>
                 <td>
                   <%= row[:user_record]&.display_name || "User ##{row[:user]}" %>

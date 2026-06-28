@@ -2,10 +2,10 @@ class SendSlackDmJob < ApplicationJob
   queue_as :latency_5m
 
   def perform(recipient_id, message = nil, blocks_path: nil, locals: {}, thread_ts: nil, sent_by_id: nil)
-    # if Rails.env.development?
-    #   record_message(recipient_id, message, blocks_path, sent_by_id)
-    #   return
-    # end
+    if Rails.env.development?
+      record_message(recipient_id, message, blocks_path, sent_by_id)
+      return
+    end
 
     client = Slack::Web::Client.new(token: Rails.application.credentials.dig(:slack, :bot_token))
 

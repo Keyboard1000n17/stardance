@@ -73,3 +73,8 @@
     gap: 1rem;
   }
 }
+
+// Highlights the signed-in reviewer's own row in the bracket standings table.
+.fraud-leaderboard__row--me {
+  background: rgba(149, 219, 255, 0.08);
+}
