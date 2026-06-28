@@ -24,6 +24,7 @@
 #  created_at                         :datetime         not null
 #  updated_at                         :datetime         not null
 #  assigned_to_user_id                :bigint
+#  fraud_payout_line_id               :bigint
 #  fraud_related_project_id           :bigint
 #  fulfillment_payout_line_id         :bigint
 #  parent_order_id                    :bigint
