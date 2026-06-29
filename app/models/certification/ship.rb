@@ -304,37 +304,23 @@ module Certification
         .count
     end
 
-    def self.rank_for_reviewer_with_count(reviewer_id, new_count, now: Time.current)
-      other_counts = where.not(reviewer_id: [ nil, reviewer_id ])
-                       .where.not(status: :pending)
-                       .where(decided_at: now.beginning_of_day..)
-                       .joins(:reviewer)
-                       .group(:reviewer_id, "users.display_name")
-                       .order(Arel.sql("COUNT(*) DESC"), Arel.sql("users.display_name ASC"))
-                       .count
+    MILESTONE_TIERS = [
+      { min: 40, multiplier: 2.0 },
+      { min: 20, multiplier: 1.75 },
+      { min: 10, multiplier: 1.5 },
+      { min: 5,  multiplier: 1.25 },
+      { min: 0,  multiplier: 1.0 }
+    ].freeze
 
-      reviewer_name = where(reviewer_id: reviewer_id)
-                       .joins(:reviewer)
-                       .where(decided_at: now.beginning_of_day..)
-                       .where.not(status: :pending)
-                       .pick("users.display_name") || ""
-
-      list = other_counts.map { |(rid, name), count| { id: rid, name: name, count: count } }
-      list << { id: reviewer_id, name: reviewer_name, count: new_count }
-
-      sorted = list.sort_by { |item| [ -item[:count], item[:name] || "" ] }
-
-      index = sorted.index { |item| item[:id] == reviewer_id }
-      index ? index + 1 : 1
+    def self.multiplier_for_milestone(total_count)
+      MILESTONE_TIERS.find { |t| total_count >= t[:min] }&.dig(:multiplier) || 1.0
     end
 
-    def self.multiplier_for_rank(rank)
-      case rank
-      when 1 then 1.75
-      when 2 then 1.5
-      when 3 then 1.25
-      else 1.0
-      end
+    def self.next_milestone(total_count)
+      thresholds = [ 5, 10, 20, 40 ]
+      next_thresh = thresholds.find { |t| t > total_count }
+      return nil if next_thresh.nil?
+      { threshold: next_thresh, multiplier: multiplier_for_milestone(next_thresh), reviews_needed: next_thresh - total_count }
     end
 
     def self.median_value(sorted)
@@ -360,13 +346,11 @@ module Certification
     private
 
     def assign_stardust_earned
-      now = Time.current
-      my_count = Certification::Ship.where(reviewer_id: reviewer_id)
-                                    .where.not(status: :pending)
-                                    .where(decided_at: now.beginning_of_day..)
-                                    .count
-      rank = Certification::Ship.rank_for_reviewer_with_count(reviewer_id, my_count + 1, now: now)
-      multiplier = Certification::Ship.multiplier_for_rank(rank)
+      prior_count = Certification::Ship.where(reviewer_id: reviewer_id)
+                                       .where.not(status: :pending)
+                                       .count
+      total_count = prior_count + 1
+      multiplier = Certification::Ship.multiplier_for_milestone(total_count)
       self.stardust_earned = REVIEW_BOUNTY * multiplier
     end
 

@@ -70,9 +70,9 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def show
     authorize @ship
-    @reviewed_today = ::Certification::Ship.reviewed_today(current_user)
-    @next_rank = ::Certification::Ship.rank_for_reviewer_with_count(current_user.id, @reviewed_today + 1)
-    @next_multiplier = ::Certification::Ship.multiplier_for_rank(@next_rank)
+    @total_reviews = ::Certification::Ship.where(reviewer_id: current_user.id).where.not(status: :pending).count
+    @current_multiplier = ::Certification::Ship.multiplier_for_milestone(@total_reviews)
+    @next_milestone = ::Certification::Ship.next_milestone(@total_reviews)
   end
 
   def report_fraud
@@ -130,7 +130,9 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
         load_hardware_review_context
         render "admin/certification/hardware_reviews/show", status: :unprocessable_entity
       else
-        @reviewed_today = ::Certification::Ship.reviewed_today(current_user)
+        @total_reviews = ::Certification::Ship.where(reviewer_id: current_user.id).where.not(status: :pending).count
+        @current_multiplier = ::Certification::Ship.multiplier_for_milestone(@total_reviews)
+        @next_milestone = ::Certification::Ship.next_milestone(@total_reviews)
         render :show, status: :unprocessable_entity
       end
     end
