@@ -18,6 +18,31 @@ class DailyRollsController < ApplicationController
     end
   end
 
+  # The earned second roll: unlocked once the user has coded > 1 min today on
+  # a linked Stardance project. Its value is added to the first roll (their
+  # board number becomes the sum), so coding can only ever help.
+  def reroll
+    authorize :daily_roll
+
+    roll = current_user && DailyRoll.for_today(current_user)
+    just_rerolled = false
+
+    if reroll_allowed?(roll)
+      # Conditional update so a double-click can't stack a second reroll.
+      just_rerolled = DailyRoll.where(id: roll.id, reroll_value: nil)
+                               .update_all(reroll_value: DailyRoll.random_value, updated_at: Time.current).positive?
+      roll.reload
+    end
+
+    # Nothing to show if they were never eligible (also blocks a direct POST).
+    head :forbidden and return unless roll&.rerolled?
+
+    respond_to do |format|
+      format.turbo_stream { render turbo_stream: reroll_streams(roll, just_rerolled) }
+      format.html { redirect_back fallback_location: rng_path }
+    end
+  end
+
   # Dev/test only (see routes): wipe today's roll so the reveal can be
   # re-tested without waiting for midnight.
   def clear
@@ -30,6 +55,10 @@ class DailyRollsController < ApplicationController
 
   def leaderboard
     authorize :daily_roll
+
+    # Refresh today's coding time (throttled) so a reroll unlocks promptly for
+    # someone who lands straight on /rng after coding.
+    current_user&.sync_streak_if_stale! if Flipper.enabled?(:rng_reroll, current_user)
 
     @body_class = "app-layout-page"
     @today = Date.current
@@ -53,7 +82,7 @@ class DailyRollsController < ApplicationController
       @anonymous_roll = AnonymousRoll.new(cookies).today
     end
 
-    record = DailyRoll.order(value: :desc, created_at: :asc).includes(:user).first
+    record = DailyRoll.ranked.includes(:user).first
     # Today's leader is already on the podium; the record line is only
     # interesting when it points somewhere else.
     @record = record if record && record.rolled_on != @today
@@ -101,6 +130,32 @@ class DailyRollsController < ApplicationController
                            locals: { roll: roll, just_rolled: just_rolled, anonymous: true }) ]
   end
 
+  # Server-side gate for the reroll (never trust the button's state): signed
+  # in, feature live, has rolled today, hasn't already rerolled, and has coded
+  # past the unlock threshold today on a linked Stardance project.
+  def reroll_allowed?(roll)
+    current_user.present? &&
+      Flipper.enabled?(:rng_reroll, current_user) &&
+      roll.present? && !roll.rerolled? &&
+      current_user.streak_today_activity&.coded_seconds.to_i > DailyRoll::REROLL_MIN_SECONDS
+  end
+
+  # Replace both rng surfaces with the post-reroll state; just_rerolled drives
+  # the digit-reveal animation up to the new summed total.
+  def reroll_streams(roll, just_rerolled)
+    [
+      turbo_stream.replace(
+        "daily-roll-widget",
+        DiscoverRail::DailyRollWidget.new(user: current_user, context: { just_rolled: just_rerolled }).render_in(view_context)
+      ),
+      turbo_stream.replace(
+        "rng-hero",
+        partial: "daily_rolls/hero",
+        locals: { roll: roll, just_rolled: just_rerolled }
+      )
+    ]
+  end
+
   # rng ships with the week 2 release; until then it 404s for everyone.
   def require_week_2_release
     head :not_found unless Flipper.enabled?(:week_2_release, current_user)
@@ -116,9 +171,10 @@ class DailyRollsController < ApplicationController
 
   def viewer_stats
     rolls = DailyRoll.where(user: current_user)
-    best, worst = rolls.order(value: :desc, created_at: :asc).first, rolls.order(value: :asc, created_at: :asc).first
+    best = rolls.ranked.first
+    worst = rolls.order(Arel.sql("(#{DailyRoll::TOTAL_SQL}) ASC, daily_rolls.created_at ASC")).first
     return nil unless best
 
-    { best: best, worst: worst, count: rolls.count, total: rolls.sum(:value) }
+    { best: best, worst: worst, count: rolls.count, total: rolls.sum(Arel.sql(DailyRoll::TOTAL_SQL)) }
   end
 end

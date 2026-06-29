@@ -3,7 +3,7 @@
          aria-label="rng"
          data-controller="daily-roll"
          data-daily-roll-just-rolled-value="<%= just_rolled? %>"
-         data-daily-roll-value-value="<%= roll&.value %>">
+         data-daily-roll-value-value="<%= roll&.total %>">
   <h3 class="rail-widget__title">rng</h3>
 
   <% if rolled? %>
@@ -32,6 +32,24 @@
               data-tooltip-message-value="Click to copy"
               data-copy-text-value="<%= helpers.roll_share_text(roll) %>"
               data-action="click->copy#copy">copy to share</button>
+
+      <% if helpers.reroll_enabled?(user) %>
+        <% case helpers.reroll_state(user, roll) %>
+        <% when :unlocked %>
+          <%# Turbo Drive is off app-wide; opt in so the reveal animation runs. %>
+          <%= button_to "reroll", reroll_daily_roll_path,
+                        class: "action-btn action-btn--primary action-btn--small daily-roll-widget__reroll",
+                        form: { data: { turbo: true } },
+                        data: { turbo_submits_with: "rerolling…" } %>
+        <% when :locked %>
+          <%= render ActionButtonComponent.new(
+                text: "reroll 🔒", size: :small, type: :button, disabled: :soft,
+                class: "daily-roll-widget__reroll",
+                data: { controller: "tooltip", tooltip_message_value: helpers.reroll_locked_hint(user) }) %>
+        <% when :used %>
+          <span class="daily-roll-widget__reroll-note">rerolled +<%= number_with_delimiter(roll.reroll_value) %></span>
+        <% end %>
+      <% end %>
     </div>
   <% end %>
 

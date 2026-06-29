@@ -56,7 +56,7 @@
               <%= image_tag roll.user.avatar, alt: "", class: "rng-board__pedestal-avatar" %>
               <%= link_to roll.user.display_name, profile_path(roll.user.display_name), class: "rng-board__pedestal-name" %>
               <% if current_user&.id == roll.user_id %><span class="rng-board__you-tag">you</span><% end %>
-              <span class="rng-board__pedestal-value"><%= formatted_roll_value(roll.value) %></span>
+              <span class="rng-board__pedestal-value"><%= formatted_roll_value(roll.total) %></span>
             </div>
           <% end %>
         </div>
@@ -100,7 +100,7 @@
         <p class="rng-board__alltime">
           All-time best:
           <%= link_to @record.user.display_name, profile_path(@record.user.display_name), class: "rng-board__alltime-name" %>
-          <span class="rng-board__alltime-value"><%= formatted_roll_value(@record.value) %></span>
+          <span class="rng-board__alltime-value"><%= formatted_roll_value(@record.total) %></span>
           on <%= link_to rng_date_label(@record.rolled_on, today: @today), rng_date_path(@record.rolled_on, today: @today), class: "rng-board__alltime-date" %>
         </p>
       <% end %>

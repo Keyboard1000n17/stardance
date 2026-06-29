@@ -35,6 +35,21 @@ module User::Streakable
     streak_activities.for_date(streak_today_date).first
   end
 
+  # Kick off a streak sync at most once per 15 minutes, so any surface that
+  # reads today's coding time (the streak widget, the rng reroll gate) shows
+  # reasonably fresh data without re-syncing on every page load. The cache
+  # key is shared across surfaces so they throttle together. No-op for users
+  # without a linked Hackatime account.
+  def sync_streak_if_stale!
+    return unless hackatime_identity.present?
+
+    cache_key = "streak_sync:#{id}"
+    return if Rails.cache.read(cache_key)
+
+    Rails.cache.write(cache_key, true, expires_in: 15.minutes)
+    StreakSyncJob.perform_later(id)
+  end
+
   # Most recent day (streak-day granularity) the user logged any Hackatime
   # coding time. Read straight from streak_activities, so no live Hackatime
   # call — nil if they've never logged time on a linked project.

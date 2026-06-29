@@ -14,11 +14,11 @@
          data-controller="daily-roll"
          data-daily-roll-base-class-value="rng-hero"
          data-daily-roll-just-rolled-value="<%= just_rolled %>"
-         data-daily-roll-value-value="<%= roll&.value %>">
+         data-daily-roll-value-value="<%= roll&.total %>">
   <% if roll %>
     <span class="rng-hero__label"><%= for_today ? "Your number today" : "Your number · #{date_label}" %></span>
     <div class="rng-hero__result">
-      <span class="rng-hero__number rng-hero__number--<%= roll.tone %>" data-daily-roll-target="number"><%= just_rolled ? "✦" : formatted_roll_value(roll.value) %></span>
+      <span class="rng-hero__number rng-hero__number--<%= roll.tone %>" data-daily-roll-target="number"><%= just_rolled ? "✦" : formatted_roll_value(roll.total) %></span>
       <span class="rng-hero__burst" data-daily-roll-target="burst" aria-hidden="true"></span>
     </div>
     <p class="rng-hero__flavor"><%= roll.flavor %></p>
@@ -43,6 +43,24 @@
                   data-tooltip-message-value="Click to copy"
                   data-copy-text-value="<%= roll_share_text(roll) %>"
                   data-action="click->copy#copy">copy to share</button>
+
+          <% if reroll_enabled?(current_user) %>
+            <% case reroll_state(current_user, roll) %>
+            <% when :unlocked %>
+              <%# Turbo Drive is off app-wide; opt in so the reveal animation runs. %>
+              <%= button_to "reroll", reroll_daily_roll_path,
+                            class: "action-btn action-btn--primary action-btn--large rng-hero__reroll",
+                            form: { data: { turbo: true } },
+                            data: { turbo_submits_with: "rerolling…" } %>
+            <% when :locked %>
+              <%= render ActionButtonComponent.new(
+                    text: "reroll 🔒", type: :button, disabled: :soft,
+                    class: "rng-hero__reroll",
+                    data: { controller: "tooltip", tooltip_message_value: reroll_locked_hint(current_user) }) %>
+            <% when :used %>
+              <span class="rng-hero__reroll-note">rerolled +<%= formatted_roll_value(roll.reroll_value) %></span>
+            <% end %>
+          <% end %>
         <% end %>
       </div>
       <% if for_today && Rails.env.development? %>

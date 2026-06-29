@@ -729,6 +729,15 @@
   }
 }
 
+// "rerolled +N" — shown once the earned reroll has been spent (the number
+// above already reflects the summed total). Takes its own line in the wrap.
+.daily-roll-widget__reroll-note {
+  color: var(--color-space-text-muted);
+  flex: 1 1 100%;
+  font-size: var(--font-size-s);
+  text-align: center;
+}
+
 // The reveal is skipped in JS under reduced motion, but the CSS-driven
 // animations (idle button glow, settle pop, landing shake) need their own
 // guard.
