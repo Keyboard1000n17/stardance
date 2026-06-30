@@ -85,6 +85,7 @@ class ShopOrder < ApplicationRecord
 
   validates :quantity, presence: true, numericality: { only_integer: true, greater_than: 0 }, on: :create
   validates :frozen_address, presence: true, on: :create
+  validate :check_item_enabled, on: :create
   validate :check_one_per_person_ever_limit, on: :create
   validate :check_max_quantity_limit, on: :create
   validate :check_user_balance, on: :create
@@ -342,6 +343,10 @@ class ShopOrder < ApplicationRecord
     # price for ordinary items.
     order_region = region.presence || Shop::Regionalizable.country_to_region(frozen_address&.dig("country"))
     self.frozen_item_price = shop_item.price_for_user(user, order_region || "XX")
+  end
+
+  def check_item_enabled
+    errors.add(:base, "This item is not available for purchase.") unless shop_item.enabled?
   end
 
   def check_one_per_person_ever_limit
