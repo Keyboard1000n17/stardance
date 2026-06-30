@@ -1,8 +1,9 @@
 class Home::FeedsController < ApplicationController
   include OnboardingResumable
 
-  FEED_LIMIT = 20
+  FEED_LIMIT = 10
   RECOMMENDATION_POOL = 100 # after this, we fallback to SQL
+  GORSE_TIMEOUT = 0.75
   TABS = %w[for_you following popular newest new_builders].freeze
   FeedPage = Struct.new(:page, :limit, :offset, :next, keyword_init: true)
 
@@ -122,7 +123,7 @@ class Home::FeedsController < ApplicationController
   end
 
   def recommended_posts
-    Gorse::Recommendations.new(user: current_user).posts(limit: RECOMMENDATION_POOL)
+    recommendations.posts(limit: RECOMMENDATION_POOL)
   end
 
   def feed_pagy
@@ -257,7 +258,6 @@ class Home::FeedsController < ApplicationController
   end
 
   def load_recommended_projects
-    recommendations = Gorse::Recommendations.new(user: current_user)
     projects = recommendations.projects(limit: 6)
 
     @recommended_projects =
@@ -272,5 +272,12 @@ class Home::FeedsController < ApplicationController
 
   def first_page?
     @pagy.nil? || @pagy.page == 1
+  end
+
+  def recommendations
+    @recommendations ||= Gorse::Recommendations.new(
+      user: current_user,
+      client: Gorse::Client.new(timeout_seconds: GORSE_TIMEOUT)
+    )
   end
 end

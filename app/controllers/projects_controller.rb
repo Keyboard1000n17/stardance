@@ -174,7 +174,6 @@ class ProjectsController < ApplicationController
           can_review_payout &&
           latest_ship_event.present? &&
           latest_ship_event.certification_status == "approved" &&
-          latest_ship_event.payout.blank? &&
           !latest_ship_event.mission_submission&.rejected?
 
         is_static = latest_ship_event.mission_submission&.payout_path == "static_prize"
@@ -195,6 +194,7 @@ class ProjectsController < ApplicationController
           ratings_given: ratings_given,
           ratings_total: ratings_total,
           static_prize: is_static,
+          paid_out: latest_ship_event.payout.present?,
           estimated_payout: latest_ship_event.estimated_payout,
           review_open: latest_ship_event.payout_review_open?,
           review_deadline: latest_ship_event.payout_review_deadline,

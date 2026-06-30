@@ -13,6 +13,8 @@
   demo_url         = local_assigns.fetch(:demo_url, project.demo_url)
   repo_url         = local_assigns.fetch(:repo_url, project.repo_url)
   payout_review    = local_assigns[:payout_review]
+  media_variant    = local_assigns.fetch(:media_variant, :large)
+  lazy_media       = local_assigns.fetch(:lazy_media, false)
   engagement_data = if track_engagement
     {
       controller: "feed-engagement",
@@ -76,7 +78,11 @@
   <header class="feed-post-card__header">
     <% if author %>
       <%= link_to profile_path(author.display_name), class: "feed-post-card__avatar-link", aria: { label: "@#{author.display_name}" } do %>
-        <%= image_tag author.avatar, alt: "", class: "feed-post-card__avatar" %>
+        <%= image_tag author.avatar,
+                      alt: "",
+                      class: "feed-post-card__avatar",
+                      loading: (lazy_media ? "lazy" : nil),
+                      decoding: (lazy_media ? "async" : nil) %>
       <% end %>
     <% end %>
 
@@ -103,7 +109,10 @@
     </div>
   </header>
 
-  <%= render "shared/post_media", attachments: ship.attachments %>
+  <%= render "shared/post_media",
+        attachments: ship.attachments,
+        variant: media_variant,
+        lazy: lazy_media %>
 
   <ul class="feed-post-card__body project-show__latest-ship-stats" aria-label="Project totals">
     <li class="profile-project-card__meta-item">
@@ -149,7 +158,7 @@
                 class="project-show__latest-ship-btn"
                 onclick="document.getElementById('payout-review-modal').showModal()"
                 aria-haspopup="dialog">
-          Review payout →
+          <%= payout_review[:paid_out] ? "View rating reasons →" : "Review payout →" %>
         </button>
       <% end %>
     </div>
