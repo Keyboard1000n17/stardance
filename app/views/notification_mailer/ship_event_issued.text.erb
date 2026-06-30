@@ -21,4 +21,9 @@ You're blessed — payout includes a 20% bonus for great feedback.
 You're cursed — payout reduced by 50%. Write more detailed feedback during voting to lift the curse.
 <% end %>
 
-View balance: <%= my_balance_url %>
+<% if Flipper.enabled?(:payout_recommendations, @recipient) %><% recommended_items = ShopItem.affordable_for(@recipient, limit: 3) %><% if recommended_items.any? %>What you can grab with your stardust:
+<% recommended_items.each do |item| -%>
+- <%= item.name %> (<%= item.ticket_cost %> stardust): <%= shop_item_url(item) %>
+<% end -%>
+
+<% end %><% end %>View balance: <%= my_balance_url %>

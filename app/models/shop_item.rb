@@ -197,6 +197,24 @@ class ShopItem < ApplicationRecord
     "#{SHOP_PAGE_CACHE_KEY}/v=#{version}"
   end
 
+  # Top affordable items for a user, for payout-email recommendations. Reuses the
+  # cached shop-page set (already enabled/listed/buyable, non-prize, with stock +
+  # purchase counts preloaded) so it adds no queries. Affordability and display
+  # both use ticket_cost so the email's price always matches what it filtered on.
+  # Fails closed to [] so a payout email never breaks on a recommendation error.
+  def self.affordable_for(user, limit: 3)
+    balance = user.balance
+    cached_shop_page_data[:buyable_standalone]
+      .reject(&:is_free?)
+      .reject(&:out_of_stock?)
+      .select { |item| item.ticket_cost <= balance }
+      .sort_by { |item| -item.current_event_purchases }
+      .first(limit)
+  rescue => e
+    Rails.logger.warn("ShopItem.affordable_for failed for user #{user&.id}: #{e.message}")
+    []
+  end
+
   MANUAL_FULFILLMENT_TYPES = [
     "ShopItem::HCBGrant",
     "ShopItem::HCBPreauthGrant",
