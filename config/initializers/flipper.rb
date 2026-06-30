@@ -40,6 +40,8 @@ Rails.application.config.after_initialize do
         week_1_release
         hardware_flow
         ship_event_payouts
+        lookout
+        payout_recommendations
       ].each { |flag| Flipper.add(flag) }
     end
   rescue StandardError => e

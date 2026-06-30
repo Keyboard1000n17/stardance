@@ -478,7 +478,7 @@ Rails.application.routes.draw do
   # Voting
   get "rate/new", to: "votes#new", as: :new_rate
   resources :ship_events, only: [] do
-    resource :vote_reasons, only: :show, controller: "ship_events/vote_reasons"
+    resource :payout_acceptance, only: :create, controller: "ship_events/payout_acceptances"
   end
   resources :votes, only: [ :new, :create ] do
     resource :flag, only: :create, controller: "votes/flags"
@@ -535,7 +535,9 @@ Rails.application.routes.draw do
   get "rng/history", to: "daily_rolls#history", as: :rng_history
   delete "daily_roll/clear", to: "daily_rolls#clear", as: :clear_daily_roll if Rails.env.development? || Rails.env.test?
   namespace :home do
-    resource :discover_rail, only: [ :show ]
+    resource :discover_rail, only: [] do
+      get :streak, on: :member
+    end
     resource :feed, only: [ :show ]
   end
 
@@ -648,6 +650,7 @@ Rails.application.routes.draw do
       end
     end
     resources :payout_reviews, only: [ :index, :show ]
+    resources :ledger_entries, only: [ :index ]
     get "super_stars", to: "super_stars#show", as: :super_stars
     get "user-perms", to: "users#user_perms"
     resource :support, only: [ :show ], controller: "support/dashboards"

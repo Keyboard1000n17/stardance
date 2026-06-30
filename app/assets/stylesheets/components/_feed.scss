@@ -58,6 +58,11 @@
   width: 100%;
 }
 
+.feed-home__frame > .feed-post-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 700px;
+}
+
 .feed-loading {
   display: flex;
   flex-direction: column;
@@ -1595,6 +1600,13 @@
     flex-direction: column;
     max-height: 84vh;
     overflow: hidden;
+  }
+
+  &__lazy-content {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    min-height: 0;
   }
 
   &__header {

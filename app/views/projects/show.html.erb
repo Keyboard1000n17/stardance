@@ -489,7 +489,7 @@
           devlog_modifier_class = devlog_primary ? "project-show__action--primary" : "project-show__action--secondary"
         %>
         <nav class="project-show__actions" aria-label="Project actions">
-          <% if Flipper.enabled?(:hardware_flow, current_user) && @project.hardware? %>
+          <% if Flipper.enabled?(:hardware_flow, current_user) && @project.hardware? && !Flipper.enabled?(:lookout, current_user) %>
             <%= render "projects/record_timelapse_button",
                        project: @project,
                        disabled_message: (@hackatime_linked ? nil : "Link your Hackatime account to start recording") %>
@@ -650,7 +650,7 @@
         </nav>
       <% else %>
         <nav class="project-show__actions" aria-label="Project actions">
-          <% if Flipper.enabled?(:hardware_flow, current_user) && @project.hardware? %>
+          <% if Flipper.enabled?(:hardware_flow, current_user) && @project.hardware? && !Flipper.enabled?(:lookout, current_user) %>
             <%= render "projects/record_timelapse_button",
                        project: @project,
                        disabled_message: "Link your Hackatime account to start recording" %>
@@ -745,24 +745,26 @@
       <% time_kind = @project.hardware? ? "timelapse" : "coding" %>
       <section class="project-show__onboarding" aria-labelledby="project-show-onboarding-title">
         <header class="project-show__onboarding-header">
-          <% if onboarding_mission&.icon&.attached? %>
-            <%= image_tag onboarding_mission.icon, alt: "", class: "project-show__onboarding-image" %>
+          <% onboarding_banner = onboarding_mission&.banner&.attached? %>
+          <% onboarding_image = onboarding_banner ? onboarding_mission.banner : onboarding_mission&.icon %>
+          <% if onboarding_image&.attached? %>
+            <%= image_tag onboarding_image, alt: "", class: class_names("project-show__onboarding-image", "project-show__onboarding-image--icon" => !onboarding_banner) %>
           <% end %>
 
           <h2 class="project-show__onboarding-header-title" id="project-show-onboarding-title">
             <%= onboarding_mission ? onboarding_mission.name : (@hackatime_linked ? "You're all set — go #{verb}!" : "Welcome to your new project!") %>
           </h2>
 
-          <% if onboarding_mission&.has_guide? %>
-            <p class="project-show__onboarding-header-body">
-              Open the guide to start <%= onboarding_mission.name %>!
-            </p>
-          <% end %>
-
-          <%# Time-tracking nudge — shown for every new project, mission or not. %>
+          <%# Time-tracking nudge — shown for every new project, mission or not.
+              Suppressed under :lookout; the Track-your-time card owns this message. %>
+          <% unless Flipper.enabled?(:lookout, current_user) %>
           <% if !@hackatime_linked %>
             <p class="project-show__onboarding-header-body">
-              Link Hackatime to start tracking your time. Once you do and post a devlog, you'll unlock free stickers in the shop!
+              <% if onboarding_mission&.has_guide? %>
+                First, link Hackatime to make sure your time is logged, and then open the guide to get started!
+              <% else %>
+                First, link Hackatime to make sure your time is logged, then get started building!
+              <% end %>
             </p>
           <% elsif @project.hackatime_keys.present? %>
             <p class="project-show__onboarding-header-body">
@@ -776,6 +778,7 @@
             <p class="project-show__onboarding-header-body">
               Start coding with Hackatime running. Once you have 15 minutes, <%= link_to "edit your project", project_path(@project, editing: true), class: "project-show__onboarding-header-link", data: { turbo_frame: "project_hero" } %> to link your Hackatime project, then write your first devlog!
             </p>
+          <% end %>
           <% end %>
         </header>
 
@@ -797,6 +800,10 @@
                       data: { turbo: false } do %>
             Read on how to start your hardware project!<%= inline_svg_tag "icons/right-arrow.svg", class: "action-btn__icon action-btn__icon--trailing", aria: { hidden: true } %>
           <% end %>
+        <% end %>
+
+        <% if Flipper.enabled?(:lookout, current_user) %>
+          <%= render "projects/track_time_card", project: @project, hackatime_linked: @hackatime_linked %>
         <% end %>
       </section>
     <% end %>
@@ -823,12 +830,17 @@
                        ship_number: ship_count - ship_index + 1,
                        recert_modal_id: recert_id,
                        is_member: is_member,
+                       payout_review: entry.postable == @votes_for_payout&.dig(:ship_event) ? @votes_for_payout : nil,
                        mission_resubmit_modal_id: mission_modal_id %>
           <% else %>
             <%= render PostComponent.new(post: entry, current_user: current_user, theme: :profile_dark) %>
           <% end %>
         <% end %>
       </section>
+    <% end %>
+
+    <% if @votes_for_payout&.dig(:review_deadline) %>
+      <%= render "projects/payout_review_modal", payout_review: @votes_for_payout %>
     <% end %>
 
     <% if current_user.present? && (!is_member || Rails.env.development?) %>
