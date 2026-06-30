@@ -23,7 +23,7 @@ You're cursed — payout reduced by 50%. Write more detailed feedback during vot
 
 <% if Flipper.enabled?(:payout_recommendations, @recipient) %><% recommended_items = ShopItem.affordable_for(@recipient, limit: 3) %><% if recommended_items.any? %>What you can grab with your stardust:
 <% recommended_items.each do |item| -%>
-- <%= item.name %> (<%= item.ticket_cost %> stardust): <%= shop_item_url(item) %>
+- <%= item.name %><%= " (★ on your wishlist)" if item.recommended_from_wishlist? %> (<%= item.ticket_cost %> stardust): <%= shop_item_url(item) %>
 <% end -%>
 
 <% end %><% end %>View balance: <%= my_balance_url %>

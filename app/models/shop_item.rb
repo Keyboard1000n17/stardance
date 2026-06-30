@@ -199,20 +199,34 @@ class ShopItem < ApplicationRecord
 
   # Top affordable items for a user, for payout-email recommendations. Reuses the
   # cached shop-page set (already enabled/listed/buyable, non-prize, with stock +
-  # purchase counts preloaded) so it adds no queries. Affordability and display
-  # both use ticket_cost so the email's price always matches what it filtered on.
-  # Fails closed to [] so a payout email never breaks on a recommendation error.
+  # purchase counts preloaded) so it adds no extra catalog queries. Items the user
+  # has wishlisted come first (highest intent — "the thing you saved for is now in
+  # reach"), then the most popular affordable items fill the rest. Affordability
+  # and display both use ticket_cost so the email's price always matches what it
+  # filtered on. Fails closed to [] so a payout email never breaks on a rec error.
   def self.affordable_for(user, limit: 3)
     balance = user.balance
-    cached_shop_page_data[:buyable_standalone]
+    affordable = cached_shop_page_data[:buyable_standalone]
       .reject(&:is_free?)
       .reject(&:out_of_stock?)
       .select { |item| item.ticket_cost <= balance }
-      .sort_by { |item| -item.current_event_purchases }
+
+    wishlisted_ids = user.wishlisted_shop_items.pluck(:id).to_set
+    ordered = affordable
+      .partition { |item| wishlisted_ids.include?(item.id) }
+      .flat_map { |group| group.sort_by { |item| -item.current_event_purchases } }
       .first(limit)
+
+    ordered.each { |item| item.instance_variable_set(:@recommended_from_wishlist, wishlisted_ids.include?(item.id)) }
+    ordered
   rescue => e
     Rails.logger.warn("ShopItem.affordable_for failed for user #{user&.id}: #{e.message}")
     []
+  end
+
+  # True when affordable_for surfaced this item because the user wishlisted it.
+  def recommended_from_wishlist?
+    instance_variable_defined?(:@recommended_from_wishlist) && @recommended_from_wishlist
   end
 
   MANUAL_FULFILLMENT_TYPES = [
