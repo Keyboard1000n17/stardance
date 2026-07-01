@@ -31,7 +31,7 @@ module DailyRollsHelper
 
   # Tooltip on the locked reroll button: what to do to unlock it.
   def reroll_locked_hint
-    "Code 1 min on a Stardance project today to unlock a reroll which will increase your number!"
+    "Code 5 min on a Stardance project today to unlock a reroll which will increase your number!"
   end
 
   # The copy-to-share blurb, e.g.
