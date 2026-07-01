@@ -22,7 +22,7 @@ class DailyRollsController < ApplicationController
     end
   end
 
-  # The earned second roll: unlocked once the user has coded > 1 min today on
+  # The earned second roll: unlocked once the user has coded > 5 min today on
   # a linked Stardance project. Its value is added to the first roll (their
   # board number becomes the sum), so coding can only ever help.
   def reroll

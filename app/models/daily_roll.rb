@@ -32,7 +32,7 @@ class DailyRoll < ApplicationRecord
 
   # Coding time (in seconds, on a linked Stardance project, today) that
   # unlocks the one earned reroll. See DailyRollsHelper#reroll_state.
-  REROLL_MIN_SECONDS = 60
+  REROLL_MIN_SECONDS = 300
 
   # A roll's standing is its own value plus any earned reroll. Summed as
   # bigint in SQL so two near-max int4 rolls (~4.29B total) can't overflow
