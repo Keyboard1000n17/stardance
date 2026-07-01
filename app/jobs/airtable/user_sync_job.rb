@@ -58,9 +58,11 @@ class Airtable::UserSyncJob < Airtable::BaseSyncJob
   # Payout notification data as Loops contact properties, synced through the
   # `_users` Airtable table (the only sanctioned path to Loops — no direct API).
   # `Loops - stardancePayoutIssuedAt` is the timestamp property a Loops workflow
-  # (or a filtered campaign) fires on; the rest are the values the email templates
-  # in. Per-user latest payout only (one row per user). Blank for users with no
-  # ship-event payout. Fails closed to {} so it can never break the sync.
+  # (or a filtered campaign) fires on; Stardust/Project are templated into the
+  # email. These three fields already exist on the `_users` table. Per-user latest
+  # payout only (one row per user); blank for users with no ship-event payout;
+  # fails closed to {} so it can never break the sync. (Item recommendations are a
+  # follow-up — they need more `Loops - stardancePayoutRec*` columns created first.)
   def payout_loops_fields(user)
     entry = user.ledger_entries
                 .where(ledgerable_type: "Post::ShipEvent")
@@ -68,25 +70,11 @@ class Airtable::UserSyncJob < Airtable::BaseSyncJob
                 .first
     return {} unless entry
 
-    urls     = Rails.application.routes.url_helpers
-    opts     = ActionMailer::Base.default_url_options
-    host     = opts[:host] || "stardance.hackclub.com"
-    protocol = opts[:protocol] || "https"
-
-    fields = {
+    {
       "Loops - stardancePayoutIssuedAt" => entry.created_at&.iso8601,
       "Loops - stardancePayoutStardust" => entry.amount&.to_i,
       "Loops - stardancePayoutProject"  => entry.ledgerable&.project&.title
     }
-
-    ShopItem.affordable_for(user, limit: 3).each_with_index do |item, i|
-      n = i + 1
-      fields["Loops - stardancePayoutRec#{n}Name"]  = item.name
-      fields["Loops - stardancePayoutRec#{n}Price"] = item.recommended_price
-      fields["Loops - stardancePayoutRec#{n}Url"]   = urls.shop_item_url(item, host:, protocol:)
-    end
-
-    fields
   rescue => e
     Rails.logger.warn("UserSyncJob payout_loops_fields failed for user #{user.id}: #{e.message}")
     {}
