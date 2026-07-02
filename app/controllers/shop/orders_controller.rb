@@ -19,7 +19,7 @@ class Shop::OrdersController < Shop::BaseController
     @shop_item = ShopItem.find(params[:shop_item_id])
     @mission_submission = load_redeemable_submission(@shop_item)
 
-    unless @shop_item.enabled? || @mission_submission.present?
+    unless @shop_item.enabled?
       redirect_to shop_path, alert: "This item cannot be ordered."
       return
     end
@@ -71,7 +71,7 @@ class Shop::OrdersController < Shop::BaseController
                    []
     end
 
-    item_price = @shop_item.price_for_region(region)
+    item_price = @shop_item.price_for_user(current_user, region)
     item_total = item_price * quantity
     accessories_total = @accessories.sum { |a| a.price_for_region(region) } * quantity
     modifiers_total = @modifiers.sum { |m| m.price_for_region(region) }

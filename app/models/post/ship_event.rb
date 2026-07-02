@@ -3,14 +3,14 @@
 # Table name: post_ship_events
 #
 #  id                         :bigint           not null, primary key
-#  base_hours                 :float
 #  body                       :string
-#  bridge                     :boolean          default(FALSE), not null
 #  certification_status       :string           default("pending")
+#  comments_count             :integer          default(0), not null
 #  feedback_reason            :text
 #  feedback_video_url         :string
-#  hours                      :float
-#  legacy_payout_deduction    :float
+#  hours_at_payout            :float
+#  hours_at_ship              :float
+#  likes_count                :integer          default(0), not null
 #  multiplier                 :float
 #  originality_median         :decimal(5, 2)
 #  originality_percentile     :decimal(5, 2)
@@ -20,6 +20,7 @@
 #  payout_basis_locked_at     :datetime
 #  payout_basis_overall_score :decimal(5, 2)
 #  payout_basis_percentile    :decimal(5, 2)
+#  payout_basis_vote_ids      :bigint           default([]), not null, is an Array
 #  payout_blessing            :string
 #  payout_curve_version       :string
 #  review_instructions        :text
@@ -31,21 +32,20 @@
 #  usability_median           :decimal(5, 2)
 #  usability_percentile       :decimal(5, 2)
 #  votes_count                :integer          default(0), not null
-#  voting_scale_version       :integer          default(2), not null
 #  created_at                 :datetime         not null
 #  updated_at                 :datetime         not null
 #
 class Post::ShipEvent < ApplicationRecord
   include Postable
   include Ledgerable
+  include Post::ShipEvent::Payouts
   include SemanticSearchIndexable
   semantic_search_indexable type: "ship"
 
-  LEGACY_VOTING_SCALE_VERSION = 1
-  CURRENT_VOTING_SCALE_VERSION = 2
   VOTES_REQUIRED_FOR_PAYOUT = 12
   VOTES_TO_LEAVE_POOL = VOTES_REQUIRED_FOR_PAYOUT
   VOTE_COST_PER_SHIP = 15
+  MAX_PAYOUT_HOURS_PER_DEVLOG = 10
   BODY_MAX_LENGTH = Post::Devlog::BODY_MAX_LENGTH
   REVIEW_INSTRUCTIONS_MAX_LENGTH = 2_000
   MAX_ATTACHMENTS = 2
@@ -62,6 +62,10 @@ class Post::ShipEvent < ApplicationRecord
                               foreign_key: :ship_event_id,
                               dependent: :destroy,
                               inverse_of: :ship_event
+  has_many :vote_events, class_name: "Vote::Event",
+                         foreign_key: :ship_event_id,
+                         dependent: :nullify,
+                         inverse_of: :ship_event
 
   has_one :mission_submission, class_name: "Mission::Submission",
                                foreign_key: :ship_event_id,
@@ -70,10 +74,16 @@ class Post::ShipEvent < ApplicationRecord
 
   after_update :sync_mission_submission_status, if: :saved_change_to_certification_status?
 
-  scope :current_voting_scale, -> { where(voting_scale_version: CURRENT_VOTING_SCALE_VERSION) }
-  scope :legacy_voting_scale, -> { where(voting_scale_version: LEGACY_VOTING_SCALE_VERSION) }
+  scope :voteable, -> {
+    where(certification_status: "approved", payout: nil)
+      .where(Vote.countable_count_lt(VOTES_TO_LEAVE_POOL))
+      .where("post_ship_events.hours_at_ship > 0")
+      .where.not(id: Mission::Submission.with_deleted.where(payout_path: "static_prize").select(:ship_event_id))
+  }
+  scope :paid_out, -> { where(certification_status: "approved").where.not(payout: nil) }
 
   after_commit :decrement_user_vote_balance, on: :create
+  after_commit :schedule_type_check, on: :create
 
   validates :body, presence: { message: "Update message can't be blank" }
   validates :body, length: { maximum: BODY_MAX_LENGTH }, on: :create
@@ -81,56 +91,45 @@ class Post::ShipEvent < ApplicationRecord
   validate :project_can_be_shipped, on: :create
   has_paper_trail ignore: [ :votes_count, :synced_at ]
 
-  def majority_judgment
-    MajorityJudgmentService.call(self)
+  def self.recalculate_hours_for_devlog_post(post)
+    return unless post&.project
+
+    post.project.posts.of_ship_events
+        .where("posts.created_at >= ?", post.created_at)
+        .order(:created_at)
+        .first
+        &.postable
+        &.recalculate_hours_at_ship
   end
 
-  def hours
-    project = post&.project
-    return 0 unless project && created_at
-
-    ship_event_post = post
-    previous_ship_event_post = project.posts.of_ship_events
-                                      .where("posts.created_at < ?", ship_event_post.created_at)
-                                      .order("posts.created_at DESC")
-                                      .first
-
-    # created_at if first otherwise use the last ship_event
-    start_time = previous_ship_event_post ? previous_ship_event_post.created_at : project.created_at
-
-    seconds = project.posts.of_devlogs(join: true)
-                     .where("posts.created_at >= ? AND posts.created_at <= ?", start_time, ship_event_post.created_at)
-                     .where(post_devlogs: { deleted_at: nil })
-                     .sum("post_devlogs.duration_seconds")
-    seconds.to_f / 3600
+  def capture_hours_at_ship
+    reload.recalculate_hours_at_ship
   end
 
-  def payout_eligible?
-    return false unless certification_status == "approved"
-    return false unless current_voting_scale?
-    return false unless payout.blank?
-    return false unless votes.payout_countable.count >= VOTES_REQUIRED_FOR_PAYOUT
-
-    payout_user = payout_recipient
-    return false unless payout_user
-    return false if payout_user.vote_balance < 0
-
-    true
-  end
-
-  def payout_recipient
-    post&.user
-  end
-
-  def current_voting_scale?
-    voting_scale_version == CURRENT_VOTING_SCALE_VERSION
-  end
-
-  def legacy_voting_scale?
-    voting_scale_version == LEGACY_VOTING_SCALE_VERSION
+  def recalculate_hours_at_ship
+    update!(hours_at_ship: hours_logged_in_ship_window)
   end
 
   private
+
+  def hours_logged_in_ship_window
+    return 0 unless post&.project && post.created_at
+
+    devlogs_in_ship_window.sum("post_devlogs.duration_seconds").to_f / 3600
+  end
+
+  def devlogs_in_ship_window
+    project.posts.of_devlogs(join: true)
+           .where("posts.created_at >= ? AND posts.created_at <= ?", ship_window_start_time, post.created_at)
+           .where(post_devlogs: { deleted_at: nil })
+           .then { |scope| project.hardware? ? scope.where(post_devlogs: { phase: "build" }) : scope }
+  end
+
+  def ship_window_start_time
+    project.posts.of_ship_events
+           .where("posts.created_at < ?", post.created_at)
+           .maximum(:created_at) || project.created_at
+  end
 
   def project_can_be_shipped
     return unless project
@@ -139,8 +138,14 @@ class Post::ShipEvent < ApplicationRecord
 
   def decrement_user_vote_balance
     return unless post&.user
+    return if mission_submission&.payout_path == "static_prize"
 
     post.user.increment!(:vote_balance, -VOTE_COST_PER_SHIP)
+  end
+
+  def schedule_type_check
+    project = post&.project
+    Project::TypeCheckJob.perform_later(project) if project && project.project_type.nil?
   end
 
   # Drives the Mission::Submission state machine off ship cert transitions.

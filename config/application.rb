@@ -73,10 +73,11 @@ module Battlemage
                          expire_after: 2.months,
                          secure: Rails.env.production?,
                          httponly: true,
-                         domain: Rails.env.production? ? ".stardance.hackclub.com" : ".lvh.me"
+                         domain: Rails.env.production? ? ".stardance.hackclub.com" : :all
 
     config.exceptions_app = self.routes
 
+    config.middleware.insert_after ActionDispatch::RemoteIp, Rack::Attack
     config.middleware.insert_before ActionDispatch::Static, ServeAvif
     config.middleware.insert_before ActionDispatch::Static, NoCacheErrors
   end
