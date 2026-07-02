@@ -1,54 +1,10 @@
 // Interstitial shown when a builder tries to create a hardware project on
-// Stardance — hardware lives on Hack Club Outpost now.
+// Stardance — hardware lives on Hack Club Outpost now. Reuses the existing
+// Outpost discover-rail widget; this just centers it on the page.
 .hardware-moved {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 70vh;
   padding: var(--space-xl) var(--space-m);
-
-  &__card {
-    width: 100%;
-    max-width: 34rem;
-    padding: var(--space-xxl) var(--space-xl);
-    background: var(--color-set-2-bg);
-    border: 1px solid var(--color-space-border);
-    border-radius: var(--border-radius);
-    text-align: center;
-  }
-
-  &__title {
-    margin: 0 0 var(--space-l);
-    font-size: var(--font-size-xxl);
-    color: var(--color-space-text);
-  }
-
-  &__notice {
-    margin: 0 0 var(--space-l);
-    padding: var(--space-m);
-    background: var(--color-brand-salmon-soft);
-    border: 1px solid var(--color-brand-salmon);
-    border-radius: var(--border-radius);
-  }
-
-  &__notice-line {
-    margin: 0;
-    font-weight: 700;
-    letter-spacing: 0.02em;
-    color: var(--color-brand-salmon);
-
-    & + & {
-      margin-top: var(--space-xs);
-    }
-  }
-
-  &__lede {
-    margin: 0 0 var(--space-l);
-    font-size: var(--font-size-l);
-    color: var(--color-space-text-muted);
-  }
-
-  &__cta {
-    display: inline-flex;
-  }
 }

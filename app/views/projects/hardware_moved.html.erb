@@ -1,19 +1,5 @@
-<% content_for :title, "Hardware projects have moved" %>
+<% content_for :title, "Hardware projects have moved to Outpost" %>
 
 <main class="hardware-moved">
-  <section class="hardware-moved__card">
-    <h1 class="hardware-moved__title">Hardware projects have moved to Outpost</h1>
-
-    <div class="hardware-moved__notice" role="alert">
-      <p class="hardware-moved__notice-line">DO NOT GO THROUGH STARDANCE.</p>
-      <p class="hardware-moved__notice-line">DO NOT USE THE STARDANCE PLATFORM.</p>
-      <p class="hardware-moved__notice-line">SUBMITTING A PROJECT ON STARDANCE WILL NOT GET YOU A REVIEW.</p>
-    </div>
-
-    <p class="hardware-moved__lede">Building hardware? Start your project on Hack Club Outpost — that's the only place it gets reviewed and funded.</p>
-
-    <a href="https://outpost.hackclub.com" class="action-btn action-btn--large action-btn--primary hardware-moved__cta">
-      Go to Hack Club Outpost<%= inline_svg_tag "icons/right-arrow.svg", class: "action-btn__icon action-btn__icon--trailing", aria: { hidden: true } %>
-    </a>
-  </section>
+  <%= render DiscoverRail::OutpostWidget.new(user: current_user) %>
 </main>
