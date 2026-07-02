@@ -13,7 +13,17 @@ class Shop::SuggestionsController < Shop::BaseController
 
   def history
     authorize ShopSuggestion
-    @decided = ShopSuggestion.kept.where(aasm_state: [ :accepted, :rejected ]).includes(:user, :shop_suggestion_votes).order(updated_at: :desc)
+    @decided = ShopSuggestion.kept.where(aasm_state: [ :accepted, :rejected ]).includes(:user, :shop_suggestion_votes, :shop_item).order(updated_at: :desc)
+
+    suggestion_ids = @decided.map { |s| s.id.to_s }
+    deciding_versions = PaperTrail::Version
+      .where(item_type: "ShopSuggestion", item_id: suggestion_ids)
+      .where("object_changes -> 'aasm_state' ->> 1 IN (?)", [ "accepted", "rejected" ])
+      .select(:item_id, :whodunnit)
+    users_by_id = User.where(id: deciding_versions.filter_map(&:whodunnit).uniq).index_by { |u| u.id.to_s }
+    @decided_by = deciding_versions.each_with_object({}) do |v, h|
+      h[v.item_id.to_i] ||= users_by_id[v.whodunnit.to_s]
+    end
   end
 
   def create

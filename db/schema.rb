@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_02_113808) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_131242) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -1169,11 +1169,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_02_113808) do
     t.datetime "discarded_at"
     t.text "name"
     t.string "rejection_reason"
+    t.bigint "shop_item_id"
     t.datetime "updated_at", null: false
     t.string "url"
     t.decimal "usd_cost", precision: 8, scale: 2
     t.bigint "user_id", null: false
     t.index ["aasm_state"], name: "index_shop_suggestions_on_aasm_state"
+    t.index ["shop_item_id"], name: "index_shop_suggestions_on_shop_item_id"
     t.index ["user_id"], name: "index_shop_suggestions_on_user_id"
   end
 

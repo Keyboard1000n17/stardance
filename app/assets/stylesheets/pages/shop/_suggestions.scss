@@ -154,6 +154,14 @@
     border-color 140ms ease,
     transform 140ms ease;
 
+  &--linked {
+    cursor: pointer;
+
+    &:hover {
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+  }
+
   &__image-wrap {
     height: 160px;
     overflow: hidden;
@@ -196,6 +204,11 @@
     &--accepted {
       background: rgba(8, 6, 30, 0.75);
       color: #4ade80;
+    }
+
+    &--rejected {
+      background: rgba(8, 6, 30, 0.75);
+      color: var(--color-brand-salmon);
     }
   }
 
@@ -247,6 +260,34 @@
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: 3;
+  }
+
+  &__decided-by {
+    font-size: var(--font-size-xs);
+    font-style: italic;
+    margin: var(--space-xs) 0 0;
+
+    &--accepted {
+      color: #4ade80;
+      opacity: 0.8;
+    }
+
+    &--rejected {
+      color: var(--color-brand-salmon);
+      opacity: 0.8;
+    }
+  }
+
+  &__rejection-reason {
+    background: rgba(255, 141, 157, 0.06);
+    border-left: 2px solid rgba(255, 141, 157, 0.4);
+    border-radius: 0 4px 4px 0;
+    color: var(--color-space-text-muted);
+    font-size: var(--font-size-xs);
+    font-style: italic;
+    line-height: 1.45;
+    margin: var(--space-xs) 0 0;
+    padding: var(--space-xxs) var(--space-s);
   }
 
   &__footer {

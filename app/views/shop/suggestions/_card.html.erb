@@ -1,5 +1,14 @@
 <% is_admin = current_user&.admin? %>
-<div class="suggestion-card">
+<% decided_by ||= nil %>
+<% card_href = suggestion.accepted? && suggestion.shop_item_id ? shop_item_path(suggestion.shop_item_id) : nil %>
+<div class="suggestion-card<%= ' suggestion-card--linked' if card_href %>"
+     <% if card_href %>
+       data-controller="card-link"
+       data-card-link-url-value="<%= card_href %>"
+       data-action="click->card-link#navigate"
+       role="link"
+       tabindex="0"
+     <% end %>>
   <div class="suggestion-card__image-wrap">
     <% if suggestion.image.attached? && suggestion.image.variable? %>
       <%= image_tag suggestion.image.variant(resize_to_limit: [480, 320], format: :webp),
@@ -26,6 +35,16 @@
     </div>
 
     <p class="suggestion-card__description"><%= suggestion.description.truncate(120) %></p>
+
+    <% if suggestion.rejected? && suggestion.rejection_reason.present? %>
+      <p class="suggestion-card__rejection-reason">
+        "<%= suggestion.rejection_reason %>"<% if decided_by %> &mdash; <%= decided_by.display_name %><% end %>
+      </p>
+    <% elsif decided_by %>
+      <p class="suggestion-card__decided-by suggestion-card__decided-by--<%= suggestion.aasm_state %>">
+        by <%= decided_by.display_name %>
+      </p>
+    <% end %>
   </div>
 
   <div class="suggestion-card__footer">
@@ -40,7 +59,9 @@
       <% end %>
     <% end %>
 
-    <% if suggestion.url.present? %>
+    <% if card_href %>
+      <%= link_to "Shop →", card_href, class: "suggestion-card__url-link" %>
+    <% elsif suggestion.url.present? %>
       <%= link_to "View item →", suggestion.url, target: "_blank", rel: "noopener noreferrer", class: "suggestion-card__url-link" %>
     <% end %>
   </div>

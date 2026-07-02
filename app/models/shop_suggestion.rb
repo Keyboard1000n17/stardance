@@ -12,12 +12,14 @@
 #  usd_cost         :decimal(8, 2)
 #  created_at       :datetime         not null
 #  updated_at       :datetime         not null
+#  shop_item_id     :bigint
 #  user_id          :bigint           not null
 #
 # Indexes
 #
-#  index_shop_suggestions_on_aasm_state  (aasm_state)
-#  index_shop_suggestions_on_user_id     (user_id)
+#  index_shop_suggestions_on_aasm_state    (aasm_state)
+#  index_shop_suggestions_on_shop_item_id  (shop_item_id)
+#  index_shop_suggestions_on_user_id       (user_id)
 #
 # Foreign Keys
 #
@@ -30,6 +32,7 @@ class ShopSuggestion < ApplicationRecord
   has_paper_trail
 
   belongs_to :user
+  belongs_to :shop_item, optional: true
   has_one_attached :image
   has_many :shop_suggestion_votes, dependent: :destroy
 
