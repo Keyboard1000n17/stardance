@@ -30,11 +30,13 @@ export default class extends Controller {
         // just-opened tab to the project page, where it auto-opens.
         if (body.hardware_outpost_redirect) {
           const popup = document.getElementById("hardware-outpost-modal");
-          if (popup && recorderWindow) {
-            recorderWindow.close();
+          if (popup) {
+            recorderWindow?.close();
             popup.showModal();
           } else if (recorderWindow) {
             recorderWindow.location = body.hardware_outpost_redirect;
+          } else {
+            window.location.assign(body.hardware_outpost_redirect);
           }
           return;
         }

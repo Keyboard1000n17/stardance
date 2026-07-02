@@ -490,6 +490,10 @@ class ProjectsController < ApplicationController
   # back to the new-project page with the Outpost popup open.
   def redirect_hardware_creation_to_outpost
     return unless Flipper.enabled?(:hardware_to_outpost, current_user)
+    # Guests can't create a project anyway (ProjectPolicy#new?/#create? require an
+    # HCA-linked user), so don't bounce them to /projects/new — that would just
+    # 403 before the popup shows. Let the normal auth flow handle them.
+    return unless current_user&.hca_linked?
 
     creating_hardware = params.dig(:project, :hardware_stage).present? ||
       (params[:mission_slug].present? && Mission.find_by(slug: params[:mission_slug])&.hardware?)
