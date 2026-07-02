@@ -3,6 +3,10 @@ class ShopSuggestionPolicy < ApplicationPolicy
     true
   end
 
+  def history?
+    true
+  end
+
   def create?
     signed_in_any?
   end

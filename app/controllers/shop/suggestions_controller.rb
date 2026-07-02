@@ -11,6 +11,11 @@ class Shop::SuggestionsController < Shop::BaseController
       .sort_by { |s| [ -s.vote_count, -s.id ] }
   end
 
+  def history
+    authorize ShopSuggestion
+    @decided = ShopSuggestion.kept.where(aasm_state: [ :accepted, :rejected ]).includes(:user, :shop_suggestion_votes).order(updated_at: :desc)
+  end
+
   def create
     authorize ShopSuggestion
 

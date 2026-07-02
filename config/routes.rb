@@ -468,6 +468,9 @@ Rails.application.routes.draw do
     get "category/:slug", to: "items#category", as: :category
     resources :suggestions, only: [ :index, :create ] do
       resources :votes, only: [ :create ], controller: "suggestion_votes"
+      collection do
+        get :history
+      end
     end
     post "wishlists/:id", to: "wishlists#create", as: :create_wishlist
     delete "wishlists/:id", to: "wishlists#destroy", as: :wishlist

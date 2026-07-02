@@ -1,9 +1,8 @@
 .suggestions-page {
   color: var(--color-space-text);
   font-family: var(--font-family-text);
-  margin: var(--space-xxxxl) auto 0;
-  max-width: 900px;
-  padding: 0 var(--space-l) var(--space-xxxxl);
+  margin-top: var(--space-xxxxl);
+  padding: 0 var(--space-xxl) var(--space-xxxxl);
 
   &__header {
     align-items: flex-start;
@@ -39,6 +38,17 @@
     line-height: 1.55;
     margin: 0;
     max-width: 52ch;
+  }
+
+  &__history-link,
+  &__back-link {
+    color: var(--color-space-text-muted);
+    font-size: var(--font-size-xs);
+    text-decoration: none;
+
+    &:hover {
+      color: var(--color-space-text);
+    }
   }
 
   &__cost-row {
@@ -93,7 +103,7 @@
     scrollbar-width: thin;
 
     > * {
-      flex: 0 0 280px;
+      flex: 0 0 240px;
       scroll-snap-align: start;
     }
 
@@ -114,7 +124,7 @@
   &__grid {
     display: grid;
     gap: var(--space-m);
-    grid-template-columns: repeat(auto-fill, 280px);
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
 
   &__empty {
