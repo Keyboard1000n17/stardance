@@ -63,6 +63,7 @@ class Project < ApplicationRecord
     "Desktop App (Windows)", "Desktop App (Linux)", "Desktop App (macOS)",
     "Minecraft Mods", "Hardware", "Android App", "iOS App", "Other"
   ].freeze
+  USER_SELECTABLE_TYPES = (AVAILABLE_CATEGORIES - [ "Hardware" ]).freeze
 
   # Hardware projects carry a build/design stage; software projects leave
   # hardware_stage nil. Drives the Lookout screen-recording flow on the project
@@ -102,6 +103,7 @@ class Project < ApplicationRecord
   has_many :ship_events, through: :ship_event_posts, source: :postable, source_type: "Post::ShipEvent"
   has_many :git_commit_posts, -> { where(postable_type: "Post::GitCommit").order(created_at: :desc) }, class_name: "Post"
   has_many :votes, dependent: :destroy
+  has_many :vote_events, class_name: "Vote::Event", dependent: :nullify
   has_many :reports, class_name: "Project::Report", dependent: :destroy
   has_many :ship_reviews, class_name: "Certification::Ship", dependent: :restrict_with_exception
   has_many :certification_funding_requests, class_name: "Certification::FundingRequest", dependent: :destroy
@@ -256,11 +258,21 @@ class Project < ApplicationRecord
   # allows nil, but not "").
   normalizes :hardware_stage, with: ->(value) { value.presence }
   validates :hardware_stage, inclusion: { in: HARDWARE_STAGES }, allow_nil: true
+  validates :project_type, inclusion: { in: AVAILABLE_CATEGORIES }, allow_nil: true
   validate :hardware_stage_locked_after_funding_request
   validate :required_shipping_fields_locked_while_pending_review
+  validate :hardware_required_by_current_mission
+
+  # Set by Certification::FundingRequest#apply_verdict_to_project! to let the
+  # approval flow advance the stage; the lock below stays closed for everyone else.
+  attr_accessor :advancing_via_funding_approval
 
   def hardware_stage_locked_after_funding_request
     return unless hardware_stage_changed? && has_any_funding_request?
+    # The certification flow advances design → build when a funding request is
+    # approved. Allow only that in-process action, while still locking any
+    # owner-initiated stage change.
+    return if advancing_via_funding_approval
     errors.add(:hardware_stage, "cannot be changed after a funding request has been submitted")
   end
 
@@ -269,6 +281,16 @@ class Project < ApplicationRecord
     return if shippable?
 
     errors.add(:base, "Cannot save: #{ship_blocker_message&.downcase}. Fix this before your review completes.")
+  end
+
+  # A project on a hardware mission can't drop back to software while attached —
+  # the mission only accepts hardware projects (Mission#hardware?). Detach first.
+  # Only queries the mission when the project is actually leaving hardware.
+  def hardware_required_by_current_mission
+    return unless hardware_stage_changed? && !hardware?
+    return unless current_mission&.hardware?
+
+    errors.add(:hardware_stage, "can't be software while attached to the #{current_mission.name} hardware mission")
   end
 
   def validate_repo_cloneable
@@ -385,10 +407,10 @@ class Project < ApplicationRecord
     state :rejected
 
     event :submit_for_review do
-      transitions from: [ :draft, :submitted, :under_review, :needs_changes, :approved, :rejected ], to: :submitted, guard: :shippable?
-      after do
-        self.shipped_at = Time.current # I moved this logic to the ships controller as there's differences in how we handle reships - @AVD
-      end
+      transitions from: [ :draft, :submitted, :under_review, :needs_changes, :approved, :rejected ],
+                  to: :submitted,
+                  guard: :shippable?,
+                  after: -> { self.shipped_at = Time.current }
     end
 
     event :start_review do
@@ -594,26 +616,6 @@ class Project < ApplicationRecord
 
   def last_ship_event
     ship_events.first
-  end
-
-  def has_legacy_ship_events?
-    ship_events.where(voting_scale_version: Post::ShipEvent::LEGACY_VOTING_SCALE_VERSION).exists?
-  end
-
-  def has_paid_current_scale_ship_events?(excluding_ship_event_id: nil)
-    scope = ship_events
-              .where(voting_scale_version: Post::ShipEvent::CURRENT_VOTING_SCALE_VERSION)
-              .where.not(payout: nil)
-    scope = scope.where.not(id: excluding_ship_event_id) if excluding_ship_event_id.present?
-    scope.exists?
-  end
-
-  def legacy_payout_total
-    ship_events
-      .where(voting_scale_version: Post::ShipEvent::LEGACY_VOTING_SCALE_VERSION)
-      .where.not(payout: nil)
-      .sum(:payout)
-      .to_f
   end
 
   def total_ship_hours

@@ -1,11 +1,30 @@
 class Admin::Certification::YswsController < Admin::Certification::ApplicationController
   def index
     authorize ::Certification::Ysws
+    @project_type = params[:project_type].presence
+    @sort         = params[:sort].presence_in(%w[length todo])
+    @dir          = params[:dir] == "asc" ? "asc" : "desc"
 
-    @reviews = ::Certification::Ysws
-      .where(reviewed_at: nil, returned_at: nil)
-      .includes(:project, :user)
-      .order(created_at: :asc)
+    scope = ::Certification::Ysws.where(reviewed_at: nil, returned_at: nil)
+
+    # Type filter options are whatever project types are actually present in the
+    # pending queue (plus an "unclassified" bucket) — never hardcoded.
+    @type_counts = scope.joins(:project).group("projects.project_type").count
+
+    scope = scope.by_project_type(@project_type) if @project_type
+
+    scope = scope.with_todo_devlog_count.includes(:project, :user)
+
+    scope =
+      case @sort
+      when "length" then scope.order(Arel.sql("certification_ysws_reviews.original_minutes #{@dir}"))
+      when "todo"   then scope.order(Arel.sql("todo_devlog_count #{@dir}"))
+      else               scope.order(created_at: :asc)
+      end
+
+    # Loaded eagerly so the view can count the collection without re-running the
+    # custom-select query as a COUNT(*), which the aliased column would break.
+    @reviews = scope.to_a
   end
 
   def show
@@ -22,7 +41,20 @@ class Admin::Certification::YswsController < Admin::Certification::ApplicationCo
     # Check if review is already in unified DB
     @review.check_and_update_unified_db_status!
 
-    devlog_minutes = @review.devlog_reviews.map(&:original_minutes).compact
+    # Earlier reviews of the same project. Their devlogs are shown frozen
+    # (read-only) for context, oldest first, with only the current review's
+    # devlogs editable.
+    @prior_reviews = ::Certification::Ysws
+      .where(project_id: @review.project_id)
+      .where("id < ?", @review.id)
+      .includes(devlog_reviews: { post_devlog: :attachments_attachments })
+      .order(:id)
+
+    # Prior (frozen) + current devlogs, in display order, counted together in
+    # the header, time stats, and chart.
+    @all_devlog_reviews = @prior_reviews.flat_map(&:devlog_reviews) + @review.devlog_reviews.to_a
+
+    devlog_minutes = @all_devlog_reviews.map(&:original_minutes).compact
 
     @stats = {
       total_minutes: devlog_minutes.sum,

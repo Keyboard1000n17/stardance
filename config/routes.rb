@@ -450,6 +450,9 @@ Rails.application.routes.draw do
     namespace :v1 do
       resources :ambassador_referrals, only: [ :index, :show ]
     end
+    namespace :slack do
+      post "events", to: "events#create"
+    end
   end
 
   # Shop
@@ -474,9 +477,21 @@ Rails.application.routes.draw do
 
   # Voting
   get "rate/new", to: "votes#new", as: :new_rate
-  resources :votes, only: [ :new, :create ]
+  resources :ship_events, only: [] do
+    resource :payout_acceptance, only: :create, controller: "ship_events/payout_acceptances"
+  end
+  resources :votes, only: [ :new, :create ] do
+    resource :flag, only: :create, controller: "votes/flags"
+  end
   namespace :votes do
     resource :skip, only: :create
+    resources :assignments, only: [] do
+      member do
+        get :demo
+        get :repo
+      end
+    end
+    resources :events, only: :create
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
@@ -514,15 +529,25 @@ Rails.application.routes.draw do
   get "home", to: "home#index"
   resources :feed_events, only: [ :create ]
   resource :daily_roll, only: [ :create ]
+  post "daily_roll/reroll", to: "daily_rolls#reroll", as: :reroll_daily_roll
+  get "daily_roll/reroll_status", to: "daily_rolls#reroll_status", as: :reroll_status_daily_roll
+  patch "streaks/timezone", to: "streaks#update_timezone"
+  get "streaks/month", to: "streaks#month", as: :streak_month
   get "rng", to: "daily_rolls#leaderboard", as: :rng
   get "rng/history", to: "daily_rolls#history", as: :rng_history
   delete "daily_roll/clear", to: "daily_rolls#clear", as: :clear_daily_roll if Rails.env.development? || Rails.env.test?
   namespace :home do
+    resource :discover_rail, only: [] do
+      get :streak, on: :member
+    end
     resource :feed, only: [ :show ]
   end
 
   # Leaderboard
   get "leaderboard", to: "leaderboard#index"
+
+  # Contributors — merged-PR leaderboard for the Stardance repo itself.
+  get "contributors", to: "contributors#index"
 
   # Events — listing of missions and (eventually) other themed events.
   resources :events, only: [ :index ]
@@ -620,6 +645,14 @@ Rails.application.routes.draw do
         get  :votes
       end
     end
+    resources :vote_flags, only: [ :index ] do
+      scope module: :vote_flags do
+        resource :approval, only: :create
+        resource :rejection, only: :create
+      end
+    end
+    resources :payout_reviews, only: [ :index, :show ]
+    resources :ledger_entries, only: [ :index ]
     get "super_stars", to: "super_stars#show", as: :super_stars
     get "user-perms", to: "users#user_perms"
     resource :support, only: [ :show ], controller: "support/dashboards"
@@ -635,6 +668,7 @@ Rails.application.routes.draw do
       end
       resources :participants, only: [ :index, :show ] do
         member do
+          post :link_referral
           post :reject_referrals
           post :ban_participant
           post :ban_user
@@ -695,6 +729,7 @@ Rails.application.routes.draw do
       end
     end
     resources :messages, only: [ :index, :create ]
+    resources :email_templates, only: [ :index, :create, :destroy ]
     resources :support_vibes, only: [ :index, :create ]
     resources :sw_vibes, only: [ :index ]
     resources :suspicious_votes, only: [ :index ]
@@ -734,7 +769,17 @@ Rails.application.routes.draw do
       resource  :step_ordering,  only: [ :create ],                  controller: "missions/step_orderings"
       resources :prizes,         only: [ :create, :update, :destroy ], controller: "missions/prizes"
       resources :shop_unlocks,   only: [ :create, :destroy ],          controller: "missions/shop_unlocks"
+      resources :submissions,    only: [ :index, :show, :update ],     controller: "missions/submissions" do
+        collection do
+          get :next
+        end
+        member do
+          post :claim
+          post :undo
+        end
+      end
     end
+    get "mission_reviews", to: "missions/submissions#overview", as: :mission_reviews
 
     namespace :certification do
       # Reviewer stats & payout requests
@@ -746,18 +791,29 @@ Rails.application.routes.draw do
       resources :ships, path: "ship", only: [ :index, :show, :update ] do
         collection do
           get :next
+          get :logs
+          get :monitor, to: "ships/monitor#show"
         end
+        patch :set_project_type, on: :member
+        post :report_fraud, on: :member
         scope module: :ships do
           resource :claim, only: [ :create, :destroy ]
         end
       end
 
-      resources :funding_requests, path: "funding", only: [ :index, :show, :update ] do
-        collection do
-          get :next
-        end
+      resources :funding_requests, path: "funding", only: [ :update ] do
         scope module: :funding_requests do
           resource :claim, only: [ :create, :destroy ]
+        end
+      end
+
+      # Unified hardware review surface: one queue and one project page covering
+      # both design funding requests and build ship certifications. Verdicts and
+      # claims reuse the funding/ship mutation endpoints above so PaperTrail and
+      # existing audit behavior stay attached to the underlying records.
+      resources :hardware_reviews, path: "hardware", param: :project_id, only: [ :index, :show ] do
+        collection do
+          get :next
         end
       end
 
@@ -766,6 +822,7 @@ Rails.application.routes.draw do
       get "devlogs/:devlog_id/commits", to: "devlog_commits#index", as: "devlog_commits"
 
       get "review", to: "ysws#index", as: "ysws_reviews"
+      get "review/dashboard", to: "ysws/dashboard#show", as: "ysws_dashboard"
       get "review/:id", to: "ysws#show", as: "ysws_review"
       get "review/:id/commits", to: "ysws#commits", as: "ysws_commits"
       post "review/:id/report_fraud", to: "ysws#report_fraud", as: "ysws_report_fraud"
@@ -832,6 +889,7 @@ Rails.application.routes.draw do
     resource :og_image, only: [ :show ], module: :projects, defaults: { format: :png }
     resource :ships, only: [ :create ], module: :projects
     resource :recertification, only: [ :create ], module: :projects
+    resource :mission_resubmission, only: [ :create ], module: :projects
     resource :funding_request, only: [ :create ], module: :projects
     resource :mission, only: [ :create, :destroy ], module: :projects, controller: "missions"
     resource :magic, only: [ :create, :destroy ], module: :projects, controller: "magic"
@@ -858,7 +916,7 @@ Rails.application.routes.draw do
 
   resources :devlogs, only: [] do
     resource :like, only: [ :create, :destroy ]
-    resources :comments, only: [ :create, :destroy ]
+    resources :comments, only: [ :index, :create, :destroy ]
   end
 
   # Public user profiles
@@ -883,6 +941,8 @@ Rails.application.routes.draw do
 
   resource :username_availability, only: [ :show ], controller: "users/username_availabilities"
 
+  post "markdown_preview", to: "markdown_previews#create"
+
   # Autocomplete search endpoints (used by the bio editor and elsewhere).
   get "search/users",    to: "search#users",    as: :search_users
   get "search/projects", to: "search#projects", as: :search_projects
@@ -890,8 +950,13 @@ Rails.application.routes.draw do
 
   get "edu", to: "landing#edu", as: :edu
 
-  # Guides
-  resources :guides, only: [ :index, :show ]
+  get "emails/:name", to: "email_templates#show", as: :public_email_template
+  get "emails/:name/content", to: "email_templates#content", as: :public_email_template_content
+  # Resources (formerly "guides"). Served at /resources; the guides_path /
+  # guide_path helpers are retained. Old /guides links redirect here.
+  resources :guides, only: [ :index, :show ], path: "resources"
+  get "/guides", to: redirect("/resources")
+  get "/guides/:id", to: redirect("/resources/%{id}")
 
   # Missions (public listing + show page).
   # Project-side / reviewer-queue / admin-managed missions surfaces ship in later PRs.
@@ -904,12 +969,9 @@ Rails.application.routes.draw do
   end
 
   # Reviewer queue.
-  resources :mission_submissions, only: [ :index, :show ] do
+  resources :mission_submissions, only: [] do
     member do
-      post :approve
-      post :reject
-      post :undo
-      get  :redeem
+      get :redeem
     end
   end
 

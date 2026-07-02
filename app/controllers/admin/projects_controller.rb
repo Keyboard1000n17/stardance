@@ -28,10 +28,10 @@ class Admin::ProjectsController < Admin::ApplicationController
 
   def votes
     @project = ::Project.find(params[:id])
-    authorize @project, :show?
+    authorize @project, :view_votes?
 
     @pagy, @votes = pagy(
-      @project.votes.includes(:user).order(created_at: :desc)
+      @project.votes.includes(:user, :events).order(created_at: :desc)
     )
   end
 

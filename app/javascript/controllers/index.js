@@ -10,11 +10,17 @@ application.register("achievement-highlight", AchievementHighlightController);
 import AddressSelectController from "./address_select_controller";
 application.register("address-select", AddressSelectController);
 
+import AdminLedgerChartController from "./admin_ledger_chart_controller";
+application.register("admin-ledger-chart", AdminLedgerChartController);
+
 import BioEditorController from "./bio_editor_controller";
 application.register("bio-editor", BioEditorController);
 
 import BulkSelectController from "./bulk_select_controller";
 application.register("bulk-select", BulkSelectController);
+
+import CardLinkController from "./card_link_controller";
+application.register("card-link", CardLinkController);
 
 import Certification__FeedbackTemplatesController from "./certification/feedback_templates_controller";
 application.register(
@@ -24,6 +30,30 @@ application.register(
 
 import Certification__QueueController from "./certification/queue_controller";
 application.register("certification--queue", Certification__QueueController);
+
+import Certification__ScreenshotCheckController from "./certification/screenshot_check_controller";
+application.register(
+  "certification--screenshot-check",
+  Certification__ScreenshotCheckController,
+);
+
+import Certification__Ships__MonitorChartController from "./certification/ships/monitor_chart_controller";
+application.register(
+  "certification--ships--monitor-chart",
+  Certification__Ships__MonitorChartController,
+);
+
+import Certification__Ships__FraudReportController from "./certification/ships/fraud_report_controller";
+application.register(
+  "certification--ships--fraud-report",
+  Certification__Ships__FraudReportController,
+);
+
+import Certification__VerdictPreviewController from "./certification/verdict_preview_controller";
+application.register(
+  "certification--verdict-preview",
+  Certification__VerdictPreviewController,
+);
 
 import Certification__VideoDropController from "./certification/video_drop_controller";
 application.register(
@@ -77,6 +107,12 @@ import Certification__Ysws__ReviewSidebarController from "./certification/ysws/r
 application.register(
   "certification--ysws--review-sidebar",
   Certification__Ysws__ReviewSidebarController,
+);
+
+import Certification__Ysws__ReviewerChartController from "./certification/ysws/reviewer_chart_controller";
+application.register(
+  "certification--ysws--reviewer-chart",
+  Certification__Ysws__ReviewerChartController,
 );
 
 import CommandPaletteController from "./command_palette_controller";
@@ -139,6 +175,9 @@ application.register("feed-engagement", FeedEngagementController);
 import FeedKeyboardController from "./feed_keyboard_controller";
 application.register("feed-keyboard", FeedKeyboardController);
 
+import FeedTabsController from "./feed_tabs_controller";
+application.register("feed-tabs", FeedTabsController);
+
 import FileUploadController from "./file_upload_controller";
 application.register("file-upload", FileUploadController);
 
@@ -175,6 +214,9 @@ application.register("lookout-recorder", LookoutRecorderController);
 import MarkdownPreviewController from "./markdown_preview_controller";
 application.register("markdown-preview", MarkdownPreviewController);
 
+import MentionAutocompleteController from "./mention_autocomplete_controller";
+application.register("mention-autocomplete", MentionAutocompleteController);
+
 import MissionGuideLanguageController from "./mission_guide_language_controller";
 application.register("mission-guide-language", MissionGuideLanguageController);
 
@@ -186,6 +228,9 @@ application.register(
   "mission-guide-variables",
   MissionGuideVariablesController,
 );
+
+import Missions__QueueController from "./missions/queue_controller";
+application.register("missions--queue", Missions__QueueController);
 
 import ModalController from "./modal_controller";
 application.register("modal", ModalController);
@@ -216,6 +261,9 @@ application.register("order-form", OrderFormController);
 
 import ParallaxController from "./parallax_controller";
 application.register("parallax", ParallaxController);
+
+import PayoutReviewController from "./payout_review_controller";
+application.register("payout-review", PayoutReviewController);
 
 import PostMenuController from "./post_menu_controller";
 application.register("post-menu", PostMenuController);
@@ -250,6 +298,9 @@ application.register("project-type", ProjectTypeController);
 import ReadmeImageController from "./readme_image_controller";
 application.register("readme-image", ReadmeImageController);
 
+import RerollPollController from "./reroll_poll_controller";
+application.register("reroll-poll", RerollPollController);
+
 import RevealOnScrollController from "./reveal_on_scroll_controller";
 application.register("reveal-on-scroll", RevealOnScrollController);
 
@@ -280,8 +331,17 @@ application.register("slack-doodle", SlackDoodleController);
 import SortableController from "./sortable_controller";
 application.register("sortable", SortableController);
 
+import StickerCountdownController from "./sticker_countdown_controller";
+application.register("sticker-countdown", StickerCountdownController);
+
+import StickerPromoController from "./sticker_promo_controller";
+application.register("sticker-promo", StickerPromoController);
+
 import StarImageInputController from "./star_image_input_controller";
 application.register("star-image-input", StarImageInputController);
+
+import StreakController from "./streak_controller";
+application.register("streak", StreakController);
 
 import SubmitOnMetaEnterController from "./submit_on_meta_enter_controller";
 application.register("submit-on-meta-enter", SubmitOnMetaEnterController);
@@ -303,6 +363,12 @@ application.register("username-availability", UsernameAvailabilityController);
 
 import VimeoPlayerController from "./vimeo_player_controller";
 application.register("vimeo-player", VimeoPlayerController);
+
+import VoteScorecardController from "./vote_scorecard_controller";
+application.register("vote-scorecard", VoteScorecardController);
+
+import VoteTelemetryController from "./vote_telemetry_controller";
+application.register("vote-telemetry", VoteTelemetryController);
 
 import WelcomeTourController from "./welcome_tour_controller";
 application.register("welcome-tour", WelcomeTourController);

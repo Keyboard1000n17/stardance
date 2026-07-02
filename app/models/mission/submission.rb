@@ -3,6 +3,8 @@
 # Table name: mission_submissions
 #
 #  id                               :bigint           not null, primary key
+#  claim_expires_at                 :datetime
+#  claimed_at                       :datetime
 #  deleted_at                       :datetime
 #  payout_path                      :string           not null
 #  rejection_message                :text
@@ -19,6 +21,7 @@
 #
 # Indexes
 #
+#  idx_mission_submissions_on_status_claim_expires     (status,claim_expires_at)
 #  index_mission_submissions_active_per_ship_event     (ship_event_id) UNIQUE WHERE (deleted_at IS NULL)
 #  index_mission_submissions_on_chosen_prize_id        (chosen_prize_id)
 #  index_mission_submissions_on_deleted_at             (deleted_at)
@@ -44,6 +47,7 @@ class Mission::Submission < ApplicationRecord
   include SoftDeletable
   include Ledgerable
   include AASM
+  include MissionReviewable
 
   has_paper_trail
 
@@ -100,14 +104,15 @@ class Mission::Submission < ApplicationRecord
     pending.where("created_at < ?", days.days.ago)
   }
 
-  # Per-mission + global reviewers, minus teammates (no self-review).
+  # Per-mission reviewers/owners, minus teammates (no self-review). Global
+  # mission_reviewers manage every mission but are deliberately left out here —
+  # they opt into the queue rather than being paged for each submission.
   def reviewer_recipients
     teammate_ids = ship_event&.post&.project&.users&.pluck(:id) || []
 
     per_mission_ids = mission.memberships.pluck(:user_id)
-    global_ids = User.where("? = ANY (granted_roles)", "mission_reviewer").pluck(:id)
 
-    User.where(id: (per_mission_ids + global_ids).uniq - teammate_ids)
+    User.where(id: per_mission_ids.uniq - teammate_ids)
         .where.not(slack_id: [ nil, "" ])
   end
 
@@ -125,7 +130,8 @@ class Mission::Submission < ApplicationRecord
       project_url: project ? routes.project_url(project, **url_opts) : routes.root_url(**url_opts),
       builder_name: builder&.display_name || "the builder",
       payout_path: payout_path.titleize,
-      submission_url: routes.mission_submission_url(self, **url_opts),
+      admin_submission_url: routes.admin_mission_submission_url(mission.slug, self, **url_opts),
+      redeem_url: mission.prizes_count > 0 ? routes.redeem_mission_submission_url(self, **url_opts) : nil,
       rejection_message: rejection_message.to_s
     }
   end

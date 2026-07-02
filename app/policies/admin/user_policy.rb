@@ -67,6 +67,27 @@ class Admin::UserPolicy < ApplicationPolicy
   end
 
   def view_votes?
+    user&.admin?
+  end
+  def view_order_full_details?
+    user&.admin? || user&.fraud_dept? || user&.fulfillment_person? || user&.shop_manager?
+  end
+
+  def shop_order_action?
+    user&.admin? || user&.fraud_dept?  || user&.fulfillment_person?
+  end
+  def view_fulfillment_info?
+    user&.admin? || user&.fulfillment_person?
+  end
+  def view_email?
+    user&.admin? || user&.fraud_dept?  || user&.fulfillment_person?
+  end
+
+  def view_internal_notes?
+    user&.admin? || user&.fraud_dept?  || user&.fulfillment_person?
+  end
+
+  def audit_log?
     user&.admin? || user&.fraud_dept?
   end
 

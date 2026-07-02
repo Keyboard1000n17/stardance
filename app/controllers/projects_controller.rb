@@ -28,7 +28,10 @@ class ProjectsController < ApplicationController
 
     prepare_project_show_context
 
-    render :show_hackpad if @project_onboarding_mission&.slug == "hackpad"
+    if params[:embed].present?
+      @hide_sidebar = true
+      render layout: "embed"
+    end
   end
 
   def prepare_project_show_context
@@ -53,6 +56,7 @@ class ProjectsController < ApplicationController
         @all_hackatime_projects = current_user.hackatime_projects
         result = current_user.try_sync_hackatime_data!
         @hackatime_times = result&.dig(:projects) || {}
+        @hackatime_token_stale = current_user.hackatime_token_stale?
 
         linked_ids = @linked_hackatime_projects.map(&:id).to_set
         taken_project_ids = @all_hackatime_projects.map(&:project_id).compact.uniq - [ @project.id ]
@@ -155,27 +159,47 @@ class ProjectsController < ApplicationController
     end
 
     @latest_ship_post = @posts.find { |post| post.postable_type == "Post::ShipEvent" }
-    latest_ship_event = @latest_ship_post&.postable
+    latest_ship_event = @project.ship_events.where(certification_status: "approved").first
+
+    @rejected_mission_sub = @posts
+      .select { |p| p.postable_type == "Post::ShipEvent" }
+      .lazy.map { |p| p.postable&.mission_submission }
+      .find { |sub| sub&.rejected? }
 
     @votes_for_payout = nil
     if current_user.present?
-      is_owner = @project.memberships.where(role: :owner, user_id: current_user.id).exists?
+      can_review_payout = @is_member || current_user.admin?
 
-      if is_owner &&
+      if Post::ShipEvent.payout_feature_enabled?(current_user) &&
+          can_review_payout &&
           latest_ship_event.present? &&
           latest_ship_event.certification_status == "approved" &&
-          latest_ship_event.payout.blank? &&
-          latest_ship_event.mission_submission&.payout_path != "static_prize" &&
           !latest_ship_event.mission_submission&.rejected?
+
+        is_static = latest_ship_event.mission_submission&.payout_path == "static_prize"
 
         required = Post::ShipEvent::VOTES_REQUIRED_FOR_PAYOUT
         current = latest_ship_event.votes.payout_countable.count
         remaining = [ required - current, 0 ].max
 
+        ratings_total = Post::ShipEvent::VOTE_COST_PER_SHIP
+        ratings_remaining = [ -latest_ship_event.payout_recipient.vote_balance, 0 ].max
+        ratings_given = ratings_total - ratings_remaining
+
         @votes_for_payout = {
+          ship_event: latest_ship_event,
           current: current,
           required: required,
-          remaining: remaining
+          remaining: remaining,
+          ratings_given: ratings_given,
+          ratings_total: ratings_total,
+          static_prize: is_static,
+          paid_out: latest_ship_event.payout.present?,
+          estimated_payout: latest_ship_event.estimated_payout,
+          review_open: latest_ship_event.payout_review_open?,
+          review_deadline: latest_ship_event.payout_review_deadline,
+          reason_votes: latest_ship_event.payout_basis_locked_at? ? latest_ship_event.payout_counted_votes : [],
+          admin_view: current_user.admin? && !@is_member
         }
       end
     end
@@ -279,6 +303,9 @@ class ProjectsController < ApplicationController
       project_hours = @project.total_hackatime_hours
 
       if (slug = params[:mission_slug].presence) && (mission = Mission.find_by(slug: slug)) && mission.prerequisites_met_by?(current_user)
+        # A project created for a hardware mission is born hardware (design
+        # stage) so it satisfies the mission's hardware-only requirement.
+        @project.update!(hardware_stage: "design") if mission.hardware? && !@project.hardware?
         @project.missions << mission
         attrs = {}
         if @project.title.blank? || @project.title == "Untitled"
