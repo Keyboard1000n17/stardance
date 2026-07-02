@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_113808) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -267,16 +267,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.index ["user_id"], name: "index_daily_rolls_on_user_id"
   end
 
-  create_table "devlog_lookout_sessions", force: :cascade do |t|
-    t.datetime "created_at", null: false
-    t.bigint "devlog_id", null: false
-    t.bigint "lookout_session_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["devlog_id", "lookout_session_id"], name: "idx_devlog_lookout_sessions_unique", unique: true
-    t.index ["devlog_id"], name: "index_devlog_lookout_sessions_on_devlog_id"
-    t.index ["lookout_session_id"], name: "index_devlog_lookout_sessions_on_lookout_session_id"
-  end
-
   create_table "devlog_versions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "devlog_id", null: false
@@ -386,6 +376,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
 
   create_table "lookout_sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.bigint "devlog_id"
     t.integer "duration_seconds", default: 0
     t.string "mode"
     t.bigint "project_id", null: false
@@ -396,6 +387,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.string "token", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["devlog_id"], name: "index_lookout_sessions_on_devlog_id"
     t.index ["project_id", "status"], name: "index_lookout_sessions_on_project_id_and_status"
     t.index ["project_id"], name: "index_lookout_sessions_on_project_id"
     t.index ["token"], name: "index_lookout_sessions_on_token", unique: true
@@ -421,7 +413,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.bigint "mission_id", null: false
     t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
-    t.index ["mission_id", "language"], name: "index_mission_guide_variants_unique_language", unique: true
+    t.index "mission_id, lower((language)::text)", name: "index_mission_guide_variants_unique_language", unique: true
     t.index ["mission_id"], name: "index_mission_guide_variants_on_mission_id"
   end
 
@@ -489,7 +481,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.string "language", null: false
     t.bigint "mission_step_id", null: false
     t.datetime "updated_at", null: false
-    t.index ["mission_step_id", "language"], name: "index_mission_step_bodies_unique_language", unique: true
+    t.index "mission_step_id, lower((language)::text)", name: "index_mission_step_bodies_unique_language", unique: true
     t.index ["mission_step_id"], name: "index_mission_step_bodies_on_mission_step_id"
   end
 
@@ -643,13 +635,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   create_table "post_ship_events", force: :cascade do |t|
     t.string "body"
     t.string "certification_status", default: "pending"
-    t.integer "comments_count", default: 0, null: false
     t.datetime "created_at", null: false
     t.text "feedback_reason"
     t.string "feedback_video_url"
     t.float "hours_at_payout"
     t.float "hours_at_ship"
-    t.integer "likes_count", default: 0, null: false
     t.float "multiplier"
     t.decimal "originality_median", precision: 5, scale: 2
     t.decimal "originality_percentile", precision: 5, scale: 2
@@ -1163,13 +1153,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.index ["slug"], name: "index_shop_sources_on_slug", unique: true
   end
 
-  create_table "shop_suggestions", force: :cascade do |t|
+  create_table "shop_suggestion_votes", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.text "explanation"
-    t.text "item"
-    t.string "link"
+    t.bigint "shop_suggestion_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["shop_suggestion_id"], name: "index_shop_suggestion_votes_on_shop_suggestion_id"
+    t.index ["user_id"], name: "index_shop_suggestion_votes_on_user_id"
+  end
+
+  create_table "shop_suggestions", force: :cascade do |t|
+    t.string "aasm_state", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.datetime "discarded_at"
+    t.text "name"
+    t.string "rejection_reason"
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.decimal "usd_cost", precision: 8, scale: 2
+    t.bigint "user_id", null: false
+    t.index ["aasm_state"], name: "index_shop_suggestions_on_aasm_state"
     t.index ["user_id"], name: "index_shop_suggestions_on_user_id"
   end
 
@@ -1307,7 +1311,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.boolean "send_notifications_for_new_followers", default: true, null: false
     t.boolean "send_votes_to_slack", default: false, null: false
     t.boolean "stardust_balance_notifications", default: false, null: false
-    t.boolean "streak_slack_status_enabled", default: false, null: false
+    t.boolean "streak_slack_status_enabled", default: true, null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
     t.index ["leaderboard_optin"], name: "index_user_preferences_on_leaderboard_optin"
@@ -1347,12 +1351,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.string "guest_email"
     t.boolean "has_gotten_free_stickers", default: false
     t.boolean "has_pending_achievements", default: false, null: false
-    t.boolean "has_presentable_hardware_project", default: false, null: false
     t.string "hcb_email"
     t.string "interests", default: [], array: true
     t.text "internal_notes"
     t.string "ip_address"
     t.string "last_name"
+    t.string "manual_outpost_ticket_approval"
     t.boolean "manual_ysws_override"
     t.boolean "mission_review_notifications", default: true, null: false
     t.datetime "onboarded_at"
@@ -1382,6 +1386,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.index ["approx_balance"], name: "index_users_on_approx_balance", order: :desc
     t.index ["approx_total_earned"], name: "index_users_on_approx_total_earned", order: :desc
     t.index ["email"], name: "index_users_on_email"
+    t.index ["guest_email"], name: "index_users_on_guest_email"
     t.index ["onboarded_at"], name: "index_users_on_onboarded_at"
     t.index ["session_token"], name: "index_users_on_session_token", unique: true
     t.index ["slack_id"], name: "index_users_on_slack_id", unique: true
@@ -1494,8 +1499,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   add_foreign_key "certification_ysws_reviews", "users", column: "spotchecked_by_id"
   add_foreign_key "comments", "users"
   add_foreign_key "daily_rolls", "users"
-  add_foreign_key "devlog_lookout_sessions", "lookout_sessions"
-  add_foreign_key "devlog_lookout_sessions", "post_devlogs", column: "devlog_id"
   add_foreign_key "devlog_versions", "post_devlogs", column: "devlog_id"
   add_foreign_key "devlog_versions", "users"
   add_foreign_key "follows", "users", column: "followed_id"
@@ -1505,6 +1508,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   add_foreign_key "fulfillment_payout_runs", "users", column: "approved_by_user_id"
   add_foreign_key "ledger_entries", "users"
   add_foreign_key "likes", "users"
+  add_foreign_key "lookout_sessions", "post_devlogs", column: "devlog_id"
   add_foreign_key "lookout_sessions", "projects"
   add_foreign_key "lookout_sessions", "users"
   add_foreign_key "messages", "users"
@@ -1573,7 +1577,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   add_foreign_key "shop_item_sources", "shop_items"
   add_foreign_key "shop_item_sources", "shop_sources"
   add_foreign_key "shop_items", "users"
-  add_foreign_key "shop_items", "users", column: "created_by_user_id", on_delete: :nullify
+  add_foreign_key "shop_items", "users", column: "created_by_user_id", on_delete: :nullify, validate: false
   add_foreign_key "shop_items", "users", column: "default_assigned_user_id", on_delete: :nullify
   add_foreign_key "shop_order_modifier_selections", "shop_item_modifiers"
   add_foreign_key "shop_order_modifier_selections", "shop_orders"
@@ -1585,6 +1589,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   add_foreign_key "shop_orders", "shop_warehouse_packages", column: "warehouse_package_id"
   add_foreign_key "shop_orders", "users"
   add_foreign_key "shop_orders", "users", column: "assigned_to_user_id", on_delete: :nullify
+  add_foreign_key "shop_suggestion_votes", "shop_suggestions"
+  add_foreign_key "shop_suggestion_votes", "users"
   add_foreign_key "shop_suggestions", "users"
   add_foreign_key "shop_warehouse_packages", "users"
   add_foreign_key "shop_wishlists", "shop_items"

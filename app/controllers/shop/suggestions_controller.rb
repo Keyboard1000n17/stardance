@@ -1,25 +1,37 @@
 class Shop::SuggestionsController < Shop::BaseController
-  def create
-    authorize :shop_suggestion
+  before_action -> { head :not_found unless Flipper.enabled?(:shop_suggestions, current_user) }
 
-    if current_user.has_dismissed?("shop_suggestion_box") || !Flipper.enabled?(:shop_suggestion_box, current_user)
-      redirect_to shop_path, alert: "Suggestion box is not available."
-      return
-    end
+  def index
+    authorize ShopSuggestion
+    @new_suggestions = ShopSuggestion.kept.pending.includes(:user, :shop_suggestion_votes).order(created_at: :desc).limit(6)
+    @suggestions = ShopSuggestion
+      .kept
+      .pending
+      .includes(:user, :shop_suggestion_votes)
+      .sort_by { |s| [ -s.vote_count, -s.id ] }
+  end
+
+  def create
+    authorize ShopSuggestion
 
     @suggestion = current_user.shop_suggestions.build(suggestion_params)
 
     if @suggestion.save
-      Airtable::ShopSuggestionSyncJob.perform_later(@suggestion.id)
-      redirect_to shop_path, notice: "Thank you for your suggestion!"
+      redirect_to shop_suggestions_path, notice: "Your suggestion was submitted! #{ShopSuggestion::SUBMISSION_COST} Stardust has been deducted."
     else
-      redirect_to shop_path, alert: @suggestion.errors.full_messages.to_sentence
+      @new_suggestions = ShopSuggestion.kept.pending.includes(:user, :shop_suggestion_votes).order(created_at: :desc).limit(6)
+      @suggestions = ShopSuggestion
+        .kept
+        .pending
+        .includes(:user, :shop_suggestion_votes)
+        .sort_by { |s| [ -s.vote_count, -s.id ] }
+      render :index, status: :unprocessable_entity
     end
   end
 
   private
 
   def suggestion_params
-    params.require(:shop_suggestion).permit(:item, :explanation, :link)
+    params.require(:shop_suggestion).permit(:name, :description, :url, :usd_cost, :image)
   end
 end
