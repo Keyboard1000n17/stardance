@@ -434,6 +434,7 @@ export default class extends Controller {
         this.setText(statusEl, "Your timelapse is ready!");
       }
       if (showVideo) await this.revealVideo();
+      this.showHardwareOutpostNotice();
       return;
     }
     if (data.status === "failed") {
@@ -477,6 +478,14 @@ export default class extends Controller {
       this.renderingTarget.textContent =
         "Your timelapse will be ready to watch in a moment.";
     }
+  }
+
+  // Hardware moved to Outpost — once the timelapse is done, let the builder know.
+  // The notice is only rendered on the page for hardware projects with the flag
+  // on, so this is a no-op everywhere else.
+  showHardwareOutpostNotice() {
+    const dialog = document.getElementById("hardware-outpost-modal");
+    if (dialog && !dialog.open) dialog.showModal();
   }
 
   close(event) {
