@@ -247,7 +247,11 @@ class ProjectsController < ApplicationController
   end
 
   def new
-    if current_user&.projects&.none?
+    # First-timers get bounced to the setup wizard — except when a blocked
+    # hardware create sent them here to see the Outpost popup (?hardware=outpost),
+    # which lives on this page. Bouncing then would drop the param (no popup) and
+    # could ping-pong with the wizard's own hardware redirect.
+    if current_user&.projects&.none? && params[:hardware] != "outpost"
       # /projects/new just bounces to setup for first-timers — pop it from the
       # back-stack so the idea step's back button skips over it.
       if session[:previous_pages].is_a?(Array)
