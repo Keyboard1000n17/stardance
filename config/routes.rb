@@ -865,6 +865,10 @@ Rails.application.routes.draw do
     get  "setup/welcome",       to: "setup#welcome",       as: :setup_welcome
   end
 
+  # Hardware projects have moved to Hack Club Outpost. Any attempt to create one
+  # on Stardance lands here (see ProjectsController) and is pointed to Outpost.
+  get "hardware-moved", to: "projects#hardware_moved", as: :hardware_moved
+
   # Projects — public index lives on the user profile projects section; only
   # show/new/edit/update/destroy and the nested resources are exposed here.
   resources :projects, shallow: true, except: [ :index ] do

@@ -87,6 +87,12 @@ class Projects::SetupController < ApplicationController
       redirect_to mission_path(mission.slug), alert: "Complete #{unmet} first to unlock this mission." and return
     end
 
+    # Hardware missions would make this project hardware — but hardware lives on
+    # Outpost now, so send the builder there instead of attaching it here.
+    if mission.hardware? && Flipper.enabled?(:hardware_to_outpost, current_user)
+      redirect_to hardware_moved_path and return
+    end
+
     if project.current_mission&.id == mission.id
       redirect_to(next_gate_after_details_path) and return
     end
