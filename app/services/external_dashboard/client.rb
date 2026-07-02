@@ -3,12 +3,28 @@ module ExternalDashboard
     extend self
 
     DEFAULT_BASE_URL = "https://dash.shipwrights.dev".freeze
-    EXTERNAL_ID_PREFIX = "SD-".freeze
     ERROR_MESSAGE_MAX = 500
     DEFAULT_TIMEOUT_SECONDS = 10
+    NOT_CONFIGURED_ERROR = "api key or workplace id missing".freeze
 
     def configured?
       api_key.present? && workplace_id.present?
+    end
+
+    def parse_json(raw)
+      JSON.parse(raw.to_s)
+    rescue JSON::ParserError
+      {}
+    end
+
+    def error_from(body)
+      body["error"].to_s.truncate(ERROR_MESSAGE_MAX).presence
+    end
+
+    def decision_webhook_secret
+      raw = Rails.application.credentials.dig(:external_dashboard, :decision_webhook_secret).presence ||
+            ENV["EXTERNAL_REVIEW_SECRET"].presence
+      raw.is_a?(String) ? raw : nil
     end
 
     def base_url

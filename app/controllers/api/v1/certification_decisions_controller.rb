@@ -1,6 +1,7 @@
 class Api::V1::CertificationDecisionsController < Api::V1::BaseController
   SIGNATURE_HEADER = "X-Shipwrights-Signature".freeze
   SIGNATURE_PREFIX = "sha256=".freeze
+  MAX_BODY_BYTES = 64.kilobytes
 
   def create
     unless request.media_type == "application/json"
@@ -17,7 +18,9 @@ class Api::V1::CertificationDecisionsController < Api::V1::BaseController
   private
 
     def valid_api_key?
-      secret = webhook_secret
+      return reject_auth("payload too large") if request.content_length.to_i > MAX_BODY_BYTES
+
+      secret = ExternalDashboard::Client.decision_webhook_secret
       return reject_auth("secret not configured") if secret.blank?
 
       header = request.headers[SIGNATURE_HEADER].to_s.strip
@@ -29,12 +32,6 @@ class Api::V1::CertificationDecisionsController < Api::V1::BaseController
 
       return true if ActiveSupport::SecurityUtils.secure_compare(expected, provided)
       reject_auth("signature mismatch")
-    end
-
-    def webhook_secret
-      raw = Rails.application.credentials.dig(:external_dashboard, :decision_webhook_secret).presence ||
-            ENV["EXTERNAL_REVIEW_SECRET"].presence
-      raw.is_a?(String) ? raw : nil
     end
 
     def reject_auth(reason)

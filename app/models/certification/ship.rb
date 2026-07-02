@@ -15,6 +15,7 @@
 #  created_at                :datetime         not null
 #  updated_at                :datetime         not null
 #  external_certification_id :string
+#  post_ship_event_id        :bigint
 #  project_id                :bigint           not null
 #  returned_by_id            :bigint
 #  reviewer_id               :bigint
@@ -24,11 +25,13 @@
 #  idx_on_status_claim_expires_at_c7a5e87a52                      (status,claim_expires_at)
 #  index_certification_ship_reviews_on_decided_at                 (decided_at)
 #  index_certification_ship_reviews_on_external_certification_id  (external_certification_id) UNIQUE
+#  index_certification_ship_reviews_on_post_ship_event_id         (post_ship_event_id)
 #  index_certification_ship_reviews_on_reviewer_id                (reviewer_id)
 #  index_ship_reviews_unique_pending_project                      (project_id) UNIQUE WHERE (status = 0)
 #
 # Foreign Keys
 #
+#  fk_rails_...  (post_ship_event_id => post_ship_events.id) ON DELETE => nullify
 #  fk_rails_...  (project_id => projects.id)
 #  fk_rails_...  (reviewer_id => users.id)
 #
@@ -45,6 +48,7 @@ module Certification
                foreign_key: :project_id, optional: true
     belongs_to :reviewer, class_name: "User", optional: true
     belongs_to :returned_by, class_name: "User", optional: true
+    belongs_to :post_ship_event, class_name: "Post::ShipEvent", optional: true
 
     has_paper_trail
 
@@ -59,7 +63,11 @@ module Certification
     end
 
     def owner
-      @owner ||= project.memberships.owner.first&.user
+      @owner ||= project.memberships.owner.order(:created_at).first&.user
+    end
+
+    def verdict_ship_event
+      post_ship_event || project&.last_ship_event
     end
 
     enum :status, {
@@ -80,7 +88,24 @@ module Certification
       update!(external_certification_id: cert_id)
       :persisted
     rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+      restore_attributes([ :external_certification_id ])
       :skipped
+    end
+
+    def transfer_external_certification_id_to!(other)
+      return false if external_certification_id.blank?
+      return false if other.external_certification_id.present?
+
+      uuid = external_certification_id
+      transaction do
+        update!(external_certification_id: nil)
+        other.update!(external_certification_id: uuid)
+      end
+      true
+    rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique
+      reload
+      other.reload
+      false
     end
 
     ACCEPTED_VIDEO_TYPES = %w[video/mp4 video/webm video/quicktime].freeze
@@ -398,17 +423,23 @@ module Certification
     def apply_verdict_to_project!
       return if pending?
       project.with_lock do
-        project.start_review! if project.may_start_review?
+        ship_event = verdict_ship_event
+        latest = ship_event.nil? || ship_event == project.last_ship_event
+
         case status.to_sym
         when :approved
-          project.approve! if project.may_approve?
-          ship_event = project.last_ship_event
           ship_event&.update!(certification_status: "approved")
+          if latest
+            project.start_review! if project.may_start_review?
+            project.approve! if project.may_approve?
+          end
           create_ysws_review_for_ship(ship_event) if ship_event
         when :returned
-          project.return_for_changes! if project.may_return_for_changes?
-          ship_event = project.last_ship_event
           ship_event&.update!(certification_status: "returned")
+          if latest
+            project.start_review! if project.may_start_review?
+            project.return_for_changes! if project.may_return_for_changes?
+          end
         end
       end
     end
@@ -447,7 +478,11 @@ module Certification
         project_title: project.title,
         project_url: routes.project_url(project, **url_opts),
         feedback: feedback.to_s,
-        video_url: verdict_video.attached? ? routes.rails_blob_url(verdict_video, **url_opts) : nil
+        video_url: if verdict_video.attached?
+                     routes.rails_blob_url(verdict_video, **url_opts)
+                   else
+                     verdict_ship_event&.feedback_video_url.presence
+                   end
       }
 
       case status.to_sym

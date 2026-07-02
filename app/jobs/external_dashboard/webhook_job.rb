@@ -8,7 +8,7 @@ module ExternalDashboard
 
     discard_on ActiveRecord::RecordNotFound
 
-    retry_on Faraday::Error, RetriableServerError, wait: 30.seconds, attempts: 2 do |job, error|
+    retry_on Faraday::Error, RetriableServerError, wait: :polynomially_longer, attempts: 4 do |job, error|
       cert_id = job.arguments.first
       Rails.logger.warn "[#{job.class.name}] cert=#{cert_id} giving up after #{error.class}: #{error.message}"
       Sentry.capture_message(

@@ -1,20 +1,18 @@
 module ExternalDashboard
   class CertReturnService
-    Result = Struct.new(:status, :http_status, :error, keyword_init: true) do
-      def ok? = status == :ok
+    Result = Struct.new(:status, :http_status, :error, keyword_init: true)
+
+    def self.call(cert)
+      new(cert).call
     end
 
-    def self.call(cert:, reason:)
-      new(cert: cert, reason: reason).call
-    end
-
-    def initialize(cert:, reason:)
+    def initialize(cert)
       @cert = cert
-      @reason = reason.to_s.strip.truncate(Post::ShipEvent::RETURN_REASON_MAX_LENGTH, omission: "")
+      @reason = cert.recert_reason.to_s.strip.truncate(Post::ShipEvent::RETURN_REASON_MAX_LENGTH, omission: "")
     end
 
     def call
-      return Result.new(status: :not_configured, error: "api key or workplace id missing") unless Client.configured?
+      return Result.new(status: :not_configured, error: Client::NOT_CONFIGURED_ERROR) unless Client.configured?
       return Result.new(status: :skipped, error: "cert has no external_certification_id") if external_id.blank?
       return Result.new(status: :skipped, error: "reason is blank") if @reason.blank?
 
@@ -33,8 +31,7 @@ module ExternalDashboard
     end
 
     def parse_response(response)
-      body = parse_body(response.body)
-      error = body["error"].to_s.truncate(Client::ERROR_MESSAGE_MAX).presence
+      error = Client.error_from(Client.parse_json(response.body))
 
       case response.status
       when 200..299
@@ -44,12 +41,6 @@ module ExternalDashboard
       else
         Result.new(status: :server_error, http_status: response.status, error: error)
       end
-    end
-
-    def parse_body(raw)
-      JSON.parse(raw.to_s)
-    rescue JSON::ParserError
-      {}
     end
   end
 end

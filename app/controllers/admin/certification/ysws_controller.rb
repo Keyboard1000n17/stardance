@@ -254,30 +254,26 @@ class Admin::Certification::YswsController < Admin::Certification::ApplicationCo
     end
 
     if ::Certification::Ship.pending.exists?(project_id: @review.project_id)
-      if @review.project.last_ship_event&.id == @review.post_ship_event_id
-        return render json: { success: false, error: "This project already has a pending ship certification." }, status: :unprocessable_entity
-      end
+      return render json: { success: false, error: "This project already has a pending ship certification." }, status: :unprocessable_entity
     end
 
     ActiveRecord::Base.transaction do
       approved_cert = ::Certification::Ship
         .where(project_id: @review.project_id, status: :approved)
-        .order(created_at: :desc)
+        .order(created_at: :desc, id: :desc)
         .lock
         .first
 
       new_cert = ::Certification::Ship.create!(
         project_id: @review.project_id,
+        post_ship_event_id: @review.post_ship_event_id,
         recert_reason: recert_reason, # codeql[rb/cleartext-storage-sensitive-data]
         returned_by_id: current_user.id
       )
       @review.update!(returned_at: Time.current)
 
-      if approved_cert&.external_certification_id.present?
-        uuid = approved_cert.external_certification_id
-        approved_cert.update!(external_certification_id: nil)
-        new_cert.update!(external_certification_id: uuid)
-        ::ExternalDashboard::CertReturnJob.perform_later(new_cert.id, recert_reason)
+      if approved_cert&.transfer_external_certification_id_to!(new_cert)
+        ::ExternalDashboard::CertReturnJob.perform_later(new_cert.id)
       end
     end
 

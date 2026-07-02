@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_02_220726) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -198,9 +198,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.datetime "claimed_at"
     t.datetime "created_at", null: false
     t.datetime "decided_at"
+    t.string "external_certification_id"
     t.text "feedback"
     t.text "internal_reason"
     t.integer "lock_version", default: 0, null: false
+    t.bigint "post_ship_event_id"
     t.bigint "project_id", null: false
     t.text "recert_reason"
     t.bigint "returned_by_id"
@@ -209,6 +211,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["decided_at"], name: "index_certification_ship_reviews_on_decided_at"
+    t.index ["external_certification_id"], name: "index_certification_ship_reviews_on_external_certification_id", unique: true
+    t.index ["post_ship_event_id"], name: "index_certification_ship_reviews_on_post_ship_event_id"
     t.index ["project_id"], name: "index_ship_reviews_unique_pending_project", unique: true, where: "(status = 0)"
     t.index ["reviewer_id"], name: "index_certification_ship_reviews_on_reviewer_id"
     t.index ["status", "claim_expires_at"], name: "idx_on_status_claim_expires_at_c7a5e87a52"
@@ -1484,6 +1488,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   add_foreign_key "certification_funding_requests", "projects"
   add_foreign_key "certification_funding_requests", "users"
   add_foreign_key "certification_funding_requests", "users", column: "reviewer_id"
+  add_foreign_key "certification_ship_reviews", "post_ship_events", on_delete: :nullify
   add_foreign_key "certification_ship_reviews", "projects"
   add_foreign_key "certification_ship_reviews", "users", column: "reviewer_id"
   add_foreign_key "certification_ysws_reviews", "certification_ship_reviews", column: "ship_cert_id"

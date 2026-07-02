@@ -48,10 +48,9 @@ class Post::ShipEvent < ApplicationRecord
   MAX_PAYOUT_HOURS_PER_DEVLOG = 10
   BODY_MAX_LENGTH = Post::Devlog::BODY_MAX_LENGTH
   REVIEW_INSTRUCTIONS_MAX_LENGTH = 2_000
-  FEEDBACK_REASON_MAX_LENGTH = 10_000
-  FEEDBACK_VIDEO_URL_MAX_LENGTH = 2_048
   RETURN_REASON_MAX_LENGTH = 1_000
-  FINAL_CERTIFICATION_STATUSES = %w[approved returned rejected].freeze
+  FEEDBACK_VIDEO_URL_MAX_LENGTH = 2_048
+  FEEDBACK_VIDEO_URL_PATTERN = %r{\Ahttps?://\S+\z}
   MAX_ATTACHMENTS = 2
   ACCEPTED_CONTENT_TYPES = %w[image/jpeg image/png image/webp image/heic image/heif image/gif].freeze
 
@@ -92,9 +91,9 @@ class Post::ShipEvent < ApplicationRecord
   validates :body, presence: { message: "Update message can't be blank" }
   validates :body, length: { maximum: BODY_MAX_LENGTH }, on: :create
   validates :review_instructions, length: { maximum: REVIEW_INSTRUCTIONS_MAX_LENGTH }, allow_blank: true
-  validates :feedback_reason, length: { maximum: FEEDBACK_REASON_MAX_LENGTH }, allow_blank: true
-  validates :feedback_video_url, length: { maximum: FEEDBACK_VIDEO_URL_MAX_LENGTH }, allow_blank: true
-  validates :feedback_video_url, format: { with: %r{\Ahttps?://\S+\z}, message: "must be an http(s) URL" }, allow_blank: true
+  validates :feedback_video_url, length: { maximum: FEEDBACK_VIDEO_URL_MAX_LENGTH },
+                                 format: { with: FEEDBACK_VIDEO_URL_PATTERN, message: "must be an http(s) URL" },
+                                 allow_blank: true
   validate :project_can_be_shipped, on: :create
   has_paper_trail ignore: [ :votes_count, :synced_at ]
 
