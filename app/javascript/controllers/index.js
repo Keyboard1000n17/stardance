@@ -10,6 +10,9 @@ application.register("achievement-highlight", AchievementHighlightController);
 import AddressSelectController from "./address_select_controller";
 application.register("address-select", AddressSelectController);
 
+import AdminLedgerChartController from "./admin_ledger_chart_controller";
+application.register("admin-ledger-chart", AdminLedgerChartController);
+
 import BioEditorController from "./bio_editor_controller";
 application.register("bio-editor", BioEditorController);
 
@@ -259,6 +262,9 @@ application.register("order-form", OrderFormController);
 import ParallaxController from "./parallax_controller";
 application.register("parallax", ParallaxController);
 
+import PayoutReviewController from "./payout_review_controller";
+application.register("payout-review", PayoutReviewController);
+
 import PostMenuController from "./post_menu_controller";
 application.register("post-menu", PostMenuController);
 
@@ -291,6 +297,9 @@ application.register("project-type", ProjectTypeController);
 
 import ReadmeImageController from "./readme_image_controller";
 application.register("readme-image", ReadmeImageController);
+
+import RerollPollController from "./reroll_poll_controller";
+application.register("reroll-poll", RerollPollController);
 
 import RevealOnScrollController from "./reveal_on_scroll_controller";
 application.register("reveal-on-scroll", RevealOnScrollController);

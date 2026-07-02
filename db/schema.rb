@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_26_060000) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -198,7 +198,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_060000) do
     t.datetime "claimed_at"
     t.datetime "created_at", null: false
     t.datetime "decided_at"
-    t.string "external_certification_id"
     t.text "feedback"
     t.text "internal_reason"
     t.integer "lock_version", default: 0, null: false
@@ -210,7 +209,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_060000) do
     t.integer "status", default: 0, null: false
     t.datetime "updated_at", null: false
     t.index ["decided_at"], name: "index_certification_ship_reviews_on_decided_at"
-    t.index ["external_certification_id"], name: "index_certification_ship_reviews_on_external_certification_id", unique: true
     t.index ["project_id"], name: "index_ship_reviews_unique_pending_project", unique: true, where: "(status = 0)"
     t.index ["reviewer_id"], name: "index_certification_ship_reviews_on_reviewer_id"
     t.index ["status", "claim_expires_at"], name: "idx_on_status_claim_expires_at_c7a5e87a52"
@@ -259,6 +257,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_060000) do
 
   create_table "daily_rolls", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.integer "reroll_value"
     t.date "rolled_on", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
@@ -551,6 +550,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_060000) do
     t.integer "fixed_stardust_payout"
     t.integer "guide_sections_count"
     t.string "guide_url"
+    t.boolean "hardware", default: false, null: false
     t.string "name", null: false
     t.integer "prizes_count", default: 0, null: false
     t.string "slug", null: false
@@ -659,6 +659,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_26_060000) do
     t.datetime "payout_basis_locked_at"
     t.decimal "payout_basis_overall_score", precision: 5, scale: 2
     t.decimal "payout_basis_percentile", precision: 5, scale: 2
+    t.bigint "payout_basis_vote_ids", default: [], null: false, array: true
     t.string "payout_blessing"
     t.string "payout_curve_version"
     t.text "review_instructions"

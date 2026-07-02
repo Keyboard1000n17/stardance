@@ -10,6 +10,7 @@
     width: 100%;
     height: auto;
     display: block;
+    transform: translate(6%, -6%);
   }
 
   &__countdown {
@@ -23,5 +24,13 @@
     strong {
       color: var(--color-brand-yellow);
     }
+  }
+
+  &__eligible {
+    font-family: var(--font-family-text);
+    font-weight: 700;
+    font-size: var(--font-size-m);
+    color: var(--color-brand-cream);
+    margin: 0;
   }
 }
