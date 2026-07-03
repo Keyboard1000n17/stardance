@@ -78,3 +78,129 @@
 .fraud-leaderboard__row--me {
   background: rgba(149, 219, 255, 0.08);
 }
+
+// Shop order review queue overview (fraud dashboard). Same stats shape as
+// the Shipwrights ship-queue overview, restyled with Stardance brand tokens
+// instead of that page's off-brand green/red.
+.order-queue {
+  --positive: var(--color-brand-mint);
+  --negative: var(--color-brand-salmon);
+
+  color: var(--color-space-text);
+
+  &__overview {
+    margin-bottom: var(--space-l);
+  }
+
+  &__stats {
+    background: var(--color-space-card);
+    border: 1px solid var(--color-space-border);
+    border-radius: 12px;
+  }
+
+  &__label {
+    display: block;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--color-space-text-muted);
+    margin-bottom: var(--space-xxs);
+  }
+
+  &__stats {
+    padding: var(--space-l);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-m);
+  }
+
+  &__progress-headline {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-s);
+  }
+
+  &__net {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
+
+    &.is-positive {
+      color: var(--positive);
+    }
+
+    &.is-negative {
+      color: var(--negative);
+    }
+  }
+
+  &__progress-note {
+    color: var(--color-space-text-muted);
+    font-size: 0.95rem;
+  }
+
+  &__metrics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-l);
+    padding-top: var(--space-m);
+    border-top: 1px solid var(--color-space-border);
+  }
+
+  &__metric {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__metric-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+
+    &.is-positive {
+      color: var(--positive);
+    }
+
+    &.is-negative {
+      color: var(--negative);
+    }
+  }
+
+  &__metric-link {
+    text-decoration: underline;
+
+    &:hover,
+    &:focus-visible {
+      filter: brightness(1.1);
+    }
+  }
+
+  &__metric-hint {
+    font-size: 0.75rem;
+    color: var(--color-space-text-muted);
+  }
+
+  &__alltime {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-m);
+    padding-top: var(--space-m);
+    border-top: 1px solid var(--color-space-border);
+    font-size: 0.9rem;
+  }
+
+  &__tally {
+    color: var(--color-space-text-muted);
+
+    &.is-positive {
+      color: var(--positive);
+    }
+
+    &.is-negative {
+      color: var(--negative);
+    }
+  }
+}
