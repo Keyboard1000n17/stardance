@@ -494,6 +494,12 @@ button.btn-danger {
     color: var(--color-space-text-muted);
     margin: 0 0 var(--space-m) 0;
   }
+
+  &__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--space-s);
+  }
 }
 
 /* Searchable Select Dropdown */

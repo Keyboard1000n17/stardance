@@ -50,7 +50,7 @@
 
             <% if resolution %>
               <span class="vote-flags__outcome vote-flags__outcome--<%= resolution.event_type == 'vote_flag_accepted' ? 'accepted' : 'rejected' %>">
-                <%= resolution.event_type == "vote_flag_accepted" ? "✓ Flag upheld — vote removed" : "✗ Flag dismissed — vote kept" %>
+                <%= resolution.event_type == "vote_flag_accepted" ? "✓ Flag upheld (vote removed)" : "✗ Flag dismissed (vote kept)" %>
               </span>
             <% else %>
               <span class="vote-flags__outcome vote-flags__outcome--pending">Pending review</span>
@@ -135,25 +135,40 @@
 
           <div class="vote-flags__actions">
             <% unless resolution %>
-              <div class="vote-flags__action-group">
-                <%= button_to "Uphold flag — remove vote",
-                              admin_vote_flag_approval_path(flag),
-                              method: :post,
-                              class: "btn-danger",
-                              form: { data: { turbo_confirm: "Uphold this flag?\n\nThe vote will be removed from the payout calculation. The flagger is not penalised." } } %>
-                <p class="vote-flags__action-hint">The flag is valid. Remove this vote from the payout pool.</p>
+              <div class="vote-flags__action-group" data-controller="modal">
+                <button type="button" class="btn-danger" data-action="click->modal#open">Uphold flag</button>
+                <p class="vote-flags__action-hint">The flag is valid. Removes this vote from the payout pool.</p>
+
+                <dialog class="modal" data-modal-target="dialog" aria-labelledby="uphold-flag-<%= flag.id %>-title">
+                  <h3 id="uphold-flag-<%= flag.id %>-title" class="modal__title">Uphold this flag?</h3>
+                  <p class="modal__description">
+                    The flag is valid. This vote will be removed from the payout calculation. The flagger will not be penalized.
+                  </p>
+                  <div class="modal__actions">
+                    <button type="button" class="btn-secondary" data-action="click->modal#close">Cancel</button>
+                    <%= button_to "Yes, uphold flag", admin_vote_flag_approval_path(flag), method: :post, class: "btn-danger" %>
+                  </div>
+                </dialog>
               </div>
-              <div class="vote-flags__action-group">
-                <%= button_to "Dismiss flag — keep vote",
-                              admin_vote_flag_rejection_path(flag),
-                              method: :post,
-                              class: "btn-secondary",
-                              form: { data: { turbo_confirm: "Dismiss this flag?\n\nThe vote will stay in the payout calculation. The flagger will be charged #{Vote::FLAG_COST} stardust for a bad flag." } } %>
-                <p class="vote-flags__action-hint">The flag is invalid. Keep the vote and charge the flagger <%= Vote::FLAG_COST %> stardust.</p>
+
+              <div class="vote-flags__action-group" data-controller="modal">
+                <button type="button" class="btn-secondary" data-action="click->modal#open">Dismiss flag</button>
+                <p class="vote-flags__action-hint">The flag is invalid. Keeps the vote and charges the flagger <%= Vote::FLAG_COST %> stardust.</p>
+
+                <dialog class="modal" data-modal-target="dialog" aria-labelledby="dismiss-flag-<%= flag.id %>-title">
+                  <h3 id="dismiss-flag-<%= flag.id %>-title" class="modal__title">Dismiss this flag?</h3>
+                  <p class="modal__description">
+                    The flag is invalid. The vote will stay in the payout calculation, and the flagger will be charged <%= Vote::FLAG_COST %> stardust for an incorrect flag.
+                  </p>
+                  <div class="modal__actions">
+                    <button type="button" class="btn-secondary" data-action="click->modal#close">Cancel</button>
+                    <%= button_to "Yes, dismiss flag", admin_vote_flag_rejection_path(flag), method: :post, class: "btn-secondary" %>
+                  </div>
+                </dialog>
               </div>
             <% end %>
             <% if vote&.ship_event %>
-              <%= link_to "Payout review →", admin_payout_review_path(vote.ship_event) %>
+              <%= link_to "Payout review", admin_payout_review_path(vote.ship_event) %>
             <% end %>
           </div>
         </article>
