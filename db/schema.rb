@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_07_153613) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "vector"
@@ -217,6 +217,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   create_table "certification_ysws_reviews", force: :cascade do |t|
     t.datetime "airtable_synced_at", precision: nil
     t.integer "approved_minutes"
+    t.datetime "claimed_at"
+    t.bigint "claimed_by_id"
     t.datetime "created_at", null: false
     t.datetime "demo_checked_at", precision: nil
     t.string "in_unified_db"
@@ -233,6 +235,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
     t.text "summary_justification"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["claimed_by_id"], name: "index_certification_ysws_reviews_on_claimed_by_id"
     t.index ["post_ship_event_id"], name: "index_certification_ysws_reviews_on_post_ship_event_id"
     t.index ["project_id"], name: "index_certification_ysws_reviews_on_project_id"
     t.index ["reviewer_id"], name: "index_certification_ysws_reviews_on_reviewer_id"
@@ -1505,6 +1508,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_165531) do
   add_foreign_key "certification_ysws_reviews", "post_ship_events"
   add_foreign_key "certification_ysws_reviews", "projects"
   add_foreign_key "certification_ysws_reviews", "users"
+  add_foreign_key "certification_ysws_reviews", "users", column: "claimed_by_id"
   add_foreign_key "certification_ysws_reviews", "users", column: "reviewer_id"
   add_foreign_key "certification_ysws_reviews", "users", column: "spotchecked_by_id"
   add_foreign_key "comments", "users"
