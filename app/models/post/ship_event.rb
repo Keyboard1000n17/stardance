@@ -44,6 +44,10 @@ class Post::ShipEvent < ApplicationRecord
   VOTES_TO_LEAVE_POOL = VOTES_REQUIRED_FOR_PAYOUT
   VOTE_COST_PER_SHIP = 15
   MAX_PAYOUT_HOURS_PER_DEVLOG = 10
+  MAX_PAYOUT_SECONDS_PER_DEVLOG = MAX_PAYOUT_HOURS_PER_DEVLOG.hours.to_i
+  # Un-devlogged time at which the UI and DevlogCapWarningJob start nudging
+  # users to post before they hit the per-devlog payout cap.
+  DEVLOG_CAP_WARNING_SECONDS = 8.hours.to_i
   BODY_MAX_LENGTH = Post::Devlog::BODY_MAX_LENGTH
   REVIEW_INSTRUCTIONS_MAX_LENGTH = 2_000
   RETURN_REASON_MAX_LENGTH = 1_000
