@@ -391,6 +391,13 @@ class Project < ApplicationRecord
     )
   end
 
+  # Where the current devlog window opened: the previous devlog, or for the
+  # first devlog the earlier of project creation and season start.
+  def devlog_window_start(at)
+    previous_devlog = devlogs.where("post_devlogs.created_at < ?", at).order("post_devlogs.created_at desc").first
+    previous_devlog&.created_at || [ created_at, Date.parse(HackatimeService::START_DATE).beginning_of_day ].min
+  end
+
   aasm column: :ship_status do
     state :draft, initial: true
     state :submitted
@@ -710,11 +717,6 @@ class Project < ApplicationRecord
       read_timeout: 5
     )
     response.code.to_i
-  end
-
-  def devlog_window_start(at)
-    previous_devlog = devlogs.where("post_devlogs.created_at < ?", at).order("post_devlogs.created_at desc").first
-    previous_devlog&.created_at || [ created_at, Date.parse(HackatimeService::START_DATE).beginning_of_day ].min
   end
 
   def previous_ship_event_has_payout?
