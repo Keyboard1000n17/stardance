@@ -449,6 +449,7 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       resources :ambassador_referrals, only: [ :index, :show ]
+      resources :certification_decisions, only: [ :create ]
     end
     namespace :slack do
       post "events", to: "events#create"
@@ -735,6 +736,15 @@ Rails.application.routes.draw do
     resources :suspicious_votes, only: [ :index ]
     resources :audit_logs, only: [ :index, :show ]
     resources :fulfillment_payouts, only: [ :index, :show ] do
+      member do
+        post :approve
+        post :reject
+      end
+      collection do
+        post :trigger
+      end
+    end
+    resources :fraud_payouts, only: [ :index, :show ] do
       member do
         post :approve
         post :reject

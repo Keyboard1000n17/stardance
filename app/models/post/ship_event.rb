@@ -5,12 +5,10 @@
 #  id                         :bigint           not null, primary key
 #  body                       :string
 #  certification_status       :string           default("pending")
-#  comments_count             :integer          default(0), not null
 #  feedback_reason            :text
 #  feedback_video_url         :string
 #  hours_at_payout            :float
 #  hours_at_ship              :float
-#  likes_count                :integer          default(0), not null
 #  multiplier                 :float
 #  originality_median         :decimal(5, 2)
 #  originality_percentile     :decimal(5, 2)
@@ -48,6 +46,7 @@ class Post::ShipEvent < ApplicationRecord
   MAX_PAYOUT_HOURS_PER_DEVLOG = 10
   BODY_MAX_LENGTH = Post::Devlog::BODY_MAX_LENGTH
   REVIEW_INSTRUCTIONS_MAX_LENGTH = 2_000
+  RETURN_REASON_MAX_LENGTH = 1_000
   MAX_ATTACHMENTS = 2
   ACCEPTED_CONTENT_TYPES = %w[image/jpeg image/png image/webp image/heic image/heif image/gif].freeze
 
@@ -71,6 +70,11 @@ class Post::ShipEvent < ApplicationRecord
                                foreign_key: :ship_event_id,
                                inverse_of: :ship_event,
                                dependent: :destroy
+
+  has_one :integrity_check, class_name: "Certification::Integrity",
+                            foreign_key: :ship_event_id,
+                            inverse_of: :ship_event,
+                            dependent: :destroy
 
   after_update :sync_mission_submission_status, if: :saved_change_to_certification_status?
 
