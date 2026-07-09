@@ -44,6 +44,14 @@
           <dl class="ship-review__meta">
             <dt>Submitter</dt>
             <dd><%= @owner&.display_name || "—" %></dd>
+            <dt>Slack</dt>
+            <dd>
+              <% if @owner&.slack_id.present? %>
+                <%= link_to "DM on Slack ↗", "https://hackclub.enterprise.slack.com/archives/#{@owner.slack_id}", target: "_blank", rel: "noopener" %>
+              <% else %>
+                —
+              <% end %>
+            </dd>
             <dt>Submitted</dt>
             <dd><%= time_ago_in_words(@ship.project.shipped_at || @ship.created_at) %> ago</dd>
             <% if @ship.reviewer %>
