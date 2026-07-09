@@ -35,6 +35,7 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
                          limit: 25)
 
     @own_project_ids = current_user.memberships.pluck(:project_id).to_set
+    @internal_sw_dash_reviews_disabled = internal_sw_dash_reviews_disabled?
 
     @stats = ::Certification::Ship.dashboard_stats
     @lb_period = params[:lb].presence_in(%w[daily weekly alltime]) || "daily"
@@ -70,6 +71,9 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def show
     authorize @ship
+    if internal_sw_dash_reviews_disabled? && (dash_url = ExternalDashboard::Client.certification_url(@ship.external_certification_id))
+      return redirect_to dash_url, allow_other_host: true
+    end
     set_milestone_context
   end
 
@@ -111,6 +115,9 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def update
     authorize @ship
+    if internal_sw_dash_reviews_disabled? && @ship.external_certification_id.present?
+      return redirect_to admin_certification_ships_path, alert: "Reviews are handled on the Shipwrights dashboard."
+    end
     return redirect_to admin_certification_ship_path(@ship), alert: "Ship is no longer pending." unless @ship.pending?
 
     @ship.reviewer = current_user
@@ -136,6 +143,7 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def next
     authorize ::Certification::Ship
+    return redirect_to admin_certification_ships_path, notice: "Reviews are handled on the Shipwrights dashboard." if internal_sw_dash_reviews_disabled?
     skip_ids = parse_skip_ids
     candidate = ::Certification::Ship.next_eligible(current_user, skip_ids: skip_ids)
     if candidate.nil?
@@ -204,6 +212,10 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def release_other_claims
     ::Certification::Ship.release_all_for(current_user) if current_user.present?
+  end
+
+  def internal_sw_dash_reviews_disabled?
+    Flipper.enabled?(:disable_internal_sw_dash_reviews, current_user)
   end
 
   def parse_skip_ids
