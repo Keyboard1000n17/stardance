@@ -117,8 +117,11 @@ module OgImage
 
     def draw_flex_text
       username = pango_escape("@#{@user.display_name}")
-      item_name = pango_escape(truncate_text(@shop_item.name, 28))
-      item_size = item_font_size(item_name)
+      # Size off the human-visible (pre-escape) length so names with & < > "
+      # don't get bumped into a smaller bucket by their escaped expansion.
+      truncated_name = truncate_text(@shop_item.name, 28)
+      item_name = pango_escape(truncated_name)
+      item_size = item_font_size(truncated_name)
 
       draw_shadowed_text(username, x: 60, y: 316, size: 54)
 
@@ -129,6 +132,8 @@ module OgImage
 
       profile_url = pango_escape("stardance.hackclub.com/@#{@user.display_name}")
       draw_shadowed_text(profile_url, x: 60, y: third_line_y + 88 + 42, size: 36, color: LINK_COLOR)
+    rescue StandardError => e
+      Rails.logger.warn("OgImage::ShopOrderFlex: failed to draw text: #{e.message}")
     end
 
     def draw_shadowed_text(text, x:, y:, size:, color: TEXT_COLOR, font: nil)

@@ -7,7 +7,11 @@ export default class extends Controller {
   async copy(event) {
     event.preventDefault();
     try {
-      if (!navigator.clipboard || !window.ClipboardItem || !window.isSecureContext) {
+      if (
+        !navigator.clipboard ||
+        !window.ClipboardItem ||
+        !window.isSecureContext
+      ) {
         throw new Error("clipboard unsupported");
       }
       // Pass the promise straight to ClipboardItem so Safari keeps the

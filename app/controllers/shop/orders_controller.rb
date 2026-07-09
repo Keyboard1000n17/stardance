@@ -199,7 +199,7 @@ class Shop::OrdersController < Shop::BaseController
   def find_sharable_order
     return nil unless Flipper.enabled?(:sharable_purchase, current_user)
 
-    latest = @orders.first
+    latest = @orders.worth_counting.first
     return nil unless latest && latest.created_at > 10.minutes.ago
     return nil if latest.shop_item.is_a?(ShopItem::TutorialNothing)
 
