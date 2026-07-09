@@ -124,25 +124,47 @@ module Certification
     # the dashboard leaderboard uses this to show a projected payout.
     STARDUST_PER_DEVLOG = 0.2
 
+    # Limited-time bonus rate: devlogs whose parent review was completed within
+    # BONUS_WINDOW pay out at this higher rate instead of STARDUST_PER_DEVLOG.
+    BONUS_STARDUST_PER_DEVLOG = 0.3
+
+    # 11am EDT July 9 2026 → 4pm EDT July 13 2026 (uses the New York zone so the
+    # EDT offset is applied correctly regardless of the app's default zone).
+    BONUS_WINDOW = Time.find_zone!("America/New_York").local(2026, 7, 9, 11, 0)..
+      Time.find_zone!("America/New_York").local(2026, 7, 13, 16, 0)
+
     # All-time devlog-review leaderboard. A devlog counts as reviewed once its
     # parent YSWS review is completed (reviewed_at present); completion already
-    # forces every child devlog out of :pending.
+    # forces every child devlog out of :pending. Devlogs reviewed within
+    # BONUS_WINDOW pay out at the higher BONUS_STARDUST_PER_DEVLOG rate.
     #   => [{ reviewer_id:, name:, devlogs:, stardust: }, ...] desc by devlogs
     def self.reviewer_devlog_leaderboard
+      bonus_sql = sanitize_sql_array([
+        "certification_ysws_reviews.reviewed_at BETWEEN ? AND ?",
+        BONUS_WINDOW.begin, BONUS_WINDOW.end
+      ])
+
+      # Count devlogs per reviewer, split by whether they fall in the bonus
+      # window, so each bucket can be paid out at its own rate.
       Certification::Devlog
         .joins(ysws_review: :reviewer)
         .where.not(certification_ysws_reviews: { reviewed_at: nil })
-        .group("users.id", "users.display_name")
-        .order(Arel.sql("COUNT(*) DESC"), "users.display_name ASC")
+        .group("users.id", "users.display_name", Arel.sql("(#{bonus_sql})"))
         .count
-        .map do |(reviewer_id, name), devlogs|
+        .group_by { |(reviewer_id, name, _bonus), _count| [ reviewer_id, name ] }
+        .map do |(reviewer_id, name), entries|
+          devlogs  = entries.sum { |_key, count| count }
+          stardust = entries.sum do |(_id, _name, bonus), count|
+            count * (bonus ? BONUS_STARDUST_PER_DEVLOG : STARDUST_PER_DEVLOG)
+          end
           {
             reviewer_id: reviewer_id,
             name: name,
             devlogs: devlogs,
-            stardust: (devlogs * STARDUST_PER_DEVLOG).round(1)
+            stardust: stardust.round(1)
           }
         end
+        .sort_by { |row| [ -row[:devlogs], row[:name] ] }
     end
 
     # Devlogs reviewed per reviewer per day over the trailing window, bucketed by
