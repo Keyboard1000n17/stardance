@@ -541,6 +541,7 @@ Rails.application.routes.draw do
   namespace :home do
     resource :discover_rail, only: [] do
       get :streak, on: :member
+      get :certificate, on: :member
     end
     resource :feed, only: [ :show ]
   end
