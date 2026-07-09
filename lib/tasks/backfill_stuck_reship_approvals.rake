@@ -15,6 +15,7 @@ namespace :backfill do
     puts
 
     count = 0
+    failed = 0
 
     Project.where(ship_status: "submitted").find_each do |project|
       ship_event = project.last_ship_event
@@ -28,18 +29,30 @@ namespace :backfill do
 
       puts "  [FIX] Project ##{project.id} \"#{project.title}\", ship event ##{ship_event.id}: submitted → approved"
 
-      unless dry_run
-        project.with_lock do
-          project.start_review!
-          project.approve!
-        end
+      if dry_run
+        count += 1
+        next
       end
 
-      count += 1
+      begin
+        project.with_lock do
+          # State can shift between the may_start_review? check above and the
+          # lock, so re-check inside the transaction before transitioning.
+          raise ActiveRecord::Rollback unless project.may_start_review?
+
+          project.start_review!
+          project.approve!
+          count += 1
+        end
+      rescue => e
+        failed += 1
+        puts "  [FAIL] Project ##{project.id} \"#{project.title}\": #{e.class} #{e.message}"
+      end
     end
 
     puts
     puts "#{dry_run ? 'Would fix' : 'Fixed'} #{count} project(s)."
+    puts "Skipped #{failed} project(s) due to errors — see [FAIL] lines above." if failed.positive?
     puts "Run with DRY_RUN=false to apply." if dry_run
   end
 end
