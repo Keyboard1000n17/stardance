@@ -217,10 +217,23 @@ class Admin::Certification::YswsController < Admin::Certification::ApplicationCo
       return render json: { success: false, error: "This review is already in the unified DB" }, status: :unprocessable_entity
     end
 
-    incomplete = @review.devlog_reviews.select { |dr| dr.pending? || dr.justification.blank? }
-    if incomplete.any?
-      Rails.logger.warn "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Blocked: #{incomplete.count} incomplete devlog(s): #{incomplete.map(&:id).inspect}"
-      return render json: { success: false, error: "Fill in all devlogs" }, status: :unprocessable_entity
+    devlog_reviews = @review.devlog_reviews
+    pending = devlog_reviews.select(&:pending?)
+    if pending.any?
+      Rails.logger.warn "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Blocked: #{pending.count} unreviewed devlog(s): #{pending.map(&:id).inspect}"
+      return render json: { success: false, error: "Review all devlogs before completing." }, status: :unprocessable_entity
+    end
+
+    approved = devlog_reviews.select(&:approved?)
+    if approved.any? && approved.none? { |dr| dr.justification.present? }
+      Rails.logger.warn "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Blocked: no justification on any of #{approved.count} approved devlog(s)"
+      return render json: { success: false, error: "Add a justification to at least one approved devlog." }, status: :unprocessable_entity
+    end
+
+    unjustified_rejections = devlog_reviews.select { |dr| dr.rejected? && dr.justification.blank? }
+    if unjustified_rejections.any?
+      Rails.logger.warn "[YSWS#complete] user=#{current_user&.id} review=#{params[:id]} Blocked: #{unjustified_rejections.count} rejected devlog(s) missing justification: #{unjustified_rejections.map(&:id).inspect}"
+      return render json: { success: false, error: "Add a justification to every rejected devlog." }, status: :unprocessable_entity
     end
 
     @review.update_columns(reviewer_id: current_user.id, reviewed_at: Time.current)
