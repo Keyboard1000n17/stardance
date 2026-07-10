@@ -78,6 +78,8 @@
                     <% else %>
                       <span class="my-orders__status-hint">We have ordered the item for you! <% if order.external_ref.present? %><%= order.external_ref %><% else %>You should check your emails :)<% end %></span>
                     <% end %>
+                  <% elsif order.aasm_state == "rejected" && order.rejection_reason.present? %>
+                    <span class="my-orders__status-hint my-orders__status-hint--danger"><%= order.rejection_reason %></span>
                   <% end %>
                 </div>
               </div>
