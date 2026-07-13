@@ -71,6 +71,10 @@ class Admin::Certification::ShipsController < Admin::Certification::ApplicationC
 
   def show
     authorize @ship
+    if params[:via] == "dashboard"
+      return redirect_to admin_certification_ships_path, alert: "This project has been deleted." if @ship.project.deleted_at?
+      return redirect_to project_path(@ship.project)
+    end
     if internal_sw_dash_reviews_disabled? && (dash_url = ExternalDashboard::Client.certification_url(@ship.external_certification_id))
       return redirect_to dash_url, allow_other_host: true
     end
