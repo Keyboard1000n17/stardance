@@ -468,7 +468,12 @@ Rails.application.routes.draw do
     end
     resource :region, only: [ :update ]
     get "category/:slug", to: "items#category", as: :category
-    resources :suggestions, only: [ :create ]
+    resources :suggestions, only: [ :index, :create ] do
+      resources :votes, only: [ :create ], controller: "suggestion_votes"
+      collection do
+        get :history
+      end
+    end
     post "wishlists/:id", to: "wishlists#create", as: :create_wishlist
     delete "wishlists/:id", to: "wishlists#destroy", as: :wishlist
   end
@@ -733,10 +738,11 @@ Rails.application.routes.draw do
           post :force_state
         end
       end
-      resources :suggestions, only: [ :index ] do
+      resources :suggestions, only: [] do
         member do
-          post :dismiss
-          post :disable_for_user
+          post :accept
+          post :reject
+          delete :delete
         end
       end
     end

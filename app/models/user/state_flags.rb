@@ -1,11 +1,12 @@
 module User::StateFlags
   extend ActiveSupport::Concern
 
-  DISMISSIBLE_THINGS = %w[home_intro flagship_ad shop_suggestion_box willsbuilds_banner shop_picks_intro slack_doodle].freeze
+  DISMISSIBLE_THINGS = %w[home_intro flagship_ad willsbuilds_banner shop_picks_intro slack_doodle].freeze
 
   # Families of week-scoped dismissal keys (e.g. "sticker_promo_2026_07_07"),
   # where the suffix rotates so each occurrence is dismissed independently.
   DISMISSIBLE_PREFIXES = %w[sticker_promo].freeze
+
 
   def has_dismissed?(thing_name) = things_dismissed.include?(thing_name.to_s)
 

@@ -40,16 +40,16 @@ application.register(
   Certification__ScreenshotCheckController,
 );
 
-import Certification__Ships__MonitorChartController from "./certification/ships/monitor_chart_controller";
-application.register(
-  "certification--ships--monitor-chart",
-  Certification__Ships__MonitorChartController,
-);
-
 import Certification__Ships__FraudReportController from "./certification/ships/fraud_report_controller";
 application.register(
   "certification--ships--fraud-report",
   Certification__Ships__FraudReportController,
+);
+
+import Certification__Ships__MonitorChartController from "./certification/ships/monitor_chart_controller";
+application.register(
+  "certification--ships--monitor-chart",
+  Certification__Ships__MonitorChartController,
 );
 
 import Certification__VerdictPreviewController from "./certification/verdict_preview_controller";
@@ -126,6 +126,9 @@ application.register("comment-modal", CommentModalController);
 
 import ComposerController from "./composer_controller";
 application.register("composer", ComposerController);
+
+import ConfirmController from "./confirm_controller";
+application.register("confirm", ConfirmController);
 
 import CopyController from "./copy_controller";
 application.register("copy", CopyController);
@@ -204,6 +207,9 @@ application.register("hero-warp", HeroWarpController);
 
 import HorizontalScrollController from "./horizontal_scroll_controller";
 application.register("horizontal-scroll", HorizontalScrollController);
+
+import ImageDropzoneController from "./image_dropzone_controller";
+application.register("image-dropzone", ImageDropzoneController);
 
 import JsonHighlightController from "./json_highlight_controller";
 application.register("json-highlight", JsonHighlightController);
@@ -337,14 +343,14 @@ application.register("slack-doodle", SlackDoodleController);
 import SortableController from "./sortable_controller";
 application.register("sortable", SortableController);
 
+import StarImageInputController from "./star_image_input_controller";
+application.register("star-image-input", StarImageInputController);
+
 import StickerCountdownController from "./sticker_countdown_controller";
 application.register("sticker-countdown", StickerCountdownController);
 
 import StickerPromoController from "./sticker_promo_controller";
 application.register("sticker-promo", StickerPromoController);
-
-import StarImageInputController from "./star_image_input_controller";
-application.register("star-image-input", StarImageInputController);
 
 import StreakController from "./streak_controller";
 application.register("streak", StreakController);

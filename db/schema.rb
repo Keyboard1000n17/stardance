@@ -1213,13 +1213,29 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_183407) do
     t.index ["slug"], name: "index_shop_sources_on_slug", unique: true
   end
 
-  create_table "shop_suggestions", force: :cascade do |t|
+  create_table "shop_suggestion_votes", force: :cascade do |t|
     t.datetime "created_at", null: false
-    t.text "explanation"
-    t.text "item"
-    t.string "link"
+    t.bigint "shop_suggestion_id", null: false
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["shop_suggestion_id"], name: "index_shop_suggestion_votes_on_shop_suggestion_id"
+    t.index ["user_id"], name: "index_shop_suggestion_votes_on_user_id"
+  end
+
+  create_table "shop_suggestions", force: :cascade do |t|
+    t.string "aasm_state", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.datetime "discarded_at"
+    t.text "name"
+    t.string "rejection_reason"
+    t.bigint "shop_item_id"
+    t.datetime "updated_at", null: false
+    t.string "url"
+    t.decimal "usd_cost", precision: 8, scale: 2
+    t.bigint "user_id", null: false
+    t.index ["aasm_state"], name: "index_shop_suggestions_on_aasm_state"
+    t.index ["shop_item_id"], name: "index_shop_suggestions_on_shop_item_id"
     t.index ["user_id"], name: "index_shop_suggestions_on_user_id"
   end
 
@@ -1642,6 +1658,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_08_183407) do
   add_foreign_key "shop_orders", "shop_warehouse_packages", column: "warehouse_package_id"
   add_foreign_key "shop_orders", "users"
   add_foreign_key "shop_orders", "users", column: "assigned_to_user_id", on_delete: :nullify
+  add_foreign_key "shop_suggestion_votes", "shop_suggestions"
+  add_foreign_key "shop_suggestion_votes", "users"
   add_foreign_key "shop_suggestions", "users"
   add_foreign_key "shop_warehouse_packages", "users"
   add_foreign_key "shop_wishlists", "shop_items"
