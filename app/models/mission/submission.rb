@@ -7,6 +7,7 @@
 #  claimed_at                       :datetime
 #  deleted_at                       :datetime
 #  payout_path                      :string           not null
+#  pending_at                       :datetime
 #  rejection_message                :text
 #  reviewed_at                      :datetime
 #  status                           :string           not null
@@ -31,6 +32,7 @@
 #  index_mission_submissions_on_ship_event_id          (ship_event_id)
 #  index_mission_submissions_on_shop_order_id          (shop_order_id)
 #  index_mission_submissions_on_status_and_created_at  (status,created_at)
+#  index_mission_submissions_on_status_and_pending_at  (status,pending_at)
 #  index_mission_submissions_with_shop_order           (shop_order_id) WHERE (shop_order_id IS NOT NULL)
 #
 # Foreign Keys
