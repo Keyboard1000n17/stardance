@@ -23,13 +23,6 @@ body:
     validations:
       required: true
   - type: textarea
-    id: alternatives
-    attributes:
-      label: any other ways to solve it?
-      description: other approaches you thought about, if any
-    validations:
-      required: false
-  - type: textarea
     id: extra
     attributes:
       label: anything else?
